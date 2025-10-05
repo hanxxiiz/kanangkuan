@@ -2,7 +2,7 @@ import * as React from "react";
 import { SVGProps } from "react";
 
 const MascotSVG = React.forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
-  (props, ref) => (
+  (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -662,4 +662,7 @@ const MascotSVG = React.forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>(
   </svg>
 )
 );
+
+MascotSVG.displayName = "Mascot";
+
 export default MascotSVG

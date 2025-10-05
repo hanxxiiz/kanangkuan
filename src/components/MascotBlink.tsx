@@ -3,7 +3,7 @@
 import { useEffect, useRef, forwardRef } from "react";
 import MascotSVG from "./Mascot";
 
-const MascotBlink = forwardRef<SVGSVGElement, {}>((props, ref) => {
+const MascotBlink = forwardRef<SVGSVGElement, Record<string, never>>((props, ref) => {
   const mascotRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -17,21 +17,17 @@ const MascotBlink = forwardRef<SVGSVGElement, {}>((props, ref) => {
 
     let currentIndex = 0;
     const allEyelids = eyelidStates.flat();
-
-    // Initialize
     allEyelids.forEach(id => {
       const el = document.querySelector(id) as HTMLElement | SVGElement;
       if (el) el.style.opacity = "0";
     });
 
     const blink = () => {
-      // Hide all
       allEyelids.forEach(id => {
         const el = document.querySelector(id) as HTMLElement | SVGElement;
         if (el) el.style.opacity = "0";
       });
 
-      // Show current
       eyelidStates[currentIndex].forEach(id => {
         const el = document.querySelector(id) as HTMLElement | SVGElement;
         if (el) el.style.opacity = "1";
