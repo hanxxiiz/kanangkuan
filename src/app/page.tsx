@@ -4,6 +4,7 @@ import React, { useEffect, useRef} from "react";
 import Link from "next/link";
 import MascotBlink from "@/components/MascotBlink";
 import CardCarousel from "@/components/CardCarousel";
+import Navigation from "@/components/Navigation";
 
 export default function Home() {
   const slides = [
@@ -150,7 +151,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center">
+  <>
+    <Navigation />
+    <main className="min-h-screen w-full bg-black flex flex-col items-center justify-center">
       {/* HERO SECTION */}
       <section className="w-full h-screen flex flex-col bg-fixed">
         <div ref={mascotRef} className="relative">
@@ -397,6 +400,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </main>
+
+  </>
   );
 }
