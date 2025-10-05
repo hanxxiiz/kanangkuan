@@ -6,7 +6,7 @@ import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoIosClose } from "react-icons/io";
 
-const Navbar = () => {
+const Navigation = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   
@@ -110,4 +110,4 @@ const Navbar = () => {
    )
  }
  
- export default Navbar;
+ export default Navigation;
