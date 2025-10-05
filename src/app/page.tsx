@@ -4,7 +4,6 @@ import React, { useEffect, useRef} from "react";
 import Link from "next/link";
 import MascotBlink from "@/components/MascotBlink";
 import CardCarousel from "@/components/CardCarousel";
-import Image from "next/image";
 
 export default function Home() {
   const slides = [
@@ -265,7 +264,7 @@ export default function Home() {
                   >
                     <div className="w-full p-4 flex flex-col items-center justify-center">
                       <div className="relative w-full h-full rounded-xl overflow-hidden bg-white shadow-sm">
-                        <Image
+                        <img 
                           src={card.image} 
                           alt={card.title}
                           className="w-full h-full object-cover rounded-xl"
@@ -294,7 +293,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-8 py-16">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <div className="w-full">
-              <Image
+              <img
                 src="about.png"
                 alt="Descriptive Alt Text"
                 className="w-full h-auto rounded-lg object-cover"
@@ -305,7 +304,7 @@ export default function Home() {
                 About
               </h1>
               <div className="w-full">
-                <Image
+                <img
                   src="kanangkuan-wordmark.svg"
                   alt="Kanang Kuan"
                   className="w-full h-auto"

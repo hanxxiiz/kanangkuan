@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navigation from "@/components/Navigation";
 
 const poppinsBold = Poppins({
   subsets: ["latin"],
@@ -30,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${poppinsBold.variable} ${interRegular.variable} antialiased`}
       >
-        <Navbar />
+        <Navigation />
           <main>{children}</main>
       </body>
     </html>

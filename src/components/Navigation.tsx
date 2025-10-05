@@ -6,7 +6,7 @@ import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoIosClose } from "react-icons/io";
 
- const Navbar = () => {
+const Navigation = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   
@@ -42,6 +42,8 @@ import { IoIosClose } from "react-icons/io";
                 <Image
                   src="kanangkuan-logo.svg"
                   alt="Kanang Kuan"
+                  width={56}     
+                  height={56}
                   className="w-[3.5rem] h-[3.5rem]"
                 />
                 <h2 className="font-main text-2xl hover:text-pink transition-colors">Kanang Kuan</h2>
@@ -108,4 +110,4 @@ import { IoIosClose } from "react-icons/io";
    )
  }
  
- export default Navbar
+ export default Navigation;
