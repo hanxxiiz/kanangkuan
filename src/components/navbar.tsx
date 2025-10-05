@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoIosClose } from "react-icons/io";
 
- const Navbar = () => {
+const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   
@@ -108,4 +108,4 @@ import { IoIosClose } from "react-icons/io";
    )
  }
  
- export default Navbar
+ export default Navbar;
