@@ -64,7 +64,7 @@ const Navigation = () => {
                   About
               </Link>
               <Link
-                href="/signin"
+                href="/auth/signin"
                 className="m-2 px-6 py-2 bg-pink cursor-pointer text-white text-lg font-main rounded-full hover:bg-lime hover:scale-110 transition-all duration-300"
               >
                 Get Started
