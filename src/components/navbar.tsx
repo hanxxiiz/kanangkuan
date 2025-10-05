@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoIosClose } from "react-icons/io";
 
@@ -38,7 +39,7 @@ import { IoIosClose } from "react-icons/io";
           <div className="flex justify-between h-16">
             <div className="flex flex-row items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <img
+                <Image
                   src="kanangkuan-logo.svg"
                   alt="Kanang Kuan"
                   className="w-[3.5rem] h-[3.5rem]"
