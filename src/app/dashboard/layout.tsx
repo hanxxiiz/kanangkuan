@@ -1,8 +1,11 @@
 import React from 'react'
+import Navbar from '@/components/dashboard/navbar'
 
 const layout = () => {
   return (
-    <div>layout</div>
+    <div className="min-h-screen bg-white"> 
+      <Navbar />
+    </div>
   )
 }
 
