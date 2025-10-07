@@ -11,10 +11,10 @@
   position: relative;
   width: 240px;
   height: 28px;
-  background: radial-gradient(circle, #101220, #101220);
+  background: radial-gradient(circle, #ecebec, #ecebec);
   border-radius: 30px;
   overflow: hidden;
-  border: 1px solid #101220;
+  border: 1px solid #ecebec;
 
 }
 

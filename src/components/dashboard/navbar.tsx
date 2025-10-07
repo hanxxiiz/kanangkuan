@@ -20,12 +20,12 @@ const Navbar = () => {
     <nav
       className={`fixed w-full bg-white shadow-md transition-transform duration-300`}
     >
-      <div className="max-w-8xl px-4  sm:px-6 lg:px-6">
+      <div className="max-w-8xl px-1 sm:px-2 lg:px-6">
         <div className="flex justify-between h-16 items-center">
           {/* Left section: sidebar icon + logo */}
-          <div className="flex flex-row items-center space-x-4">
+          <div className="flex flex-row items-center sm:space-x-1 lg:space-x-4">
             <button
-              className="p-2 rounded-md hover:cursor-pointer hover:text-[#101220] transition-all duration-200"
+              className="p-3 sm:p-2 rounded-md hover:cursor-pointer hover:text-[#101220] transition-all duration-200"
               onClick={() => console.log("Sidebar expand clicked!")}
             >
               <IoMenu className="text-2xl" />
@@ -37,18 +37,18 @@ const Navbar = () => {
                 alt="Kanang Kuan"
                 width={56}
                 height={56}
-                className="w-[3.5rem] h-[3.5rem]"
+                className="w-[2.5rem] h-[2.5rem] sm:w-[3.5rem] sm:h-[3.5rem]"
               />
-              <h2 className="font-main text-lime text-2xl hover:text-pink transition-colors">
+              <h2 className="font-main text-lime text-xl sm:text-2xl hover:text-pink transition-colors whitespace-nowrap">
                 Kanang Kuan
               </h2>
             </Link>
           </div>
 
           {/* Right section: level bar + notifications + profile */}
-          <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-3">
-              <span className="text-md font-main text-[#101220]">
+          <div className="flex items-center space-x-2 ml-auto sm:pl-0 sm:space-x-3 lg:space-x-8">
+            <div className="hidden sm:flex items-center space-x-3">
+              <span className="text-md font-body text-[#101220]">
                 Level {level}
               </span>
               <div className="level-container">
@@ -57,8 +57,6 @@ const Navbar = () => {
                 </div>
                 <div className="level-text text-xl font-body">{progress} XP</div>
               </div>
-              
-              
             </div>
 
             {/* Notifications */}
@@ -70,18 +68,18 @@ const Navbar = () => {
             </button>
 
             {/* Profile + dropdown */}
-            <div className="flex items-center space-x-1">
-              <Link href="/dashboard" className="flex items-center">
+            <div className="flex items-center -space-x-1 sm:space-x-0">
+              <Link href="/dashboard" className="flex items-center flex-shrink-0">
                 <Image
                   src="/temporary.PNG"
                   alt="Kanang Kuan"
                   width={40}
                   height={40}
-                  className="rounded-full w-[3rem] h-[3rem]"
+                  className="rounded-full w-[2.2rem] h-[2.2rem] sm:w-[3rem] sm:h-[3rem]"
                 />
               </Link>
               <button
-                className="relative rounded-full hover:cursor-pointer hover:text-[#101220] transition"
+                className="relative rounded-full hover:cursor-pointer hover:text-[#101220] transition flex-shrink-0"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
                 <RiArrowDropDownLine
