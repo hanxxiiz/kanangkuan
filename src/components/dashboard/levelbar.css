@@ -11,29 +11,29 @@
   position: relative;
   width: 240px;
   height: 28px;
-  background: radial-gradient(circle, #ecebec, #ecebec);
+  background: #101220;
   border-radius: 30px;
   overflow: hidden;
-  border: 1px solid #ecebec;
-
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .level-text {
   position: absolute;
   top: 51%;
-  left: 15%;
+  left: 30%;
   transform: translate(-50%, -50%);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 1px;
-  color: #fff;
+  color: #ffffff;
   z-index: 2;
 }
 
 .level-fill {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0px;
   height: 100%;
+  width: calc(100% - 30px); /* Add this */
   background: linear-gradient(90deg, #C401DB, #FD14BB);
   border-radius: 30px;
   transition: width 0.8s ease-in-out;

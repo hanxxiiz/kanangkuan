@@ -12,12 +12,24 @@
   --font-mono: var(--font-geist-mono);
   --font-main: var(--font-poppins);
   --font-body: var(--font-inter);
+  --font-regular: var(--font-regular);
+
+  --font-weight-main: 700;
+  --font-weight-regular: 400;
   
   --color-cyan: #10FFE2;
   --color-pink: #FD14BB;
   --color-lime: #8AFF00;
   --color-purple: #C401DB;
   --color-blue: #6715FF;
+}
+
+.font-main {
+  font-weight: 700 !important;
+}
+
+.font-regular {
+  font-weight: 400 !important;
 }
 
 @media (prefers-color-scheme: dark) {
