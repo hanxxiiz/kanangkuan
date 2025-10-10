@@ -18,7 +18,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
 
   return (
     <nav
-      className={`fixed w-full bg-white shadow-md transition-transform duration-300`}
+      className={`fixed top-0 left-0 w-full bg-white shadow-md transition-transform duration-300`}
     >
       <div className="max-w-8xl px-0 sm:px-2 lg:px-8">
         <div className="flex justify-between h-16 items-center">
@@ -47,7 +47,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
 
           {/* Right section: level bar + notifications + profile */}
           <div className="pl-5 flex items-center space-x-3 ml-auto sm:pl-0 sm:space-x-3 lg:space-x-8">
-            <div className="hidden sm:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-3">
               <span className="text-md font-body text-[#101220]">
                 Level {level}
               </span>

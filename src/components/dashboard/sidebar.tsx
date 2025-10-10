@@ -23,7 +23,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
     <div
       className={`${
         isOpen ? "w-64" : "w-20"
-      } h-screen bg-[#101220] text-black transition-all duration-300 flex flex-col overflow-hidden`}
+      } h-screen bg-[#101220] text-black transition-all duration-300 flex flex-col overflow-hidden fixed left-0 top-16 z-40`}
     >
       {/* Search Pill */}
       <div className={`mx-auto mt-10 ${isOpen ? "" : "mb-0.5"}`}>
@@ -106,7 +106,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
           );
         })}
 
-        <div className={`mt-4 mx-auto transition-all duration-300 overflow-hidden ${
+        <div className={`mt-4 mx-auto transition-all duration-300 ${
           isOpen ? "opacity-100 max-w-[250px]" : "opacity-0 max-w-0"
         }`}>
           <button
