@@ -6,26 +6,26 @@ import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
+import { IoSearchOutline } from "react-icons/io5";
 import "./levelbar.css";
 
 const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const level = 5;
   const progress = 60;
+  const notificationCount = 5;
 
   return (
     <nav
       className={`fixed top-0 left-0 w-full bg-white shadow-md transition-transform duration-300`}
     >
-      <div className="max-w-8xl px-0 sm:px-2 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+      <div className="max-w-8xl mx-auto px-3 sm:px-8 lg:px-12">
+        <div className="flex justify-between items-center h-16">
           {/* Left section: sidebar icon + logo */}
-          <div className="flex flex-row items-center sm:space-x-1 lg:space-x-4">
+          <div className="flex flex-row items-center space-x-2 sm:space-x-4 lg:space-x-6">
             <button
-              className="p-3 sm:p-2 rounded-md hover:cursor-pointer hover:text-[#101220] transition-all duration-200"
+              className="hidden lg:block p-3 sm:p-2 rounded-md hover:cursor-pointer hover:text-[#101220] transition-all duration-200"
               onClick={onMenuClick} 
             >
               <IoMenu className="text-2xl" />
@@ -46,8 +46,8 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
           </div>
 
           {/* Right section: level bar + notifications + profile */}
-          <div className="pl-5 flex items-center space-x-3 ml-auto sm:pl-0 sm:space-x-3 lg:space-x-8">
-            <div className="hidden md:flex items-center space-x-3">
+          <div className="flex items-center space-x-3 sm:space-x-5 lg:space-x-8">
+            <div className="hidden lg:flex items-center space-x-3">
               <span className="text-md font-body text-[#101220]">
                 Level {level}
               </span>
@@ -59,12 +59,24 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
               </div>
             </div>
 
+            {/* Search icon - visible only on mobile */}
+            <button
+              className="lg:hidden relative rounded-full hover:cursor-pointer text-[#101220] transition"
+              onClick={() => console.log("Search clicked!")}
+            >
+              <IoSearchOutline className="text-3xl" />
+            </button>
+
             {/* Notifications */}
             <button
-              className="relative rounded-full hover:cursor-pointer hover:text-[#101220] transition"
+              className="relative rounded-full hover:cursor-pointer hover:scale-105 text-[#101220] transition group"
               onClick={() => console.log("Notifications clicked!")}
             >
               <IoNotificationsOutline className="text-3xl" />
+              {/* Notification badge */}
+              <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-medium transition-colors group-hover:scale-105">
+                {notificationCount}
+              </span>
             </button>
 
             {/* Profile + dropdown */}
@@ -90,20 +102,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
                 />
               </button>
             </div>
-          </div>
-
-          {/* Mobile dropdown (empty for now, just structure kept) */}
-          <div
-            className={`md:hidden transition-all duration-300 ease-in-out ${
-              isMenuVisible
-                ? "max-h-64 opacity-100"
-                : "max-h-0 opacity-0 overflow-hidden"
-            }`}
-          >
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {/* Empty – add links later if needed */}
-            </div>
-          </div>
+          </div>         
         </div>
       </div>
     </nav>
