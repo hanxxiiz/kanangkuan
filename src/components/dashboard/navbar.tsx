@@ -18,7 +18,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full bg-white shadow-md transition-transform duration-300`}
+      className={`fixed top-0 left-0 w-full bg-white shadow-md transition-transform duration-300 z-50`}
     >
       <div className="max-w-8xl mx-auto px-3 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-16">

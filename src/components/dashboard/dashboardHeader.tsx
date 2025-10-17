@@ -4,7 +4,7 @@ import React from "react";
 
 const DashboardHeader = () => {
   return (
-    <div className="relative mx-auto max-w-[1000px] lg:max-w-[1200px] 2xl:max-w-[1900px] mt-5 sm:mt-10 sm:px-4">
+    <div className="relative mx-auto max-w-[1000px] lg:max-w-[1200px] 2xl:max-w-[1500px] mt-5 sm:mt-10 sm:px-4">
       {/* Desktop versions - outside card */}
       <img
         src="/dashboard-mascot-shadow.png"
