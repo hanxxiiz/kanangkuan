@@ -26,7 +26,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
   return (
     <>
       {/*Mobile/iPad horizontal navigation bar*/}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#000000] border-t border-gray-700 z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-black z-50">
         <div className="flex items-center justify-between py-2 px-2">
           {menuItems.slice(0, 2).map((item) => {
             const Icon = item.icon;

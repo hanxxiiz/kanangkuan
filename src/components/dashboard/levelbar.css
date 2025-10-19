@@ -3,7 +3,7 @@
 .level-container {
   position: relative;
   width: 240px;
-  height: 28px;
+  height: 30px;
 }
 
 
@@ -33,7 +33,6 @@
   position: absolute;
   top: 0px;
   height: 100%;
-  width: calc(100% - 30px); /* Add this */
   background: linear-gradient(90deg, #C401DB, #FD14BB);
   border-radius: 30px;
   transition: width 0.8s ease-in-out;

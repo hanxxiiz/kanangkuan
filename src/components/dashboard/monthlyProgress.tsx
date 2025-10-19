@@ -1,20 +1,14 @@
 import React from "react";
 
-const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-/**
- * MonthlyProgress renders a progress card similar to the provided mockup.
- * It shows a title, weekday headers, and a 5x7 grid of circular slots.
- * All dots are solid black by default (can be replaced with images later).
- */
 export default function MonthlyProgress() {
-  const rows = 5;
+  const rows = 4;
 
   return (
     <div className="w-full h-full">
-      <div className="mx-auto w-full h-full rounded-3xl bg-[#10FFE2] p-6 sm:p-8 min-h-[260px]">
+      <div className="mx-auto w-full h-full rounded-3xl bg-[#10FFE2] p-6 sm:p-8 min-h-[200px] shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)]">
         <h2 className="font-main text-2xl sm:text-3xl text-white">My Progress</h2>
-
         {/* Weekday Headers */}
         <div className="mt-4 grid grid-cols-7 gap-x-4 sm:gap-x-6 text-black">
           {daysOfWeek.map((day) => (
@@ -24,8 +18,8 @@ export default function MonthlyProgress() {
           ))}
         </div>
 
-        {/* Dots Grid (5 rows x 7 columns) */}
-        <div className="mt-3 grid grid-rows-5 gap-y-4 sm:gap-y-3">
+        {/* Dots Grid (4 rows x 7 columns) */}
+        <div className="mt-3 grid grid-rows-4 gap-y-4 sm:gap-y-6">
           {Array.from({ length: rows }).map((_, rowIndex) => (
             <div
               key={rowIndex}

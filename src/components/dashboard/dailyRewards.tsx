@@ -3,7 +3,7 @@ import React from "react";
 const DailyRewards = () => {
   return (
     <div className="w-full h-full">
-      <div className="relative mx-auto w-full h-full rounded-3xl bg-[#6715FF] p-6 sm:p-8 text-white min-h-[260px] overflow-hidden">
+      <div className="relative mx-auto w-full h-full rounded-3xl bg-[#6715FF] p-6 sm:p-8 text-white min-h-[260px] overflow-hidden shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)]">
         {/* Image behind content */}
         <img
           src="/dashboard-mascot-2.png"
