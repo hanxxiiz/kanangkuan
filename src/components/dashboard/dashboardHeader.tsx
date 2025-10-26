@@ -9,7 +9,7 @@ const DashboardHeader = () => {
       <img
         src="/dashboard-mascot-shadow.png"
         alt="Decorative"
-        className="hidden lg:block absolute z-20 right-25 w-[330px] h-[290px] pointer-events-none opacity-80"
+        className="hidden lg:block absolute z-20 right-25 w-[330px] h-[290px] pointer-events-none opacity-90"
         style={{ bottom: 0 }}
       />
       <img

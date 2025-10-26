@@ -1,0 +1,399 @@
+.spinwheel-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.spinwheel-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000; 
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinwheel-container .wheel{
+  transform-origin: center center;
+  width: 500px;
+  height: 500px;
+  background-color: rgb(0, 0, 0);
+  border-radius: 50%;
+  border: 15px solid rgb(0, 0, 0);
+  position: relative;
+  transition: 5s;
+  overflow: hidden;
+}
+
+.spinwheel-container .wheel div {
+  width: 200px;
+  height: 50%;
+  position: absolute;
+  clip-path: polygon(100% 0, 50% 100%, 0 0);
+  transform-origin: bottom;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: rgb(162, 54, 162); 
+  left: 135px;
+}
+
+.spinwheel-container .wheel .one {
+  background-color: #3f5165;
+  left: 28.5%;
+}
+
+.spinwheel-container .wheel .two {
+  background-color: #ff9800;
+  transform: rotate(45deg);
+}
+
+.spinwheel-container .wheel .three {
+  background-color: #e91e63;
+  transform: rotate(90deg);
+}
+
+.spinwheel-container .wheel .four {
+  background-color: #4caf50;
+  transform: rotate(135deg);
+}
+
+.spinwheel-container .wheel .five {
+  background-color: #f9fffe;
+  transform: rotate(180deg);
+}
+
+.spinwheel-container .wheel .six {
+  background-color: #000000;
+  transform: rotate(225deg);
+}
+
+.spinwheel-container .wheel .seven {
+  background-color: #9c7bb0;
+  transform: rotate(270deg);
+}
+
+.spinwheel-container .wheel .eight {
+  background-color: #744336;
+  transform: rotate(315deg);
+}
+
+.spinwheel-container .arrow {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+}
+
+.spinwheel-container .arrow::before {
+  content: "\1f817";
+  font-size: 50px;
+}
+
+.spinwheel-container #spin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #000000;
+  font-size: 20px;
+  font-weight: bold;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  border: none;
+  transition: 0.2s;
+}
+
+.spinwheel-container #spin:hover {
+  background-color: #eee;
+}
+
+
+.spinwheel-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.spinwheel-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(52, 73, 94, 0.95);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinwheel-container .wheel{
+  transform-origin: center center;
+  width: 500px;
+  height: 500px;
+  background-color: #ccc;
+  border-radius: 50%;
+  border: 15px solid #ddd;
+  position: relative;
+  transition: 5s;
+  overflow: hidden;
+}
+
+.spinwheel-container .wheel div {
+  width: 200px;
+  height: 50%;
+  position: absolute;
+  clip-path: polygon(100% 0, 50% 100%, 0 0);
+  transform-origin: bottom;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  left: 135px;
+}
+
+.spinwheel-container .wheel .one {
+  background-color: #3f5165;
+  left: 28.5%;
+}
+
+.spinwheel-container .wheel .two {
+  background-color: #ff9800;
+  transform: rotate(45deg);
+}
+
+.spinwheel-container .wheel .three {
+  background-color: #e91e63;
+  transform: rotate(90deg);
+}
+
+.spinwheel-container .wheel .four {
+  background-color: #4caf50;
+  transform: rotate(135deg);
+}
+
+.spinwheel-container .wheel .five {
+  background-color: #009688;
+  transform: rotate(180deg);
+}
+
+.spinwheel-container .wheel .six {
+  background-color: #795548;
+  transform: rotate(225deg);
+}
+
+.spinwheel-container .wheel .seven {
+  background-color: #9c7bb0;
+  transform: rotate(270deg);
+}
+
+.spinwheel-container .wheel .eight {
+  background-color: #744336;
+  transform: rotate(315deg);
+}
+
+.spinwheel-container .arrow {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+}
+
+.spinwheel-container .arrow::before {
+  content: "\1f817";
+  font-size: 50px;
+}
+
+.spinwheel-container #spin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #000000;
+  font-size: 20px;
+  font-weight: bold;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  border: none;
+  transition: 0.2s;
+}
+
+.spinwheel-container #spin:hover {
+  background-color: #eee;
+}
+
+/* Large screens - 1440px and above */
+@media screen and (min-width: 1440px) {
+  .spinwheel-container .wheel {
+    width: 600px;
+    height: 600px;
+    border: 18px solid #000000;
+  }
+
+  .spinwheel-container .wheel div {
+    width: 240px;
+    font-size: 24px;
+    left: 163px;
+  }
+
+  .spinwheel-container .wheel .one {
+    left: 28.5%;
+  }
+
+  .spinwheel-container .arrow {
+    top: 40px;
+  }
+
+  .spinwheel-container .arrow::before {
+    font-size: 60px;
+  }
+
+  .spinwheel-container #spin {
+    width: 95px;
+    height: 95px;
+    font-size: 24px;
+  }
+}
+
+/* Extra large screens - 1920px and above */
+@media screen and (min-width: 1920px) {
+  .spinwheel-container .wheel {
+    width: 700px;
+    height: 700px;
+    border: 20px solid #000000;
+  }
+
+  .spinwheel-container .wheel div {
+    width: 280px;
+    font-size: 28px;
+    left: 189px;
+  }
+
+  .spinwheel-container .wheel .one {
+    left: 28.5%;
+  }
+
+  .spinwheel-container .arrow {
+    top: 50px;
+  }
+
+  .spinwheel-container .arrow::before {
+    font-size: 70px;
+  }
+
+  .spinwheel-container #spin {
+    width: 110px;
+    height: 110px;
+    font-size: 28px;
+  }
+}
+
+/* iPad adjustments (portrait and landscape) */
+@media screen and (max-width: 1024px) and (min-width: 768px) {
+  .spinwheel-container .wheel {
+    width: 400px;
+    height: 400px;
+    border: 12px solid #000000;
+  }
+
+  .spinwheel-container .wheel div {
+    width: 160px;
+    font-size: 16px;
+    left: 108px;
+  }
+
+  .spinwheel-container .wheel .one {
+    left: 28.5%;
+  }
+
+  .spinwheel-container .arrow {
+    top: 20px;
+  }
+
+  .spinwheel-container .arrow::before {
+    font-size: 40px;
+  }
+
+  .spinwheel-container #spin {
+    width: 70px;
+    height: 70px;
+    font-size: 18px;
+  }
+}
+
+/* Mobile devices - 539px and below */
+@media screen and (max-width: 539px) {
+  .spinwheel-container .wheel {
+    width: 300px;
+    height: 300px;
+    border: 10px solid #000000;
+  }
+
+  .spinwheel-container .wheel div {
+    width: 120px;
+    font-size: 14px;
+    left: 81px;
+  }
+
+  .spinwheel-container .wheel .one {
+    left: 28.5%;
+  }
+
+  .spinwheel-container .arrow {
+    top: 15px;
+  }
+
+  .spinwheel-container .arrow::before {
+    font-size: 35px;
+  }
+
+  .spinwheel-container #spin {
+    width: 60px;
+    height: 60px;
+    font-size: 16px;
+  }
+}
+
+/* Extra small devices - 400px and below */
+@media screen and (max-width: 400px) {
+  .spinwheel-container .wheel {
+    width: 280px;
+    height: 280px;
+    border: 8px solid #ddd;
+  }
+
+  .spinwheel-container .wheel div {
+    width: 112px;
+    font-size: 12px;
+    left: 75.6px;
+  }
+
+  .spinwheel-container .wheel .one {
+    left: 28.5%;
+  }
+
+  .spinwheel-container #spin {
+    width: 55px;
+    height: 55px;
+    font-size: 14px;
+  }
+}

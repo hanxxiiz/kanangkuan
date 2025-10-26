@@ -7,13 +7,11 @@ import { IoMenu } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
-import "./levelbar.css";
+import LevelBar from "./levelBar";
 
 const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const level = 5;
-  const progress = 60;
   const notificationCount = 5;
 
   return (
@@ -39,25 +37,18 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
                 height={56}
                 className="w-[2.5rem] h-[2.5rem] sm:w-[3.5rem] sm:h-[3.5rem]"
               />
-              <h2 className="font-main text-lime text-xl sm:text-2xl hover:text-pink mr-12 sm:mr-0 transition-colors whitespace-nowrap">
+              <h2 className="font-main text-lime text-xl sm:text-2xl hover:text-purple mr-12 sm:mr-0 transition-colors whitespace-nowrap">
                 Kanang Kuan
               </h2>
             </Link>
           </div>
 
           {/* Right section: level bar + notifications + profile */}
-          <div className="flex items-center space-x-3 sm:space-x-5 lg:space-x-8">
-            <div className="hidden lg:flex items-center space-x-3">
-              <span className="text-md font-body text-[#101220]">
-                Level {level}
-              </span>
-              <div className="level-container">
-                <div className="level-bar">
-                  <div className="level-fill" style={{ width: `${progress}%` }}></div>
-                </div>
-                <div className="level-text text-xl font-body">{progress} XP / 6666 XP</div>
-              </div>
+          <div className="flex items-center space-x-3 sm:space-x-5 lg:space-x-10">
+            <div className="hidden lg:flex items-center justify-center space-x-3 h-16">
+              <LevelBar />
             </div>
+
 
             {/* Search icon - visible only on mobile */}
             <button
@@ -74,7 +65,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
             >
               <IoNotificationsOutline className="text-3xl" />
               {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-medium transition-colors group-hover:scale-105">
+              <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-regular transition-colors group-hover:scale-105">
                 {notificationCount}
               </span>
             </button>

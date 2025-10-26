@@ -6,9 +6,11 @@ import DashboardHeader from "@/components/dashboard/dashboardHeader";
 import LeaderboardCard from "@/components/dashboard/leaderboardCard";
 import MonthlyProgress from "@/components/dashboard/monthlyProgress";
 import DeckCard from "@/components/dashboard/deckCard";
+import SpinWheel from "@/components/dashboard/spinningWheel/spinningWheel";
 
 export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(false);
+  const [isWheelOpen, setIsWheelOpen] = useState(false); // Wheel modal state
 
   // Detect mobile viewport on mount & resize
   useEffect(() => {
@@ -24,7 +26,6 @@ export default function Dashboard() {
     { rank: 3, name: "username", xp: 666 },
   ];
 
-  // if mobile, make sure rank 1 appears first
   const sortedLeaderboard = isMobile
     ? [...leaderboardData].sort((a, b) => {
         if (a.rank === 1) return -1;
@@ -37,12 +38,13 @@ export default function Dashboard() {
     <div className="space-y-12">
       <DashboardHeader />
       <div className="justify-center items-center relative mx-auto max-w-[1000px] lg:max-w-[1200px] 2xl:max-w-[1500px] sm:px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch ">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
           <div className="lg:col-span-2 h-full">
             <MonthlyProgress />
           </div>
           <div className="lg:col-span-1 h-full">
-            <DailyRewards />
+            {/* Pass onClick to open SpinTheWheel */}
+            <DailyRewards onClick={() => setIsWheelOpen(true)} />
           </div>
         </div>
 
@@ -52,7 +54,6 @@ export default function Dashboard() {
           </h2>
         </div>
 
-        {/* Renders leaderboard — automatically reordered on mobile */}
         <div className="flex justify-center items-center sm:gap-0 lg:gap-6 flex-wrap md:flex-no-wrap lg:flex-wrap">
           {sortedLeaderboard.map((user) => (
             <LeaderboardCard
@@ -69,15 +70,22 @@ export default function Dashboard() {
             Jump back in
           </h2>
         </div>
-        {/* 2. USE THE NEW COMPONENT HERE */}
-        {/* This grid will stack on mobile and go side-by-side on larger screens */}
+
         <div className="grid grid-cols-1 gap-6">
-          <DeckCard deckName="Deck Name #1" cardCount={25} />
+          <DeckCard deckName="NANAMI NANAMI NANAMI NANAMI NANAMI NANAMI NANAMI NANAMI" cardCount={25} />
           <DeckCard deckName="Deck Name #1" cardCount={25} />
           <DeckCard deckName="Deck Name #1" cardCount={25} />
         </div>
+
         <div className="pt-10"></div>
       </div>
+
+      {/* SpinTheWheel Modal */}
+      <SpinWheel
+        isOpen={isWheelOpen}
+        onClose={() => setIsWheelOpen(false)}
+      />
+
     </div>
   );
 }

@@ -30,7 +30,7 @@ export default function MonthlyProgress() {
                   key={`${rowIndex}-${colIndex}`}
                   className={[
                     "flex items-center justify-center",
-                    "h-8 w-8 sm:h-10 sm:w-10 rounded-full",
+                    "h-6 w-6 sm:h-10 sm:w-10 rounded-full",
                     "bg-black",
                   ].join(" ")}
                 />

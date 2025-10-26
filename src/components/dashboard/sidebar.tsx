@@ -17,7 +17,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
   
   const menuItems = [
     { icon: BsFillGridFill, label: "Dashboard", href: "/dashboard", iconSize: "text-xl" },
-    { icon: FaFolder, label: "My Folders", href: "/dashboard/my_folders", iconSize: "text-xl" },
+    { icon: FaFolder, label: "My Decks", href: "/dashboard/my_folders", iconSize: "text-xl" },
     { icon: IoPerson, label: "Profile", href: "/dashboard/profile", iconSize: "text-xl" },
     { icon: BsBarChartFill, label: "Leaderboard", href: "/dashboard/leaderboard", iconSize: "text-xl" },
     { icon: IoSettingsSharp, label: "Settings", href: "/dashboard/settings", iconSize: "text-xl" },
