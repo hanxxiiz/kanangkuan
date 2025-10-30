@@ -28,7 +28,7 @@ export default function SignInPage() {
               Hello, Classmate
             </h1>
             <p className="p-3 font-body text-xs text-white">
-              Don't have an account yet?
+              {"Don't have an account yet?"}
             </p>
             <Link
               href="/auth/signup"
