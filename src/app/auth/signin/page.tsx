@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { login } from '@/lib/auth-actions';
-import SignInWithGoogleButton from './SignInWithGoogleButton';
+import { signInWithGoogle } from '@/lib/auth-actions';
+import { FcGoogle } from "react-icons/fc";
+import 'animate.css';
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
@@ -45,64 +44,73 @@ export default function SignInPage() {
           <h2 className="text-4xl font-main text-gray-900 mt-28">
             Sign in
           </h2>
-
-          <div className="mt-8 space-y-7">
-            <div className="relative">
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full font-body border-gray-500 border-b py-1 focus:outline-none focus:border-black focus:border-b-2 transition-colors peer"
-                autoComplete="off"
-              />
-              <label
-                htmlFor="email"
-                className="font-body absolute text-xs left-0 -top-4 cursor-text text-gray-500 peer-focus:text-black transition-all"
-              >
-                Email
-              </label>
-            </div>
-
-            <div className="relative">
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full font-body border-gray-500 border-b py-1 focus:outline-none focus:border-black focus:border-b-2 transition-colors peer"
-                autoComplete="off"
-              />
-              <label
-                htmlFor="password"
-                className="font-body absolute text-xs left-0 -top-4 cursor-text text-gray-500 peer-focus:text-black transition-all"
-              >
-                Password
-              </label>
-            </div>
-
-            <div className="text-right -mt-7">
-              <button className="text-xs font-body text-gray-400 hover:text-cyan cursor-pointer">
-                Forgot password?
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center justify-center">
-              <button
-                type="submit"
-                formAction={login}
-                className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
-              >
-                Sign in
-              </button>
-
-              <div className="text-center font-body text-xs text-gray-400 my-2">
-                or continue with
+          <form action="">
+            <div className="mt-8 space-y-7">
+              <div className="relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder=" "
+                  className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                  autoComplete="off"
+                />
+                <label
+                  htmlFor="email"
+                  className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                >
+                  Email
+                </label>
               </div>
 
-              <SignInWithGoogleButton />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder=" "
+                  className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                  autoComplete="off"
+                />
+                <label
+                  htmlFor="password"
+                  className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                >
+                  Password
+                </label>
+              </div>
+
+              <div className="text-right -mt-7">
+                <button className="text-xs font-body text-gray-400 hover:text-cyan cursor-pointer">
+                  Forgot password?
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center justify-center">
+                <button
+                  formAction={login}
+                  className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
+                >
+                  Sign in
+                </button>
+
+                <div className="text-center font-body text-xs text-gray-400 my-2">
+                  or continue with
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    signInWithGoogle();
+                  }}
+                  className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base cursor-pointer"
+                >
+                  <FcGoogle className="inline-block mr-2" />
+                    Google
+                </button>
+              </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

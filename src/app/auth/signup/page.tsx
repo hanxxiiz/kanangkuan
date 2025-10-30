@@ -5,10 +5,6 @@ import Link from 'next/link';
 import { signup } from '@/lib/auth-actions';
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
@@ -25,14 +21,13 @@ export default function SignUpPage() {
                     name="email"
                     id="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full font-body border-gray-500 border-b py-1 focus:outline-none focus:border-black focus:border-b-2 transition-colors peer"
+                    placeholder=" "
+                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="email"
-                    className="font-body absolute text-xs left-0 -top-4 cursor-text text-gray-500 peer-focus:text-black transition-all"
+                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Email
                   </label>
@@ -43,14 +38,13 @@ export default function SignUpPage() {
                     name="username"
                     id="username"
                     type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full font-body border-gray-500 border-b py-1 focus:outline-none focus:border-black focus:border-b-2 transition-colors peer"
+                    placeholder=" "
+                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="username"
-                    className="font-body absolute text-xs left-0 -top-4 cursor-text text-gray-500 peer-focus:text-black transition-all"
+                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Username
                   </label>
@@ -59,15 +53,15 @@ export default function SignUpPage() {
                 <div className="relative">
                   <input
                     id="password"
+                    name="password"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full font-body border-gray-500 border-b py-1 focus:outline-none focus:border-black focus:border-b-2 transition-colors peer"
+                    placeholder=" "
+                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="password"
-                    className="font-body absolute text-xs left-0 -top-4 cursor-text text-gray-500 peer-focus:text-black transition-all"
+                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Password
                   </label>
@@ -77,14 +71,13 @@ export default function SignUpPage() {
                   <input
                     id="confirmPassword"
                     type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full font-body border-gray-500 border-b py-1 focus:outline-none focus:border-black focus:border-b-2 transition-colors peer"
+                    placeholder=" "
+                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="confirmPassword"
-                    className="font-body absolute text-xs left-0 -top-4 cursor-text text-gray-500 peer-focus:text-black transition-all"
+                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Confirm Password
                   </label>
@@ -93,7 +86,6 @@ export default function SignUpPage() {
 
                 <div className="flex flex-col items-center justify-center">
                   <button
-                    type="submit"
                     formAction={signup}
                     className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
                   >
