@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DailyRewards from "@/components/dashboard/dailyRewards";
-import DashboardHeader from "@/components/dashboard/dashboardHeader";
-import LeaderboardCard from "@/components/dashboard/leaderboardCard";
-import MonthlyProgress from "@/components/dashboard/monthlyProgress";
-import DeckCard from "@/components/dashboard/deckCard";
-import SpinWheel from "@/components/dashboard/spinningWheel/spinningWheel";
+import DailyRewards from "@/components/dashboard/DailyRewards";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
+import DeckCard from "@/components/dashboard/DeckCard";
+import SpinWheel from "@/components/dashboard/SpinningWheel/SpinningWheel";
+import ShowReward from "@/components/dashboard/SpinningWheel/ShowReward";
+import MonthlyProgress from "@/components/dashboard/MonthlyProgress";
+
 
 export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(false);
@@ -85,7 +87,6 @@ export default function Dashboard() {
         isOpen={isWheelOpen}
         onClose={() => setIsWheelOpen(false)}
       />
-
     </div>
   );
 }

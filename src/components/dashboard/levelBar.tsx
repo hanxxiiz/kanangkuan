@@ -27,7 +27,7 @@ const LevelBar = () => {
 
       {/* 3. Hero Image */}
       <img
-        src="/levelBarHero.svg"
+        src="/dashboard/levelBarHero.svg"
         alt="Level Hero"
         className="absolute left-9 top-7 -translate-y-1/2 w-10 h-12 z-20"
       />

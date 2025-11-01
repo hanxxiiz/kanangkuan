@@ -7,13 +7,13 @@ const DashboardHeader = () => {
     <div className="relative mx-auto max-w-[1000px] lg:max-w-[1200px] 2xl:max-w-[1500px] mt-5 sm:mt-10 sm:px-4">
       {/* Desktop-only mascot images */}
       <img
-        src="/dashboard-mascot-shadow.png"
+        src="/dashboard/dashboard-mascot-shadow.png"
         alt="Decorative"
         className="hidden lg:block absolute z-20 right-25 w-[330px] h-[290px] pointer-events-none opacity-90"
         style={{ bottom: 0 }}
       />
       <img
-        src="/dashboard-mascot.png"
+        src="/dashboard/dashboard-mascot.png"
         alt="Decorative"
         className="hidden lg:block absolute z-20 right-0 w-[350px] h-auto pointer-events-none"
         style={{ bottom: 0 }}
@@ -28,7 +28,7 @@ const DashboardHeader = () => {
         {/* Mobile/Tablet*/}
         <div className="absolute z-0 -right-7 -bottom-4 w-[280px] sm:w-[280px] md:w-[350px] lg:hidden ">
           <img
-            src="/dashboard-mascot.png"
+            src="/dashboard/dashboard-mascot.png"
             alt="Decorative"
             className="w-full h-auto pointer-events-none"
           />
