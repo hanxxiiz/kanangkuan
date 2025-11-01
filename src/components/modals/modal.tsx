@@ -26,14 +26,14 @@ function Modal({
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div 
-                        className="absolute inset-0 bg-gradient-to-br from-pink/15 via-yellow-300/25 to-cyan/25 backdrop-blur-xs"
+                        className="absolute inset-0 bg-black/25 backdrop-blur-xs"
                         onClick={() => setShowModal(false)}
                     />
 
                     <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-4 z-10">
                         <div className="text-left font-main">
-                            <h2 className="text-4xl font-semibold mb-2">New Folder</h2>
-                            <div className="h-px w-full bg-black" />
+                            <h2 className="text-4xl font-semibold">New Folder</h2>
+                            <div className="h-px my-2 w-full bg-black" />
                             <div className="flex-1 overflow-auto mb-6">
                                 {children}
                             </div>
