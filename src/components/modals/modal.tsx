@@ -32,7 +32,7 @@ function Modal({
 
                     <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-4 z-10">
                         <div className="text-left font-main">
-                            <h2 className="text-4xl font-semibold">New Folder</h2>
+                            <h2 className="text-4xl font-semibold">{heading}</h2>
                             <div className="h-px my-2 w-full bg-black" />
                             <div className="flex-1 overflow-auto mb-6">
                                 {children}

@@ -9,21 +9,21 @@ import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
 
-export default function MyDecks() {
-  const { Modal , setShowModal} = useContext(ModalContext);
-  const router = useRouter(); 
+type ModalType = "folder" | "deck" | null;
 
-  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
-  const [showNewDeckModal, setShowNewDeckModal] = useState(false);
+export default function MyDecksPage() {
+  const { Modal, setShowModal } = useContext(ModalContext);
+  const router = useRouter();
 
-  const openNewFolderModal = () => {
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+
+  const openModal = (type: ModalType) => {
+    setActiveModal(type);
     setShowModal(true);
-    setShowNewFolderModal(true);
   };
 
-  const openNewDeckModal = () => {
-    setShowModal(true);
-    setShowNewDeckModal(true);
+  const handleAction = () => {
+    router.push("/");
   };
 
   return (
@@ -34,8 +34,8 @@ export default function MyDecks() {
           console.log("Add button clicked!");
         }}
         addOptions={[
-          { label: "New Folder", onClick: openNewFolderModal },
-          { label: "New Deck", onClick: openNewDeckModal },
+          { label: "New Folder", onClick: () => openModal("folder") },
+          { label: "New Deck", onClick: () => openModal("deck") },
         ]}
         filterOptions={[
           { label: "Folders", onClick: () => console.log("Folders Only") },
@@ -45,33 +45,25 @@ export default function MyDecks() {
           { label: "Oldest to Newest", onClick: () => console.log("Oldest first") },
         ]}
       >
-        <Folder color="cyan" folderName="please?" deckCount={2} />
+        <Folder id="1" color="cyan" folderName="please?" deckCount={2} />
         <Deck color="lime" deckName="huh?" cardCount={3} />
       </DecksPageLayout>
 
-      {showNewFolderModal && (
+      {activeModal === "folder" && (
         <Modal
           heading="New Folder"
           actionButtonText="Create"
-          onAction={() => {
-            router.push("/");
-            setShowModal(false);
-            setShowNewFolderModal(false);
-          }}
+          onAction={handleAction}
         >
           <NewFolderModal />
         </Modal>
       )}
 
-      {showNewDeckModal && (
+      {activeModal === "deck" && (
         <Modal
           heading="New Deck"
           actionButtonText="Create"
-          onAction={() => {
-            router.push("/");
-            setShowModal(false);
-            setShowNewDeckModal(false);
-          }}
+          onAction={handleAction}
         >
           <NewDeckModal />
         </Modal>

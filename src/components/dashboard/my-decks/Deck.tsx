@@ -1,10 +1,11 @@
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 interface DeckProps{
+    id: string,
     color?: "pink" | "cyan" | "lime" | "purple" | "blue";
     deckName?: string;
     cardCount?: number;
-    onClick?: () => void;
 }
 
 const colorMap = {
@@ -16,15 +17,22 @@ const colorMap = {
 };
 
 export default function Deck({
+    id,
     color = "pink",
     deckName = "My Deck",
     cardCount,
-    onClick = () => {},
 }:DeckProps) {
     const [fromColor, toColor] = colorMap[color || "pink"];
+
+    const router = useRouter();
+    const handleClick = () => {
+        router.push(`/dashboard/my-decks/${id}`);
+    };
   return (
     <>
-        <div className="flex items-center justify-center p-8">
+        <div className="flex items-center justify-center p-8"
+            onClick={handleClick}
+        >
             <div className="relative w-[400px] cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-5">
                 <div className={`bg-gradient-to-br ${fromColor} ${toColor} rounded-[50px] pt-8`}>
                     <div className="bg-white rounded-t-[30px] p-8 mx-8">

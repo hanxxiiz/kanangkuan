@@ -1,10 +1,11 @@
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 interface FolderProps{
+    id: string,
     color?: "pink" | "cyan" | "lime" | "purple" | "blue";
     folderName?: string;
     deckCount?: number;
-    onClick?: () => void;
 }
 
 const colorMap = {
@@ -16,16 +17,23 @@ const colorMap = {
 };
 
 export default function Folder({
+    id,
     color = "pink",
     folderName = "My Folder",
     deckCount,
-    onClick = () => {},
 }:FolderProps) {
     const [fromColor, toColor] = colorMap[color || "pink"];
 
+    const router = useRouter();
+    const handleClick = () => {
+        router.push(`/dashboard/my-decks/folder/${id}`);
+    };
+
   return (
     <>
-        <div className="flex items-center justify-center p-8">
+        <div className="flex items-center justify-center p-8"
+            onClick={handleClick}
+        >
             <div className="relative w-[400px] cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-5">
                 <div className={`absolute top-0 left-0 w-3/5 h-40 bg-gradient-to-b ${toColor} ${fromColor} rounded-t-[50px]`}>
                     <div className="absolute mt-7 left-7 right-0 h-8 bg-white rounded-tl-full"></div>
