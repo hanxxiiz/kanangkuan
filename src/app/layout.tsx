@@ -8,6 +8,12 @@ const poppinsBold = Poppins({
   variable: "--font-poppins"
 });
 
+const poppinsNormal = Poppins({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-regular",
+});
+
 const interRegular = Inter({
   subsets: ["latin"],
   weight: "400",
@@ -27,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppinsBold.variable} ${interRegular.variable} antialiased`}
+        className={`${poppinsBold.variable} ${poppinsNormal.variable} ${interRegular.variable} antialiased`}
       >
         {children}
       </body>
