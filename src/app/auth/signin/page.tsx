@@ -44,7 +44,7 @@ export default function SignInPage() {
           <h2 className="text-4xl font-main text-gray-900 mt-28">
             Sign in
           </h2>
-          <form action="">
+          <form action={login}>
             <div className="mt-8 space-y-7">
               <div className="relative">
                 <input
@@ -88,7 +88,7 @@ export default function SignInPage() {
 
               <div className="flex flex-col items-center justify-center">
                 <button
-                  formAction={login}
+                  type="submit"
                   className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
                 >
                   Sign in
