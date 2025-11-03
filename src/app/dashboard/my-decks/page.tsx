@@ -6,14 +6,14 @@ import Deck from "@/components/dashboard/my-decks/Deck";
 import NewFolderModal from "@/components/dashboard/my-decks/NewFolderModal";
 import { ModalContext } from "@/components/modals/providers";
 import { useContext, useState } from "react";
-import { useRouter } from "next/navigation";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
+import { useFolders } from "@/lib/hooks/useFolders";
+import { useDecks } from "@/lib/hooks/useDecks";
 
 type ModalType = "folder" | "deck" | null;
 
 export default function MyDecksPage() {
-  const { Modal, setShowModal } = useContext(ModalContext);
-  const router = useRouter();
+  const { setShowModal } = useContext(ModalContext);
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
@@ -22,9 +22,16 @@ export default function MyDecksPage() {
     setShowModal(true);
   };
 
-  const handleAction = () => {
-    router.push("/");
-  };
+  const { folders, folderLoading, folderError } = useFolders();
+  const { decks, deckLoading, deckError } = useDecks();
+  
+  if (folderLoading || deckLoading) {
+    return <div>My Decks Page is Loading...</div>
+  }
+
+  if (folderError || deckError) {
+    return <div>Sorry something went wrong in My Decks Page... {folderError} {deckError} </div>
+  }
 
   return (
     <div className="w-full bg-white p-10">
@@ -38,35 +45,45 @@ export default function MyDecksPage() {
           { label: "New Deck", onClick: () => openModal("deck") },
         ]}
         filterOptions={[
-          { label: "Folders", onClick: () => console.log("Folders Only") },
-          { label: "Decks", onClick: () => console.log("Decks Only") },
+          { label: "All Folders", onClick: () => console.log("Folders Only") },
+          { label: "All Decks", onClick: () => console.log("Decks Only") },
           { label: "A–Z", onClick: () => console.log("Sort A–Z") },
           { label: "Newest to Oldest", onClick: () => console.log("Newest first") },
           { label: "Oldest to Newest", onClick: () => console.log("Oldest first") },
         ]}
       >
-        <Folder id="1" color="cyan" folderName="please?" deckCount={2} />
-        <Deck color="lime" deckName="huh?" cardCount={3} />
+        {folders.length === 0 && decks.length === 0 ? (
+          <div className="text-gray-500 text-7xl font-main">Nothing here yet</div>
+        ) : (
+          <>
+            {folders.map((folder) => (
+              <Folder
+                key={folder.id}
+                id={folder.id}
+                color={folder.folder_color}
+                folderName={folder.folder_name}
+                deckCount={decks.filter((deck) => deck.folder_id === folder.id).length}
+              />
+            ))}
+            {decks.map((deck) => (
+              <Deck
+                key={deck.id}
+                id={deck.id}
+                color={deck.deck_color}
+                deckName={deck.deck_name}
+                cardCount={folders.length}
+              />
+            ))}
+          </>
+        )}
       </DecksPageLayout>
 
       {activeModal === "folder" && (
-        <Modal
-          heading="New Folder"
-          actionButtonText="Create"
-          onAction={handleAction}
-        >
           <NewFolderModal />
-        </Modal>
       )}
 
       {activeModal === "deck" && (
-        <Modal
-          heading="New Deck"
-          actionButtonText="Create"
-          onAction={handleAction}
-        >
           <NewDeckModal />
-        </Modal>
       )}
     </div>
   );
