@@ -7,7 +7,7 @@ import { IoMenu } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
-import LevelBar from "./LevelBar";
+import LevelBar from "./levelBar";
 
 const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

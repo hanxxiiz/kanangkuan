@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { signup } from '@/lib/auth-actions';
 
@@ -14,7 +13,7 @@ export default function SignUpPage() {
             <h2 className="text-4xl font-main text-gray-900 mt-28">
               Sign up
             </h2>
-            <form action="">
+            <form action={signup}>
               <div className="mt-8 space-y-7">
                 <div className="relative">
                   <input
@@ -86,7 +85,7 @@ export default function SignUpPage() {
 
                 <div className="flex flex-col items-center justify-center">
                   <button
-                    formAction={signup}
+                    type="submit"
                     className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
                   >
                     Sign up

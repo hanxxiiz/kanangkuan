@@ -22,6 +22,12 @@
   --color-lime: #8AFF00;
   --color-purple: #C401DB;
   --color-blue: #6715FF;
+
+  --color-dark-cyan: #12D2BB;
+  --color-dark-pink: #C71494;
+  --color-dark-lime: #80D817;
+  --color-dark-purple: #9214A0;
+  --color-dark-blue: #4A16AA;
 }
 
 .font-main {

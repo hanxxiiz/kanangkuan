@@ -20,9 +20,9 @@ export const Button = ({
     else if (variant === "outline") variantClasses = "border border-black text-black hover:bg-black hover:text-white";
 
     let sizeClasses = "";
-    if (size === "sm") sizeClasses = "px-3 text-xs";
-    else if (size === "md") sizeClasses = "px-4 text-sm";
-    else if (size === "lg") sizeClasses = "px-10 text-base";
+    if (size === "sm") sizeClasses = "px-3 py-1 text-xs";
+    else if (size === "md") sizeClasses = "px-4 py-1 text-sm";
+    else if (size === "lg") sizeClasses = "px-10 py-1 text-base";
 
     return (
     <button
