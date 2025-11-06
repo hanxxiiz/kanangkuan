@@ -102,7 +102,7 @@ const BasicReview = () => {
         </button>
       </div>
       
-      <style jsx>{`
+      <style>{`
         @keyframes slideOutLeft {
           from {
             transform: translateX(0) scale(1);
