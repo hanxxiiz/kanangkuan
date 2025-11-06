@@ -7,10 +7,17 @@ import { IoMenu } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
-import LevelBar from "./levelBar";
+import LevelBar from "./LevelBar";
 
-const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+const Navbar = ({ 
+  onMenuClick,
+  isDropdownOpen,
+  onDropdownToggle 
+}: { 
+  onMenuClick: () => void;
+  isDropdownOpen?: boolean;
+  onDropdownToggle?: () => void;
+}) => {
 
   const notificationCount = 5;
 
@@ -31,7 +38,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
 
             <Link href="/dashboard" className="flex items-center space-x-2">
               <Image
-                src="kanangkuan-logo.svg"
+                src="/kanangkuan-logo.svg"
                 alt="Kanang Kuan"
                 width={56}
                 height={56}
@@ -79,12 +86,12 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
                   width={40}
                   height={40}
                   className="rounded-full w-[2.2rem] h-[2.2rem] sm:w-[3rem] sm:h-[3rem] hover:cursor-pointer"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => onDropdownToggle?.()}
                 />
               </div>
               <button
                 className="relative rounded-full hover:cursor-pointer hover:text-[#101220] transition flex-shrink-0"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                onClick={() => onDropdownToggle?.()} 
               >
                 <RiArrowDropDownLine
                   className={`text-3xl transform transition-transform duration-300 ${

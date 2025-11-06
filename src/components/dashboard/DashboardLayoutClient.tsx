@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 import Navbar from "@/components/dashboard/navbar";
 import Sidebar from "@/components/dashboard/sidebar";
 import ModalProvider from "@/components/modals/providers";
+import ProfileDropdown from "@/components/dashboard/ProfileDropdown";
 
 const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const pathname = usePathname();
 
   // Only these routes will use the dashboard layout [just tweak if there are changes in folder structure]
@@ -31,7 +34,19 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
   return (
     <ModalProvider>
       <div className="min-h-screen bg-white">
-        {hasLayout && <Navbar onMenuClick={toggleSidebar} />}
+        {hasLayout && (
+          <>
+            <Navbar 
+              onMenuClick={toggleSidebar}
+              isDropdownOpen={isDropdownOpen}
+              onDropdownToggle={() => setIsDropdownOpen(!isDropdownOpen)}
+            />
+            <ProfileDropdown 
+              isOpen={isDropdownOpen} 
+              onClose={() => setIsDropdownOpen(false)} 
+            />
+          </>
+        )}
         <div className={`flex ${hasLayout ? "pt-16" : ""}`}>
           {hasLayout && <Sidebar isOpen={isSidebarOpen} />}
           <main

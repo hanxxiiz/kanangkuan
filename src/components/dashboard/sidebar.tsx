@@ -17,7 +17,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
   
   const menuItems = [
     { icon: BsFillGridFill, label: "Dashboard", href: "/dashboard", iconSize: "text-xl" },
-    { icon: FaFolder, label: "My Decks", href: "/dashboard/my_folders", iconSize: "text-xl" },
+    { icon: FaFolder, label: "My Decks", href: "/dashboard/my-decks", iconSize: "text-xl" },
     { icon: IoPerson, label: "Profile", href: "/dashboard/profile", iconSize: "text-xl" },
     { icon: BsBarChartFill, label: "Leaderboard", href: "/dashboard/leaderboard", iconSize: "text-xl" },
     { icon: IoSettingsSharp, label: "Settings", href: "/dashboard/settings", iconSize: "text-xl" },
@@ -31,14 +31,14 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
           {menuItems.slice(0, 2).map((item) => {
             const Icon = item.icon;
             const displayLabel = item.label === "My Folders" ? "Folders" : item.label;
-            const isHighlighted = clickedItem === item.href; // ONLY check clickedItem
+            const isHighlighted = clickedItem === item.href; 
 
             return (
               <Link
                 key={item.label}
                 href={item.href}
                 onClick={(e) => {
-                  e.preventDefault(); //remove this line once the other pages are alr created
+                  e.preventDefault();
                   setClickedItem(item.href);
                 }}
                 className="flex flex-col items-center py-1 px-2 rounded-lg hover:bg-[#29411a] transition-all duration-200 group flex-1"
@@ -59,7 +59,6 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
             );
           })}
           
-          {/* Practice button in the middle */}
           <Link
             href="/practice"
             onClick={(e) => {
@@ -166,12 +165,9 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
                 className={`group relative flex items-center transition-all duration-300 w-full py-3
                   ${isOpen ? "gap-6 px-8" : "justify-center px-0"}`}
               >
-                {/*Accent bar*/}
                 <span className={`absolute z-2 top-0 left-0 h-full w-2 bg-lime transition-all duration-300 ${
                   isOpen ? "opacity-0 group-hover:opacity-100" : "opacity-0 group-hover:opacity-0"
                 }`} />
-                
-                {/* Full-width Hover Background */}
                 <span
                   className={`absolute transition-all duration-300
                     ${isOpen
@@ -179,7 +175,6 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
                       : "left-2 right-2 top-0 bottom-0 bg-lime opacity-0 group-hover:opacity-100 rounded-lg"
                   }`}
                 />
-                {/* Icon + Label */}
                 <Icon
                   className={`relative z-10 ${item.iconSize} flex-shrink-0 transition 
                     ${isOpen
@@ -208,20 +203,16 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
             </button>
           </div>
         </nav>
-
-        {/* Bottom Section — Logout */}
         <div className="mt-15 mb-8">
           <Link
             href="/"
             className={`group relative flex items-center py-3 transition-all duration-300 w-full
               ${isOpen ? "gap-6 px-8" : "justify-center px-0"}`}
           >
-            {/* Left Accent Bar */}
             <span className={`absolute z-2 top-0 left-0 h-full w-2 bg-lime transition-all duration-300 ${
               isOpen ? "opacity-0 group-hover:opacity-100" : "opacity-0 group-hover:opacity-0"
             }`}/>
 
-            {/* Full-width Hover Background */}
             <span
               className={`absolute transition-all duration-300
                 ${isOpen 
@@ -230,12 +221,11 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
                 }`}
             />
 
-            {/* Icon + Label */}
             <FaSignOutAlt
               className={`relative z-10 text-xl flex-shrink-0 transition 
                 ${isOpen 
-                  ? "text-white group-hover:text-lime"  // expanded: white → lime on hover
-                  : "text-white group-hover:text-[#101220]" // collapsed: stays black even on hover
+                  ? "text-white group-hover:text-lime" 
+                  : "text-white group-hover:text-[#101220]" 
                 }`}
             />
 

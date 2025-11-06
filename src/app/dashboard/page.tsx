@@ -1,20 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DailyRewards from "@/components/dashboard/dailyRewards";
-import DashboardHeader from "@/components/dashboard/dashboardHeader";
-import LeaderboardCard from "@/components/dashboard/leaderboardCard";
-import DeckCard from "@/components/dashboard/deckCard";
+import DailyRewards from "@/components/dashboard/DailyRewards";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
+import DeckCard from "@/components/dashboard/DeckCard";
 import SpinWheel from "@/components/dashboard/SpinningWheel/SpinningWheel";
-import ShowReward from "@/components/dashboard/SpinningWheel/ShowReward";
-import MonthlyProgress from "@/components/dashboard/monthlyProgress";
+import MonthlyProgress from "@/components/dashboard/MonthlyProgress";
 
 
 export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(false);
-  const [isWheelOpen, setIsWheelOpen] = useState(false); // Wheel modal state
+  const [isWheelOpen, setIsWheelOpen] = useState(false); 
 
-  // Detect mobile viewport on mount & resize
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
@@ -39,13 +37,12 @@ export default function Dashboard() {
   return (
     <div className="space-y-12">
       <DashboardHeader />
-      <div className="justify-center items-center relative mx-auto max-w-[1000px] lg:max-w-[1200px] 2xl:max-w-[1500px] sm:px-4">
+      <div className="justify-center items-center relative mx-auto max-w-[1000px] lg:max-w-[1300px] sm:px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
           <div className="lg:col-span-2 h-full">
             <MonthlyProgress />
           </div>
           <div className="lg:col-span-1 h-full">
-            {/* Pass onClick to open SpinTheWheel */}
             <DailyRewards onClick={() => setIsWheelOpen(true)} />
           </div>
         </div>
@@ -82,7 +79,6 @@ export default function Dashboard() {
         <div className="pt-10"></div>
       </div>
 
-      {/* SpinTheWheel Modal */}
       <SpinWheel
         isOpen={isWheelOpen}
         onClose={() => setIsWheelOpen(false)}
