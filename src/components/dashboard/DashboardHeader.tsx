@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import React from "react";
 
 const DashboardHeader = () => {
   return (
-    <div className="relative mx-auto max-w-[1000px] lg:max-w-[1200px] 2xl:max-w-[1300px] mt-5 sm:mt-10 sm:px-4">
-      {/* Desktop-only mascot images */}
+    <div className="relative mx-auto max-w-[1000px] lg:max-w-[1300px] 2xl:max-w-[1500px] mt-5 sm:mt-10 sm:px-4">
       <img
         src="/dashboard/dashboard-mascot-shadow.png"
         alt="Decorative"
@@ -20,7 +20,6 @@ const DashboardHeader = () => {
       />
 
       <header className="e-card">
-        {/* Decorative wave elements */}
         <div className="wave z-0"></div>
         <div className="wave z-0"></div>
         <div className="wave z-0"></div>
@@ -42,9 +41,11 @@ const DashboardHeader = () => {
             Ready to get started?
           </p>
           <div className="mt-5 sm:mt-6">
-            <button className="font-main w-fit px-5 sm:px-7 py-2 sm:py-3 bg-lime-400 text-white text-sm sm:text-base lg:text-lg rounded-full cursor-pointer transition-all duration-300 hover:bg-cyan hover:scale-105">
-              Start Learning
-            </button>
+            <Link href="/dashboard/my-decks">
+              <button className="font-main w-fit px-5 sm:px-7 py-2 sm:py-3 bg-lime-400 text-white text-sm sm:text-base lg:text-lg rounded-full cursor-pointer transition-all duration-300 hover:bg-cyan hover:scale-105">
+                Start Learning
+              </button>
+            </Link>
           </div>
         </div>
 

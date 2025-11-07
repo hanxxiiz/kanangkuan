@@ -6,10 +6,13 @@ import Navbar from "@/components/dashboard/navbar";
 import Sidebar from "@/components/dashboard/sidebar";
 import ModalProvider from "@/components/modals/providers";
 import ProfileDropdown from "@/components/dashboard/ProfileDropdown";
+import SearchModal from "./SearchModal";
 
 const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchMode, setSearchMode] = useState<"search" | "practice">("search"); // Track the mode
 
   const pathname = usePathname();
 
@@ -31,6 +34,17 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleSearchClick = () => {
+    setSearchMode("search");
+    setShowSearchModal(true);
+  };
+
+  const handlePracticeClick = () => {
+    setSearchMode("practice");
+    setShowSearchModal(true);
+  };
+
+
   return (
     <ModalProvider>
       <div className="min-h-screen bg-white">
@@ -40,6 +54,7 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
               onMenuClick={toggleSidebar}
               isDropdownOpen={isDropdownOpen}
               onDropdownToggle={() => setIsDropdownOpen(!isDropdownOpen)}
+              onSearchClick={handleSearchClick}
             />
             <ProfileDropdown 
               isOpen={isDropdownOpen} 
@@ -48,7 +63,13 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
           </>
         )}
         <div className={`flex ${hasLayout ? "pt-16" : ""}`}>
-          {hasLayout && <Sidebar isOpen={isSidebarOpen} />}
+          {hasLayout && (
+            <Sidebar 
+              isOpen={isSidebarOpen} 
+              onSearchClick={handleSearchClick} 
+              onPracticeClick={handlePracticeClick}  
+            />
+          )}
           <main
             className={`flex-1 transition-all duration-300 ${
               hasLayout
@@ -61,6 +82,11 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
             <div className="p-6 pb-20 lg:pb-6">{children}</div>
           </main>
         </div>
+        <SearchModal 
+          showModal={showSearchModal} 
+          setShowModal={setShowSearchModal}
+          mode={searchMode}
+        />
       </div>
     </ModalProvider>
   );

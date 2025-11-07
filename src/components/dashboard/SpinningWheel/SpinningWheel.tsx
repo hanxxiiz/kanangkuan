@@ -35,6 +35,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
   const [showReward, setShowReward] = useState(false);
   const [wonSector, setWonSector] = useState<Sector | null>(null);
   const [wheelSize, setWheelSize] = useState(600);
+  const [isVisible, setIsVisible] = useState(false);
 
   const angVelRef = useRef(0);
   const angRef = useRef(0);
@@ -117,6 +118,12 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
     frame(ctx, rad);
     animationFrameRef.current = requestAnimationFrame(() => engine(ctx, rad));
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+    }
+  }, [isOpen]);
 
   // Handles responsive wheel size
   useEffect(() => {
@@ -222,16 +229,21 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={handleBackdropClick}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}      
     >
       <button
         onClick={handleClose}
-        className="cursor-pointer absolute top-4 right-4 sm:top-6 sm:right-6 text-white text-3xl sm:text-4xl hover:scale-105 transition-transform duration-200 z-40"
+        className={`cursor-pointer absolute top-4 right-4 sm:top-6 sm:right-6 text-white text-3xl sm:text-4xl hover:scale-105 transition-all duration-500 delay-100 z-40 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}      
       >
         <IoIosCloseCircleOutline />
       </button>
-      <div className="relative flex items-center justify-center w-full">
+      <div className={`relative flex items-center justify-center w-full transition-all duration-500 ${
+        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+      }`}>
         {/* Spinning wheel */}
         <div 
           id="spin_the_wheel"

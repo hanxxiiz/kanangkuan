@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import DailyRewards from "@/components/dashboard/DailyRewards";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
-import DeckCard from "@/components/dashboard/DeckCard";
+import DeckCard, {EmptyDeckState} from "@/components/dashboard/DeckCard";
 import SpinWheel from "@/components/dashboard/SpinningWheel/SpinningWheel";
 import MonthlyProgress from "@/components/dashboard/MonthlyProgress";
 
@@ -71,9 +71,7 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          <DeckCard deckName="NANAMI NANAMI NANAMI NANAMI NANAMI NANAMI NANAMI NANAMI" cardCount={25} />
-          <DeckCard deckName="Deck Name #1" cardCount={25} />
-          <DeckCard deckName="Deck Name #1" cardCount={25} />
+          <EmptyDeckState />
         </div>
 
         <div className="pt-10"></div>

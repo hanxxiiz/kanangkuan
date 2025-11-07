@@ -2,22 +2,23 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname } from "next/navigation"; // Add useRouter
 
-import { FaFolder, FaSignOutAlt } from "react-icons/fa";
+import { FaClone, FaSignOutAlt } from "react-icons/fa";
+
 import { IoSearchOutline, IoSettingsSharp, IoPerson } from "react-icons/io5";
 import { BsFillGridFill, BsBarChartFill } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
 import { MdLibraryBooks } from "react-icons/md";
 
 
-const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
+const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; onSearchClick: () => void;  onPracticeClick: () => void;}) => {  
   const pathname = usePathname();
   const [clickedItem, setClickedItem] = React.useState("/dashboard");
-  
+
   const menuItems = [
     { icon: BsFillGridFill, label: "Dashboard", href: "/dashboard", iconSize: "text-xl" },
-    { icon: FaFolder, label: "My Decks", href: "/dashboard/my-decks", iconSize: "text-xl" },
+    { icon: FaClone, label: "My Decks", href: "/dashboard/my-decks", iconSize: "text-xl" },
     { icon: IoPerson, label: "Profile", href: "/dashboard/profile", iconSize: "text-xl" },
     { icon: BsBarChartFill, label: "Leaderboard", href: "/dashboard/leaderboard", iconSize: "text-xl" },
     { icon: IoSettingsSharp, label: "Settings", href: "/dashboard/settings", iconSize: "text-xl" },
@@ -30,7 +31,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
         <div className="flex items-center justify-between py-2 px-2">
           {menuItems.slice(0, 2).map((item) => {
             const Icon = item.icon;
-            const displayLabel = item.label === "My Folders" ? "Folders" : item.label;
+            const displayLabel = item.label === "My Decks" ? "Decks" : item.label;
             const isHighlighted = clickedItem === item.href; 
 
             return (
@@ -38,7 +39,6 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
                 key={item.label}
                 href={item.href}
                 onClick={(e) => {
-                  e.preventDefault();
                   setClickedItem(item.href);
                 }}
                 className="flex flex-col items-center py-1 px-2 rounded-lg hover:bg-[#29411a] transition-all duration-200 group flex-1"
@@ -64,6 +64,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
             onClick={(e) => {
               e.preventDefault();
               setClickedItem("/practice");
+              onPracticeClick();
             }}
             className="flex flex-col items-center py-1 px-2 rounded-lg transition-all duration-200 group flex-1"
           >
@@ -89,7 +90,6 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
                 key={item.label}
                 href={item.href}
                 onClick={(e) => {
-                  e.preventDefault();
                   setClickedItem(item.href);
                 }}
                 className="flex flex-col items-center py-1 px-2 rounded-lg hover:bg-[#29411a] transition-all duration-200 group flex-1"
@@ -122,19 +122,25 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
         <div className={`mx-auto mt-10 ${isOpen ? "" : "mb-0.5"}`}>
           <div className="relative h-12 flex items-center justify-center">
             {isOpen ? (
-              <div className={`flex items-center transition-all duration-300 overflow-hidden ${
-                isOpen ? "opacity-100 max-w-[250px]" : "opacity-0 max-w-0"
-              }`}>
-                <IoSearchOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+              <div 
+                className={`flex items-center transition-all duration-300 overflow-hidden cursor-pointer ${
+                  isOpen ? "opacity-100 max-w-[250px]" : "opacity-0 max-w-0"
+                }`}
+                onClick={onSearchClick}
+              >
+                <IoSearchOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Decks / Folders"
-                  className="w-54 pl-12 pr-4 py-3 rounded-full bg-[#1a1c2b] text-white text-l placeholder-gray-400 focus:outline-none transition-all duration-300"
+                  className="w-54 pl-12 pr-4 py-3 rounded-full bg-[#1a1c2b] text-white text-l placeholder-gray-400 focus:outline-none transition-all duration-300 cursor-pointer pointer-events-none"
+                  readOnly
+                  tabIndex={-1} // Prevent tab focus
                 />
               </div>
             ) : (
-              <div className="relative group w-12 h-12 flex items-center justify-center cursor-pointer">
-                {/* Hover Background */}
+              <div className="relative group w-12 h-12 flex items-center justify-center cursor-pointer"
+                onClick={onSearchClick}
+              >
                 <span
                   className="absolute bg-lime opacity-0 group-hover:opacity-100 rounded-lg transition-all duration-300"
                   style={{
@@ -145,7 +151,6 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
                     transform: "translate(-50%, -50%)"
                   }}
                 />
-                {/* Icon */}
                 <FiSearch
                   className="text-white group-hover:text-[#101220] transition-all duration-300 text-xl z-10"
                 />
@@ -155,7 +160,7 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
         </div>
 
         {/* Menu Items */}
-        <nav className="flex flex-col mt-8 space-y-3">
+        <nav className="flex flex-col mt-6 space-y-3">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -198,12 +203,13 @@ const Sidebar = ({ isOpen }: { isOpen: boolean }) => {
           }`}>
             <button
               className="w-53 flex items-center justify-center py-2 bg-lime cursor-pointer text-white text-lg font-main rounded-full hover:bg-pink hover:scale-105 transition-all duration-300 whitespace-nowrap"
+              onClick={onPracticeClick} 
             >
               Practice
             </button>
           </div>
         </nav>
-        <div className="mt-15 mb-8">
+        <div className="mt-8 mb-8">
           <Link
             href="/"
             className={`group relative flex items-center py-3 transition-all duration-300 w-full
