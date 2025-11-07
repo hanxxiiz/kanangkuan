@@ -1,23 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { deckService, folderService } from "../services"
+import { deckService } from "../services"
 import { useUser } from "./useUser";
-import { Deck, Folder } from "@/utils/supabase/models";
+import { Deck } from "@/utils/supabase/models";
 
-export function useDecks(folderId?: string) {
+export function useDecks(deckId?: string) {
     const { user } = useUser(); 
     const [decks, setDecks] = useState<Deck[]>([]);
+    const [deck, setDeck] = useState<Deck | null>(null);
     const [deckLoading, setDeckLoading] = useState(true);
     const [deckError, setDeckError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (user && folderId) {
-            loadDecksByFolder(folderId)
+        if (user && deckId) {
+            getDeck(deckId)
         }else if (user){
             loadAllDecks();
         }
-    }, [user]);
+    }, [user, deckId]);
 
     async function loadAllDecks() {
         if (!user) return;
@@ -34,16 +35,16 @@ export function useDecks(folderId?: string) {
         }
     }
 
-    async function loadDecksByFolder(folderId: string) {
+    async function getDeck(deckId: string) {
         if (!user) return;
 
         try{
             setDeckLoading(true);
             setDeckError(null);
-            const data = await deckService.getDecksByFolder(user?.id, folderId);
-            setDecks(data);
+            const data = await deckService.getDeck(user?.id, deckId);
+            setDeck(data);
         } catch (err){
-            setDeckError (err instanceof Error ? err.message : "Failed to load decks.");
+            setDeckError (err instanceof Error ? err.message : "Failed to load deck.");
         } finally{
             setDeckLoading(false);
         }
@@ -68,5 +69,5 @@ export function useDecks(folderId?: string) {
             setDeckError (err instanceof Error ? err.message : "Failed to create folder.");
         }
     }
-    return {decks, deckLoading, deckError, createDeck}
+    return {decks, deck, deckLoading, deckError, createDeck}
 }

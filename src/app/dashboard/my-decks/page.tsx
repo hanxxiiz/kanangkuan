@@ -65,7 +65,9 @@ export default function MyDecksPage() {
                 deckCount={decks.filter((deck) => deck.folder_id === folder.id).length}
               />
             ))}
-            {decks.map((deck) => (
+            {decks
+              .filter((deck) => deck.folder_id === null)
+              .map((deck) => (
               <Deck
                 key={deck.id}
                 id={deck.id}

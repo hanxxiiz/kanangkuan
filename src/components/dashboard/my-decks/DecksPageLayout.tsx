@@ -134,7 +134,7 @@ export default function DecksPageLayout({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 place-items-center sm:gap-x-10 lg:gap-x-5">
+      <div className="grid lg:grid-cols-3 gap-x-[60px] gap-y-[70px]">
         {children}
       </div>
     </>

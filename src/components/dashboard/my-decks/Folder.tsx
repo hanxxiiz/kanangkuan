@@ -31,8 +31,8 @@ export default function Folder({
   const gradient = colorMap[color] || colorMap["pink"];
 
   return (
-    <div className="flex items-center justify-center p-8" onClick={handleClick}>
-      <div className="relative w-[400px] cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-5">
+    <div className="flex items-center justify-center" onClick={handleClick}>
+      <div className="relative w-full cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-5">
         
         <div className={`absolute top-0 left-0 w-3/5 h-40 bg-gradient-to-b ${gradient} rounded-t-[50px]`}>
           <div className="absolute mt-7 left-7 right-0 h-8 bg-white rounded-tl-full"></div>

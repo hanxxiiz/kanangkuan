@@ -11,18 +11,24 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   // Only these routes will use the dashboard layout [just tweak if there are changes in folder structure]
-  const layoutRoutes = [
+  const baseRoutes = [
     "/dashboard",
     "/dashboard/profile",
     "/dashboard/my-decks",
     "/dashboard/my-decks/folder",
-    "/dashboard/my-decks/folder/[folderId]",
     "/dashboard/leaderboard",
     "/dashboard/settings",
     "/dashboard/practice",
   ];
 
-  const hasLayout = layoutRoutes.includes(pathname);
+  const dynamicRoutes = [
+    "/dashboard/my-decks/folder/",
+    "/dashboard/my-decks/",
+  ];
+
+  const hasLayout = 
+    baseRoutes.includes(pathname) ||
+    dynamicRoutes.some((route) => pathname.startsWith(route));
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

@@ -31,10 +31,10 @@ export default function Deck({
     const gradient = colorMap[color] || colorMap["pink"];
   return (
     <>
-        <div className="flex items-center justify-center p-8"
+        <div className="flex items-center justify-center"
             onClick={handleClick}
         >
-            <div className="relative w-[400px] cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-5">
+            <div className="relative w-full cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-5">
                 <div className={`bg-gradient-to-br ${gradient} rounded-[50px] pt-8`}>
                     <div className="bg-white rounded-t-[30px] p-8 mx-8">
                         <div className="space-y-6">

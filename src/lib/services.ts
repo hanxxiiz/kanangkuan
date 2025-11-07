@@ -15,6 +15,18 @@ export const folderService = {
 
         return data || [];
     },
+
+    async getFolder(userId: string, folderId: string): Promise<Folder> {
+        const { data, error } = await supabase
+            .from("folders")
+            .select("*")
+            .match({ created_by: userId, id: folderId })
+            .single();
+
+        if (error) throw error;
+
+        return data;
+    },
     
     async createFolder(
         folder: Omit<Folder, "id" | "created_at">        
@@ -54,6 +66,18 @@ export const deckService = {
         if (error) throw error;
 
         return data || [];
+    },
+
+    async getDeck(userId: string, deckId: string): Promise<Deck> {
+        const { data, error } = await supabase
+            .from("decks")
+            .select("*")
+            .match({ created_by: userId, id: deckId })
+            .single();
+
+        if (error) throw error;
+
+        return data;
     },
     
     async createDeck(
