@@ -1,5 +1,5 @@
-import React from "react";
-import { PiLightbulbBold } from "react-icons/pi";
+import React, { useEffect } from "react";
+import confetti from "canvas-confetti";
 
 type ShowRewardProps = {
   isOpen: boolean;
@@ -10,6 +10,41 @@ type ShowRewardProps = {
 };
 
 const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, reward, icon }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const duration = 2000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 400, ticks: 60, zIndex: 70 };
+
+      function randomInRange(min: number, max: number) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        });
+      }, 250);
+
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -38,10 +73,36 @@ const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, rewa
 
   return (
     <div 
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 animate-fadeIn"
       onClick={handleBackdropClick}
     >
-      <div className={`relative w-full max-w-[480px] h-[480px] sm:h-[550px] max-h-[80vh] rounded-3xl flex flex-col justify-end items-center overflow-hidden ${getBackgroundColor()}`}>
+      <style>{`
+        @keyframes zoomIn {
+          from {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-zoomIn {
+          animation: zoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
+      <div className={`animate-zoomIn relative w-full max-w-[480px] h-[480px] sm:h-[550px] max-h-[80vh] rounded-3xl flex flex-col justify-end items-center overflow-hidden ${getBackgroundColor()}`}>
         {/* Sunburst pattern */}
         <div
           className="opacity-60 absolute top-[-80px] sm:top-[-100px] left-1/2 -translate-x-1/2 w-[400px] sm:w-[500px] h-[400px] sm:h-[500px] z-10"
