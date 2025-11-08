@@ -89,7 +89,7 @@ const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, rewa
         <img 
           src="/dashboard/reward-mascot.svg" 
           alt="Mascot" 
-          className="absolute top-[-70px] left-1/2 -translate-x-1/2 w-[380px] h-[380px] object-contain z-10"
+          className="absolute top-[-50px] left-1/2 -translate-x-1/2 w-[380px] h-[380px] object-contain z-10"
         />
         <div className="relative bg-gradient-to-b from-gray-900 to-black px-8 py-8 rounded-b-3xl z-20">
           <h1 className="text-3xl font-main text-white text-center mb-1">

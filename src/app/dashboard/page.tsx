@@ -1,17 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DailyRewards from "@/components/dashboard/DailyRewards";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import LeaderboardCard from "@/components/dashboard/LeaderboardCard";
 import DeckCard, {EmptyDeckState} from "@/components/dashboard/DeckCard";
 import SpinWheel from "@/components/dashboard/SpinningWheel/SpinningWheel";
 import MonthlyProgress from "@/components/dashboard/MonthlyProgress";
+import { useDashboard } from "@/components/dashboard/DashboardContext";
+import { CheckAndResetDailyLimits, GetTimeUntilNextSpin } from "@/lib/actions/daily-rewards-actions";
 
 
 export default function Dashboard() {
+  const router = useRouter(); 
+
+  const { userId, username, xp, profileUrl, leaderboardData, recentDecks, cardCounts } = useDashboard();
+  
   const [isMobile, setIsMobile] = useState(false);
-  const [isWheelOpen, setIsWheelOpen] = useState(false); 
+  const [isWheelOpen, setIsWheelOpen] = useState(false);
+  const [hasSpun, setHasSpun] = useState(false);
+  const [nextSpinTime, setNextSpinTime] = useState<string | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -20,11 +29,43 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const leaderboardData = [
-    { rank: 2, name: "username", xp: 666 },
-    { rank: 1, name: "username", xp: 666 },
-    { rank: 3, name: "username", xp: 666 },
-  ];
+  useEffect(() => {
+    const loadDailyLimits = async () => {
+      const limits = await CheckAndResetDailyLimits();
+      if (limits) {
+        setHasSpun(limits.has_spun);
+        if (limits.has_spun) {
+          const nextTime = await GetTimeUntilNextSpin();
+          setNextSpinTime(nextTime);
+        }
+      }
+    };
+
+    loadDailyLimits();
+  }, []);
+
+  const handleSpinComplete = async () => {
+  const limits = await CheckAndResetDailyLimits();
+  if (limits) {
+    setHasSpun(limits.has_spun);
+    if (limits.has_spun) {
+      const nextTime = await GetTimeUntilNextSpin();
+      setNextSpinTime(nextTime);
+    }
+  }
+};
+
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
+
+  useEffect(() => {
+    const handleFocus = () => router.refresh();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [router]);
+
+  
 
   const sortedLeaderboard = isMobile
     ? [...leaderboardData].sort((a, b) => {
@@ -32,7 +73,10 @@ export default function Dashboard() {
         if (b.rank === 1) return 1;
         return a.rank - b.rank;
       })
-    : leaderboardData;
+    : [...leaderboardData].sort((a, b) => { 
+        const order = { 2: 0, 1: 1, 3: 2 };
+        return (order[a.rank as keyof typeof order] ?? a.rank) - (order[b.rank as keyof typeof order] ?? b.rank);
+      });
 
   return (
     <div className="space-y-12">
@@ -43,7 +87,10 @@ export default function Dashboard() {
             <MonthlyProgress />
           </div>
           <div className="lg:col-span-1 h-full">
-            <DailyRewards onClick={() => setIsWheelOpen(true)} />
+            <DailyRewards onClick={() => setIsWheelOpen(true)} 
+              hasSpun={hasSpun}
+              nextSpinTime={nextSpinTime} 
+            />
           </div>
         </div>
 
@@ -58,8 +105,9 @@ export default function Dashboard() {
             <LeaderboardCard
               key={user.rank}
               rank={user.rank as 1 | 2 | 3}
-              name={user.name}
+              name={user.username}
               xp={user.xp}
+              imageSrc={user.profile_url || undefined}
             />
           ))}
         </div>
@@ -71,12 +119,23 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          <EmptyDeckState />
+          {recentDecks.length > 0 ? (
+            recentDecks.map((deck) => (
+              <DeckCard
+                key={deck.id}
+                deckName={deck.deck_name}
+                deckColor={deck.deck_color}
+                cardCount={cardCounts[deck.id] || 0}
+              />
+            ))
+          ) : (
+            <EmptyDeckState />
+          )}
         </div>
 
         <div className="pt-10"></div>
       </div>
-
+            
       <SpinWheel
         isOpen={isWheelOpen}
         onClose={() => setIsWheelOpen(false)}

@@ -4,11 +4,11 @@ import { FaClone } from "react-icons/fa";
 
 type DeckCardProps = {
   deckName: string;
-  cardCount: number;
-  color?: "blue" | "lime" | "pink" | "purple" | "cyan"; 
+  cardCount?: number; // Make it optional since we might not always have it
+  deckColor: string; // Add this to accept the color from database
 };
 
-const DeckCard: React.FC<DeckCardProps> = ({ deckName, cardCount, color }) => { 
+const DeckCard: React.FC<DeckCardProps> = ({ deckName, cardCount = 0, deckColor }) => { 
   
   const colorClasses: Record<string, string> = { 
     blue: "text-blue",
@@ -28,7 +28,8 @@ const DeckCard: React.FC<DeckCardProps> = ({ deckName, cardCount, color }) => {
     default: "group-hover:text-lime"
   };
 
-  const selectedColor = color || "default"; 
+  // Use deckColor from database, fallback to default
+  const selectedColor = deckColor || "default"; 
 
   return (
     <div className="group bg-white border rounded-2xl shadow-md p-6 sm:p-8 flex items-center justify-between w-full hover:scale-101 hover:shadow-lg transition-transform transition-shadow duration-100 cursor-pointer">

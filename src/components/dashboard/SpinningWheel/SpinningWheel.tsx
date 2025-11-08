@@ -2,31 +2,45 @@ import React, { useEffect, useRef, useState } from 'react';
 import './SpinningWheel.css';
 import ShowReward from './ShowReward';
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import { ProcessSpinReward } from "@/lib/actions/daily-rewards-actions";
+import { RewardType } from '@/types/dashboard';
+
 
 interface Sector {
   color: string;
   text: string;
   label: string;
   icon?: string;
+  rewardType: RewardType;  
+  rewardAmount: number;    
 }
 
 const sectors: Sector[] = [
-  { color: "#8AFF00", text: "#ffffffff", label: "+3 Lives", icon: "/dashboard/heart.svg" },
-  { color: "#FD14BB", text: "#ffffffff", label: "+1 Key", icon: "/dashboard/key.svg" },
-  { color: "#6715FF", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg"},
-  { color: "#C401DB", text: "#ffffffff", label: "+150 XP", icon: "/dashboard/star.svg" },
-  { color: "#8AFF00", text: "#ffffffff", label: "+5 Lives", icon: "/dashboard/heart.svg" },
-  { color: "#FD14BB", text: "#ffffffff", label: "+2 Keys", icon: "/dashboard/key.svg" },
-  { color: "#6715FF", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg" },
-  { color: "#C401DB", text: "#ffffffff", label: "+200 XP", icon: "/dashboard/star.svg" },
+  { color: "#8AFF00", text: "#ffffffff", label: "+3 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 3 },
+  { color: "#FD14BB", text: "#ffffffff", label: "+1 Key", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 1 },
+  { color: "#6715FF", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 2},
+  { color: "#C401DB", text: "#ffffffff", label: "+150 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 150 },
+  { color: "#8AFF00", text: "#ffffffff", label: "+5 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 5 },
+  { color: "#FD14BB", text: "#ffffffff", label: "+2 Keys", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 2 },
+  { color: "#6715FF", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 3 },
+  { color: "#C401DB", text: "#ffffffff", label: "+200 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 200 },
 ];
 
 type SpinningWheelProps = {
   isOpen: boolean;
   onClose: () => void;
+  onSpinComplete?: () => void;
 };
 
-const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
+type RewardConfig = {
+  type: RewardType;
+  amount: number;
+  label: string;
+  color: string;
+};
+
+
+const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [spinText, setSpinText] = useState("SPIN");
   const [spinBg, setSpinBg] = useState("#fff");
@@ -97,13 +111,20 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
     setSpinColor(sector.text);
   };
 
-  const frame = (ctx: CanvasRenderingContext2D, rad: number) => {
+  const frame = async(ctx: CanvasRenderingContext2D, rad: number) => {
     if (!angVelRef.current && spinButtonClickedRef.current) {
       const finalSector = sectors[getIndex()];
       console.log(`Woop! You won ${finalSector.label}`);
       spinButtonClickedRef.current = false;
-      setWonSector(finalSector);
-      setShowReward(true);
+
+      const result = await ProcessSpinReward(finalSector.rewardType, finalSector.rewardAmount);
+
+      if (result.success) {
+        setWonSector(finalSector);
+        setShowReward(true);
+      } else {
+        console.error("Failed to process reward:", result.error);
+      }
       return;
     }
 
@@ -295,8 +316,16 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
           onClose={() => {
             setShowReward(false);
             setWonSector(null);
+            if (onSpinComplete) {
+              onSpinComplete();
+            }
           }}
-          onGoBack={handleClose}
+          onGoBack={() => {
+            handleClose();
+            if (onSpinComplete) {
+              onSpinComplete();
+            }
+          }}
           reward={wonSector.label}
           icon={wonSector.icon}
         />

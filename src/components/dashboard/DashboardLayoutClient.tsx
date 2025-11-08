@@ -7,8 +7,10 @@ import Sidebar from "@/components/dashboard/sidebar";
 import ModalProvider from "@/components/modals/providers";
 import ProfileDropdown from "@/components/dashboard/ProfileDropdown";
 import SearchModal from "./SearchModal";
+import { useDashboard } from "@/components/dashboard/DashboardContext";
 
 const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
+  const { allDecks, folders } = useDashboard(); // Get decks and folders from context
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -86,6 +88,8 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
           showModal={showSearchModal} 
           setShowModal={setShowSearchModal}
           mode={searchMode}
+          allDecks={allDecks}
+          folders={folders}
         />
       </div>
     </ModalProvider>

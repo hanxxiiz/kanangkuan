@@ -9,6 +9,8 @@ import { IoNotificationsOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
 import LevelBar from "./LevelBar";
+import { useDashboard } from "@/components/dashboard/DashboardContext"; 
+
 
 const Navbar = ({ 
   onMenuClick,
@@ -22,7 +24,8 @@ const Navbar = ({
   onSearchClick?: () => void; 
 }) => {
   const router = useRouter(); 
-  const notificationCount = 10;
+  const { profileUrl, unreadNotificationCount } = useDashboard(); // Get from context
+
 
   return (
     <nav
@@ -74,9 +77,9 @@ const Navbar = ({
               onClick={() => router.push("/notification")}
             >
               <IoNotificationsOutline className="text-3xl" />
-              {notificationCount > 0 && (
+              {unreadNotificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-regular transition-colors group-hover:scale-105">
-                  {notificationCount}
+                  {unreadNotificationCount}
                 </span>
               )}
             </button>
@@ -85,10 +88,10 @@ const Navbar = ({
             <div className="flex items-center ml-1 -space-x-1 sm:space-x-0">
               <div className="flex items-center flex-shrink-0">
                 <Image
-                  src="/dashboard/default-picture.png"
+                  src={profileUrl || "/dashboard/default-picture.png"}
                   alt="Kanang Kuan"
-                  width={40}
-                  height={40}
+                  width={80}
+                  height={80}
                   className="rounded-full w-[2.2rem] h-[2.2rem] sm:w-[2.5rem] sm:h-[2.5rem] hover:cursor-pointer"
                   onClick={() => onDropdownToggle?.()}
                 />

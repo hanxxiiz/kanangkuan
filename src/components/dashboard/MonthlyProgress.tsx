@@ -1,45 +1,11 @@
 import React from "react";
+import { useDashboard } from "./DashboardContext";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-// Mock data - replace with actual data from your backend
-const mockProgressData: Record<string, number> = {
-  "2025-11-01": 600,
-  "2025-11-02": 450,
-  "2025-11-03": 850,
-  "2025-11-04": 1200,
-  "2025-11-05": 300,
-  "2025-11-06": 520,
-  "2025-11-07": 780,
-  "2025-11-08": 1100,
-  "2025-11-09": 400,
-  "2025-11-10": 920,
-  "2025-11-11": 650,
-  "2025-11-12": 1500,
-  "2025-11-13": 800,
-  "2025-11-14": 300,
-  "2025-11-15": 550,
-  "2025-11-16": 1050,
-  "2025-11-17": 720,
-  "2025-11-18": 480,
-  "2025-11-19": 890,
-  "2025-11-20": 350,
-  "2025-11-21": 1200,
-  "2025-11-22": 950,
-  "2025-11-23": 650,
-  "2025-11-24": 1100,
-  "2025-11-25": 500,
-  "2025-11-26": 850,
-  "2025-11-27": 1300,
-  "2025-11-28": 750,
-  "2025-11-29": 900,
-  "2025-11-30": 1150,
-};
-
 export default function MonthlyProgress() {
-  // SIMULATION: Change this date to test different days
-  // Set to null to use real current date
-  //const date = new Date(2025, 11 - 1, 30); // November 30, 2025
+  const { monthlyXPData } = useDashboard();
+
   const date = null; // Uncomment to use real date
   
   const rows = 5;
@@ -92,7 +58,7 @@ export default function MonthlyProgress() {
     }
     
     const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-    return mockProgressData[dateKey] || 0;
+    return monthlyXPData[dateKey] || 0;  // Changed from mockProgressData to monthlyXPData
   };
 
   return (
