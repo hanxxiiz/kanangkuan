@@ -88,7 +88,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
         }}
       >
         <div className="relative h-[40px] bg-lime">
-          <div className="absolute left-20 -bottom-[5rem] -translate-x-1/2 w-[110px] h-[110px]">
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5rem] w-[110px] h-[110px] z-10">
             <div className="relative w-full h-full rounded-full bg-black border-[7px] border-black overflow-hidden">
               {imageSrc ? (
                 <img
@@ -109,11 +109,11 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           </div>
         </div>
 
-        <div className="bg-black h-[90px]">
-          <h3 className="ml-25 text-white font-main text-2xl lg:text-3xl text-center">
+        <div className="bg-black pt-[80px] pb-4 px-4">
+          <h3 className="text-white font-main text-2xl text-center truncate">
             {name}
           </h3>
-          <p className="ml-6 -mt-1 text-white font-regular text-md md:text-lg lg:text-xl text-center">
+          <p className="text-white font-regular text-md text-center mt-1">
             {xp} XP
           </p>
         </div>

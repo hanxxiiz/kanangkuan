@@ -10,7 +10,7 @@ import SearchModal from "./SearchModal";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 
 const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
-  const { allDecks, folders } = useDashboard(); // Get decks and folders from context
+  const { allDecks, folders } = useDashboard(); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -18,19 +18,10 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
 
   const pathname = usePathname();
 
-  // Only these routes will use the dashboard layout [just tweak if there are changes in folder structure]
-  const layoutRoutes = [
-    "/dashboard",
-    "/dashboard/profile",
-    "/dashboard/my-decks",
-    "/dashboard/my-decks/folder",
-    "/dashboard/my-decks/folder/[folderId]",
-    "/dashboard/leaderboard",
-    "/dashboard/settings",
-    "/dashboard/practice",
-  ];
-
-  const hasLayout = layoutRoutes.includes(pathname);
+  // Show layout for all /dashboard routes EXCEPT those starting with /practice/
+  const hasLayout = 
+    pathname.startsWith("/dashboard") && 
+    !pathname.startsWith("/practice/");
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

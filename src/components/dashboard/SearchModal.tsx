@@ -39,7 +39,7 @@ function SearchResult({ type, name, iconColor, onClick }: SearchResultProps) {
         )}
       </div>
       <div className="flex-1">
-        <p className="text-gray-600 font-body text-md">{name}</p>
+        <p className="text-black font-body text-md">{name}</p>
       </div>
     </div>
   );

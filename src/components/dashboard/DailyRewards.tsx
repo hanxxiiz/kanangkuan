@@ -67,7 +67,7 @@ const DailyRewards: React.FC<DailyRewardsProps> = ({ onClick, hasSpun, nextSpinT
                 Spin Now
               </button>
             ) : (
-              <div className="mt-0 sm:mt-4 text-center inline-block w-[160px] px-6 py-3 bg-lime text-white font-main text-lg rounded-full backdrop-blur-sm">
+              <div className="mt-0 sm:mt-4 text-center inline-block w-[180px] px-6 py-3 bg-lime text-white font-main text-lg rounded-full backdrop-blur-sm">
                 {timeLeft}
               </div>
             )}
