@@ -4,6 +4,7 @@ import ShowReward from './ShowReward';
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { ProcessSpinReward } from "@/lib/actions/daily-rewards-actions";
 import { RewardType } from '@/types/dashboard';
+import { useDashboard } from '../DashboardContext';
 
 
 interface Sector {
@@ -50,6 +51,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
   const [wonSector, setWonSector] = useState<Sector | null>(null);
   const [wheelSize, setWheelSize] = useState(600);
   const [isVisible, setIsVisible] = useState(false);
+  const { updateSpinStatus } = useDashboard();
 
   const angVelRef = useRef(0);
   const angRef = useRef(0);
@@ -116,15 +118,20 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
       const finalSector = sectors[getIndex()];
       console.log(`Woop! You won ${finalSector.label}`);
       spinButtonClickedRef.current = false;
-
-      const result = await ProcessSpinReward(finalSector.rewardType, finalSector.rewardAmount);
-
-      if (result.success) {
-        setWonSector(finalSector);
-        setShowReward(true);
-      } else {
-        console.error("Failed to process reward:", result.error);
-      }
+      
+      setWonSector(finalSector);
+      setShowReward(true);
+      
+      ProcessSpinReward(finalSector.rewardType, finalSector.rewardAmount)
+        .then(result => {
+          if (result.success && result.nextSpinTime) {
+            updateSpinStatus(true, result.nextSpinTime);
+          }
+        })
+        .catch(error => {
+          console.error("Failed to process reward:", error);
+        });
+      
       return;
     }
 
@@ -140,20 +147,24 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
     animationFrameRef.current = requestAnimationFrame(() => engine(ctx, rad));
   };
 
-  useEffect(() => {
+   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true);
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 10); 
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
     }
   }, [isOpen]);
 
-  // Handles responsive wheel size
   useEffect(() => {
     const updateWheelSize = () => {
       if (window.innerWidth < 640) {
-        // Mobile: smaller wheel
         setWheelSize(Math.min(window.innerWidth - 40, 400));
       } else {
-        // Desktop/tablet: full size
         setWheelSize(600);
       }
     };
@@ -186,7 +197,6 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
       const dia = canvas.width;
       const rad = dia / 2;
 
-      // Clear canvas before redrawing
       ctx.clearRect(0, 0, dia, dia);
       sectors.forEach((sector, i) => drawSector(ctx, sector, i, rad));
       rotate(ctx, rad);
@@ -237,6 +247,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
     setShowReward(false);
     setWonSector(null);
     setCanvasRotation(0);
+    setIsVisible(false); 
     onClose();
   };
 

@@ -1,15 +1,18 @@
 import React from "react";
 import { FaAngleRight } from "react-icons/fa";
 import { FaClone } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 type DeckCardProps = {
+  deckId: string;  
   deckName: string;
-  cardCount?: number; // Make it optional since we might not always have it
-  deckColor: string; // Add this to accept the color from database
+  cardCount?: number; 
+  deckColor: string; 
 };
 
-const DeckCard: React.FC<DeckCardProps> = ({ deckName, cardCount = 0, deckColor }) => { 
-  
+const DeckCard: React.FC<DeckCardProps> = ({ deckId, deckName, cardCount = 0, deckColor }) => { 
+  const router = useRouter();
+
   const colorClasses: Record<string, string> = { 
     blue: "text-blue",
     lime: "text-lime",
@@ -28,17 +31,21 @@ const DeckCard: React.FC<DeckCardProps> = ({ deckName, cardCount = 0, deckColor 
     default: "group-hover:text-lime"
   };
 
-  // Use deckColor from database, fallback to default
   const selectedColor = deckColor || "default"; 
 
+  const handleClick = () => {
+    router.push(`/dashboard/my-decks/${deckId}`);
+  };
+
   return (
-    <div className="group bg-white border rounded-2xl shadow-md p-6 sm:p-8 flex items-center justify-between w-full hover:scale-101 hover:shadow-lg transition-transform transition-shadow duration-100 cursor-pointer">
+    <div className="group bg-white border rounded-2xl shadow-md p-6 sm:p-8 flex items-center justify-between w-full hover:scale-101 hover:shadow-lg transition-transform transition-shadow duration-100 cursor-pointer"
+      onClick={handleClick}
+    >
       <div className="flex items-center min-w-0"> 
         <div className="mr-6 shrink-0">
           <FaClone className={`transition-colors duration-200 ${hoverColorClasses[selectedColor]} w-6 h-6 sm:w-8 sm:h-8 ${colorClasses[selectedColor]}`} /> 
         </div>
 
-        {/* Deck Info */}
         <div className="min-w-0">
           <h3 className={`transition-colors duration-200 ${hoverColorClasses[selectedColor]} font-main text-xl sm:text-2xl 
             text-black truncate overflow-hidden whitespace-nowrap max-w-[180px] sm:max-w-[450px] lg:max-w-[800px] xl:max-w-[1200px]`}>

@@ -5,12 +5,13 @@ import { IoSearch } from "react-icons/io5";
 import { FaClone, FaFolder } from "react-icons/fa";
 import { FaCaretDown } from "react-icons/fa";
 import { Deck, Folder } from "@/types/dashboard"; 
-
+import { useRouter } from "next/navigation"; 
 
 interface SearchResultProps {
   type: "deck" | "folder";
   name: string;
   iconColor?: string;
+  onClick: () => void; 
 }
 
 const getColorClass = (color: string | null): string => {
@@ -25,9 +26,11 @@ const getColorClass = (color: string | null): string => {
   return colorMap[color || ''] || 'text-lime';
 };
 
-function SearchResult({ type, name, iconColor }: SearchResultProps) {
+function SearchResult({ type, name, iconColor, onClick }: SearchResultProps) {
   return (
-    <div className="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 cursor-pointer transition-colors duration-200">
+    <div 
+      onClick={onClick} 
+      className="flex items-center gap-3 px-6 py-3 hover:bg-gray-100 cursor-pointer transition-colors duration-200">
       <div className="flex-shrink-0">
         {type === "deck" ? (
           <FaClone className={`${iconColor} text-xl`} />
@@ -36,7 +39,7 @@ function SearchResult({ type, name, iconColor }: SearchResultProps) {
         )}
       </div>
       <div className="flex-1">
-        <p className="text-gray-800 font-body text-md">{name}</p>
+        <p className="text-gray-600 font-body text-md">{name}</p>
       </div>
     </div>
   );
@@ -72,6 +75,7 @@ export default function SearchModal({
   allDecks, 
   folders, 
 }: SearchModalProps) {
+  const router = useRouter(); 
   const [searchValue, setSearchValue] = useState("");
   const [filterType, setFilterType] = useState<"none" | "deck" | "folder">("none");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -83,6 +87,15 @@ export default function SearchModal({
       setShowFilterDropdown(false);
     }
   }, [showModal]);
+
+  const handleItemClick = (type: "deck" | "folder", id: string) => {
+    if (type === "deck") {
+      router.push(`/dashboard/my-decks/${id}`);
+    } else {
+      router.push(`/dashboard/my-decks/folder/${id}`);
+    }
+    setShowModal(false); 
+  };
 
   const transformedDecks = allDecks.map(deck => ({
     type: "deck" as const,
@@ -118,21 +131,18 @@ export default function SearchModal({
 
   const getEmptyMessage = () => {
     if (allItems.length === 0) {
-      // No items exist at all
       if (mode === "search") {
         return "You don't have any decks or folders yet. Create one to get started!";
       } else {
         return "You don't have any decks yet. Create one to get started!";
       }
     } else if (searchValue.trim() && finalResults.length === 0) {
-      // Search returned no results
       if (mode === "search") {
         return `No decks or folders found matching "${searchValue}"`;
       } else {
         return `No decks found matching "${searchValue}"`;
       }
     } else if (filterType !== "none" && finalResults.length === 0) {
-      // Filter returned no results
       return `No ${filterType}s found`;
     }
     return "";
@@ -227,10 +237,11 @@ export default function SearchModal({
           ) : (
             finalResults.map((result, index) => (
               <SearchResult 
-                key={index} 
+                key={`${result.type}-${result.id}`} 
                 type={result.type} 
                 name={result.name}
                 iconColor={result.iconColor}
+                onClick={() => handleItemClick(result.type, result.id)} 
               />
             ))
           )}

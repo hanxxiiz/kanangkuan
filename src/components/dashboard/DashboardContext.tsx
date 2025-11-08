@@ -2,22 +2,7 @@
 
 import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-
-interface DashboardContextType {
-  userId: string;
-  username: string;
-  xp: number;
-  profileUrl: string | null;
-  leaderboardData: any[];
-  recentDecks: any[];
-  allDecks: any[];
-  folders: any[];
-  cardCounts: Record<string, number>;
-  unreadNotificationCount: number;
-  refreshNotificationCount: () => Promise<void>;
-  refreshXp: () => Promise<void>;
-  monthlyXPData: Record<string, number>;
-}
+import { DashboardContextType } from '@/types/dashboard';
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
@@ -33,7 +18,9 @@ export function DashboardProvider({
   folders,
   cardCounts,
   unreadNotificationCount: initialCount,
-  monthlyXPData
+  monthlyXPData,
+  hasSpun: initialHasSpun,  
+  nextSpinTime: initialNextSpinTime, 
 }: {
   children: ReactNode;
   userId: string;
@@ -47,9 +34,13 @@ export function DashboardProvider({
   cardCounts: Record<string, number>;
   unreadNotificationCount: number;
   monthlyXPData: Record<string, number>;
+    hasSpun: boolean;  
+  nextSpinTime: string | null; 
 }) {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(initialCount);
   const [currentXp, setCurrentXp] = useState(initialXp);
+  const [hasSpun, setHasSpun] = useState(initialHasSpun);  
+  const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);  
   const supabase = createClient();
 
   const refreshNotificationCount = async () => {
@@ -80,6 +71,39 @@ export function DashboardProvider({
     } catch (error) {
       console.error('Failed to refresh XP:', error);
     }
+  };
+   const refreshDailyLimits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_daily_limits')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (data && !error) {
+        setHasSpun(data.has_spun);
+        
+        if (data.has_spun) {
+          const now = new Date();
+          const nextMidnight = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 1,
+            0, 0, 0, 0
+          );
+          setNextSpinTime(nextMidnight.toISOString());
+        } else {
+          setNextSpinTime(null);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh daily limits:', error);
+    }
+  };
+
+  const updateSpinStatus = (newHasSpun: boolean, newNextSpinTime: string | null) => {
+    setHasSpun(newHasSpun);
+    setNextSpinTime(newNextSpinTime);
   };
 
   useEffect(() => {
@@ -165,6 +189,10 @@ export function DashboardProvider({
       refreshNotificationCount,
       refreshXp,
       monthlyXPData,
+      hasSpun, 
+      nextSpinTime,
+      refreshDailyLimits,  
+      updateSpinStatus, 
     }}>
       {children}
     </DashboardContext.Provider>

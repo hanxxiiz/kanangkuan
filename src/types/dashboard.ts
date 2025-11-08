@@ -59,4 +59,24 @@ export interface SpinResult {
   error?: string;
 }
 
+export interface DashboardContextType {
+  userId: string;
+  username: string;
+  xp: number;
+  profileUrl: string | null;
+  leaderboardData: any[];
+  recentDecks: any[];
+  allDecks: any[];
+  folders: any[];
+  cardCounts: Record<string, number>;
+  unreadNotificationCount: number;
+  refreshNotificationCount: () => Promise<void>;
+  refreshXp: () => Promise<void>;
+  monthlyXPData: Record<string, number>;
+  hasSpun: boolean;  
+  nextSpinTime: string | null; 
+  refreshDailyLimits: () => Promise<void>;  
+  updateSpinStatus: (hasSpun: boolean, nextSpinTime: string | null) => void; 
+}
+
 export type RewardType = 'ai_imports' | 'hints' | 'lives' | 'keys' | 'xp';

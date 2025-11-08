@@ -218,3 +218,38 @@ export async function GetMonthlyXPData(year: number, month: number): Promise<Rec
 
   return xpByDate;
 }
+
+export async function GetDailyLimitsForContext() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { hasSpun: false, nextSpinTime: null };
+
+  const { data, error } = await supabase
+    .from("user_daily_limits")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error || !data) {
+    return { hasSpun: false, nextSpinTime: null };
+  }
+
+  // Calculate next spin time if already spun
+  let nextSpinTime = null;
+  if (data.has_spun) {
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0, 0, 0, 0
+    );
+    nextSpinTime = nextMidnight.toISOString();
+  }
+
+  return {
+    hasSpun: data.has_spun,
+    nextSpinTime,
+  };
+}

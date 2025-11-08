@@ -15,12 +15,11 @@ import { CheckAndResetDailyLimits, GetTimeUntilNextSpin } from "@/lib/actions/da
 export default function Dashboard() {
   const router = useRouter(); 
 
-  const { userId, username, xp, profileUrl, leaderboardData, recentDecks, cardCounts } = useDashboard();
+  const { userId, username, xp, profileUrl, leaderboardData, recentDecks, cardCounts, hasSpun, nextSpinTime, refreshDailyLimits } = useDashboard();
   
   const [isMobile, setIsMobile] = useState(false);
   const [isWheelOpen, setIsWheelOpen] = useState(false);
-  const [hasSpun, setHasSpun] = useState(false);
-  const [nextSpinTime, setNextSpinTime] = useState<string | null>(null);
+
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -28,32 +27,6 @@ export default function Dashboard() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  useEffect(() => {
-    const loadDailyLimits = async () => {
-      const limits = await CheckAndResetDailyLimits();
-      if (limits) {
-        setHasSpun(limits.has_spun);
-        if (limits.has_spun) {
-          const nextTime = await GetTimeUntilNextSpin();
-          setNextSpinTime(nextTime);
-        }
-      }
-    };
-
-    loadDailyLimits();
-  }, []);
-
-  const handleSpinComplete = async () => {
-  const limits = await CheckAndResetDailyLimits();
-  if (limits) {
-    setHasSpun(limits.has_spun);
-    if (limits.has_spun) {
-      const nextTime = await GetTimeUntilNextSpin();
-      setNextSpinTime(nextTime);
-    }
-  }
-};
 
   useEffect(() => {
     router.refresh();
@@ -123,6 +96,7 @@ export default function Dashboard() {
             recentDecks.map((deck) => (
               <DeckCard
                 key={deck.id}
+                deckId={deck.id}  
                 deckName={deck.deck_name}
                 deckColor={deck.deck_color}
                 cardCount={cardCounts[deck.id] || 0}

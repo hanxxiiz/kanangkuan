@@ -52,7 +52,7 @@ const DailyRewards: React.FC<DailyRewardsProps> = ({ onClick, hasSpun, nextSpinT
           style={{ zIndex: 0 }}
         />
         <div className="relative z-10">
-          <h2 className="font-main text-2xl sm:text-3xl">Daily Reward</h2>
+          <h2 className="font-main text-2xl sm:text-3xl pb-0 sm:pb-2">Daily Reward</h2>
           <p className="mt-8 sm:mt-15 font-body text-md sm:text-2xl lg:text-xl leading-snug text-white/90">
             {canSpin 
               ? "Ready to unlock your daily surprise? The wheel is waiting for you."
@@ -67,7 +67,7 @@ const DailyRewards: React.FC<DailyRewardsProps> = ({ onClick, hasSpun, nextSpinT
                 Spin Now
               </button>
             ) : (
-              <div className="mt-2 inline-block min-w-[150px] px-6 py-3 bg-pink text-white font-main text-lg rounded-full backdrop-blur-sm">
+              <div className="mt-0 sm:mt-4 text-center inline-block w-[160px] px-6 py-3 bg-lime text-white font-main text-lg rounded-full backdrop-blur-sm">
                 {timeLeft}
               </div>
             )}

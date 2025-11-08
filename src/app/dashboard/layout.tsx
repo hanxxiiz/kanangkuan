@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayoutClient from '@/components/dashboard/DashboardLayoutClient'
 import { DashboardProvider } from '@/components/dashboard/DashboardContext'  
-import { GetUserInformation, GetTopUsers, GetDecks, GetFolders, GetDeckCardCounts, GetUnreadNotificationsCount, GetMonthlyXPData} from '@/lib/queries/dashboard-queries'
+import { GetUserInformation, GetTopUsers, GetDecks, GetFolders, GetDeckCardCounts, GetUnreadNotificationsCount, GetMonthlyXPData, GetDailyLimitsForContext} from '@/lib/queries/dashboard-queries'
 
 export default async function DashboardLayout({
   children,
@@ -22,13 +22,14 @@ export default async function DashboardLayout({
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
 
-  const [userProfile, topUsers, decks, folders, unreadNotificationCount, monthlyXPData] = await Promise.all([
+  const [userProfile, topUsers, decks, folders, unreadNotificationCount, monthlyXPData, dailyLimits] = await Promise.all([
     GetUserInformation(),
     GetTopUsers(3),
     GetDecks(),
     GetFolders(),
     GetUnreadNotificationsCount(),
     GetMonthlyXPData(currentYear, currentMonth),
+    GetDailyLimitsForContext(), 
   ]);
 
   if (!userProfile) {
@@ -55,6 +56,8 @@ export default async function DashboardLayout({
       cardCounts={cardCounts}
       unreadNotificationCount={unreadNotificationCount}
       monthlyXPData={monthlyXPData}
+      hasSpun={dailyLimits.hasSpun}  
+      nextSpinTime={dailyLimits.nextSpinTime}  
     >
       <DashboardLayoutClient>{children}</DashboardLayoutClient>
     </DashboardProvider>
