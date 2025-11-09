@@ -156,7 +156,7 @@ export default function Home() {
     <main className="min-h-screen w-full bg-black flex flex-col items-center justify-center">
       {/* HERO SECTION */}
       <section className="w-full h-screen flex flex-col bg-fixed">
-        <div ref={mascotRef} className="relative">
+        <div ref={mascotRef} className="relative pointer-events-none">
           <div
             ref={headingRef}
             className="absolute inset-0 flex flex-col items-center justify-center z-0 pointer-events-none transition-transform duration-200 ease-out"
@@ -355,7 +355,7 @@ export default function Home() {
               Turn every ‘hala familiar’ into <br /> I got this!
             </h1>
             <Link
-                href="/signin"
+                href="/auth/signin"
                 className="m-10 px-40 py-5 bg-lime cursor-pointer text-white text-lg font-main rounded-full hover:bg-pink hover:scale-110 transition-all duration-300"
               >
                 Start Learning

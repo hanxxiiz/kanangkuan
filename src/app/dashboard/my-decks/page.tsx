@@ -5,17 +5,17 @@ import Folder from "@/components/dashboard/my-decks/Folder";
 import Deck from "@/components/dashboard/my-decks/Deck";
 import NewFolderModal from "@/components/dashboard/my-decks/NewFolderModal";
 import { ModalContext } from "@/components/modals/providers";
-import { useContext, useState } from "react";
+import { useContext, useState, useMemo } from "react";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useCards } from "@/lib/hooks/useCards";
+import { useViewMode } from "@/lib/hooks/useViewMode";
 
 type ModalType = "folder" | "deck" | null;
 
 export default function MyDecksPage() {
   const { setShowModal } = useContext(ModalContext);
-
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   const openModal = (type: ModalType) => {
@@ -26,6 +26,33 @@ export default function MyDecksPage() {
   const { folders, folderLoading, folderError } = useFolders();
   const { decks, deckLoading, deckError } = useDecks();
   const { cards } = useCards();
+
+  const allItems = useMemo(() => {
+    return [
+      ...folders.map(folder => ({
+        type: 'folder' as const,
+        data: folder,
+        id: folder.id,
+        name: folder.folder_name,
+        date: new Date(folder.created_at || 0)
+      })),
+      ...decks
+        .filter(deck => deck.folder_id === null)
+        .map(deck => ({
+          type: 'deck' as const,
+          data: deck,
+          id: deck.id,
+          name: deck.deck_name,
+          date: new Date(deck.created_at || 0)
+        }))
+    ];
+  }, [folders, decks]);
+
+  const { viewMode, setViewMode, sortedItems } = useViewMode({
+    items: allItems,
+    getDate: (item) => item.date,
+    getName: (item) => item.name,
+  });
   
   if (folderLoading || deckLoading) {
     return <div>My Decks Page is Loading...</div>
@@ -47,37 +74,39 @@ export default function MyDecksPage() {
           { label: "New Deck", onClick: () => openModal("deck") },
         ]}
         filterOptions={[
-          { label: "All Folders", onClick: () => console.log("Folders Only") },
-          { label: "All Decks", onClick: () => console.log("Decks Only") },
-          { label: "A–Z", onClick: () => console.log("Sort A–Z") },
-          { label: "Newest to Oldest", onClick: () => console.log("Newest first") },
-          { label: "Oldest to Newest", onClick: () => console.log("Oldest first") },
+          { label: "All", onClick: () => setViewMode("all") },
+          { label: "A–Z", onClick: () => setViewMode("a-z") },
+          { label: "Newest to Oldest", onClick: () => setViewMode("newest") },
+          { label: "Oldest to Newest", onClick: () => setViewMode("oldest") },
         ]}
       >
-        {folders.length === 0 && decks.length === 0 ? (
+        {sortedItems.length === 0 ? (
           <div className="text-gray-500 text-7xl font-main">Nothing here yet</div>
         ) : (
           <>
-            {folders.map((folder) => (
-              <Folder
-                key={folder.id}
-                id={folder.id}
-                color={folder.folder_color}
-                folderName={folder.folder_name}
-                deckCount={decks.filter((deck) => deck.folder_id === folder.id).length}
-              />
-            ))}
-            {decks
-              .filter((deck) => deck.folder_id === null)
-              .map((deck) => (
-              <Deck
-                key={deck.id}
-                id={deck.id}
-                color={deck.deck_color}
-                deckName={deck.deck_name}
-                cardCount={cards.filter((card) => card.deck_id === deck.id).length}
-              />
-            ))}
+            {sortedItems.map((item) => {
+              if (item.type === 'folder') {
+                return (
+                  <Folder
+                    key={`folder-${item.id}`}
+                    id={item.id}
+                    color={item.data.folder_color}
+                    folderName={item.data.folder_name}
+                    deckCount={decks.filter((deck) => deck.folder_id === item.id).length}
+                  />
+                );
+              } else {
+                return (
+                  <Deck
+                    key={`deck-${item.id}`}
+                    id={item.id}
+                    color={item.data.deck_color}
+                    deckName={item.data.deck_name}
+                    cardCount={cards.filter((card) => card.deck_id === item.id).length}
+                  />
+                );
+              }
+            })}
           </>
         )}
       </DecksPageLayout>
