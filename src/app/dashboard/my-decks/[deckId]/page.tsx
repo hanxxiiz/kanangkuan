@@ -2,6 +2,7 @@
 
 import Card from "@/components/dashboard/my-decks/Card";
 import CardsPageLayout from "@/components/dashboard/my-decks/CardsPageLayout";
+import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useRouter } from "next/navigation";
 import { use } from "react";
@@ -13,6 +14,7 @@ export default function MyDeckPage({
 }) {
     const { deckId } = use(params);
     const { deck, deckLoading, deckError } = useDecks(deckId); 
+    const { cards, cardLoading, cardError } = useCards(deckId)
 
     const deckName = deckLoading
         ? "Loading..."
@@ -21,54 +23,27 @@ export default function MyDeckPage({
     return (
       <div className="w-full bg-white p-10">
         <CardsPageLayout
+            currentDeckId={deckId}
             title={deckName}
-            onAddClick={() => {
-                console.log("click");
-            }}
         >   
-            <Card
-                id="sick"
-                color="blue"
-                front={`Basketball, basketball
-                Ang sarap-sarap mag-basketball
-                Ang lapad ng court, ang linis ng court
-                Ang luwang ng ring ng basketball
-                Pwedeng mag-dribble
-                Bago ka mag-shoot
-                Pwedeng shoot, sabay dribble`}
-                back="justin nabuntura"
-                />
-
-            <Card
-                id="sick"
-                color="blue"
-                front={`Basketball, basketball
-                Ang sarap-sarap mag-basketball
-                Ang lapad ng court, ang linis ng court`}
-                back="justin nabuntura"
-                />
-
-            <Card
-                id="sick"
-                color="blue"
-                front={`Basketball, basketball
-                Ang sarap-sarap mag-basketball
-                Ang lapad ng court, ang linis ng court
-                Ang luwang ng ring ng basketball
-                Pwedeng mag-dribble
-                Bago ka mag-shoot
-                Pwedeng shoot, sabay dribble`}
-                back="justin nabuntura"
-                />
-
-            <Card
-                id="sick"
-                color="blue"
-                front={`Basketball, basketball
-                Ang sarap-sarap mag-basketball
-                Ang lapad ng court, ang linis ng court`}
-                back="justin nabuntura"
-                />
+            {cards.length === 0 ? (
+                <div className="text-gray-500 text-7xl font-main">Nothing here yet</div>
+            ) : (
+                <>
+                    {cards
+                        .filter((card) => card.deck_id === deckId)
+                        .map((card) => (
+                            <Card
+                                key={card.id}
+                                id={card.id}
+                                front={card.front}
+                                back={card.back}
+                                color={deck?.deck_color}
+                            />
+                        ))
+                    }
+                </>
+            )}
         </CardsPageLayout>
       </div>
     )

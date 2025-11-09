@@ -9,6 +9,7 @@ import { useContext, useState } from "react";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
+import { useCards } from "@/lib/hooks/useCards";
 
 type ModalType = "folder" | "deck" | null;
 
@@ -24,6 +25,7 @@ export default function MyDecksPage() {
 
   const { folders, folderLoading, folderError } = useFolders();
   const { decks, deckLoading, deckError } = useDecks();
+  const { cards } = useCards();
   
   if (folderLoading || deckLoading) {
     return <div>My Decks Page is Loading...</div>
@@ -73,7 +75,7 @@ export default function MyDecksPage() {
                 id={deck.id}
                 color={deck.deck_color}
                 deckName={deck.deck_name}
-                cardCount={folders.length}
+                cardCount={cards.filter((card) => card.deck_id === deck.id).length}
               />
             ))}
           </>

@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
-import { Deck, Folder } from "@/utils/supabase/models";
+import { Card, Deck, Folder } from "@/utils/supabase/models";
 
 const supabase = createClient();
 
@@ -86,6 +86,45 @@ export const deckService = {
         const { data, error } = await supabase
             .from("decks")
             .insert(deck)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+}
+
+export const cardService = {
+    async getAllCards(): Promise<Card[]> {
+        const { data, error } = await supabase
+            .from("cards")
+            .select("*")
+            .order("created_at", {ascending: false});
+
+        if (error) throw error;
+
+        return data || [];
+    },
+
+    async getCards(deckId: string): Promise<Card[]> {
+        const { data, error } = await supabase
+            .from("cards")
+            .select("*")
+            .eq("deck_id", deckId)
+            .order("created_at", {ascending: false});
+
+        if (error) throw error;
+
+        return data || [];
+    },
+    
+    async createCard(
+        card: Omit<Card, "id" | "created_at">        
+    ): Promise<Card> {
+        const { data, error } = await supabase
+            .from("cards")
+            .insert(card)
             .select()
             .single()
 

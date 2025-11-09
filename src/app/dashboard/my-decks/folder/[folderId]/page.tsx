@@ -4,9 +4,9 @@ import Deck from "@/components/dashboard/my-decks/Deck";
 import DecksPageLayout from "@/components/dashboard/my-decks/DecksPageLayout";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
 import { ModalContext } from "@/components/modals/providers";
+import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useFolders } from "@/lib/hooks/useFolders";
-import { useRouter } from "next/navigation";
 import { use, useContext } from "react";
 
 export default function MyFolderPage({
@@ -16,6 +16,7 @@ export default function MyFolderPage({
 }) {
     const { folderId } = use(params);
     const {decks, deckLoading, deckError} = useDecks();
+    const { cards } = useCards();
     const { folder, folderLoading, folderError } = useFolders(folderId);
     const { setShowModal } = useContext(ModalContext);
 
@@ -49,7 +50,7 @@ export default function MyFolderPage({
                             id={deck.id}
                             color={deck.deck_color}
                             deckName={deck.deck_name}
-                            cardCount={decks.length}
+                            cardCount={cards.filter((card) => card.deck_id === deck.id).length}
                           />
                         ))
                     }
