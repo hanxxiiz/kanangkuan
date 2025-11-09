@@ -59,7 +59,7 @@ export default function CardsPageLayout({
         </div>
       </div>
 
-      <div className="grid grid-cols-2">
+      <div className="grid lg:grid-cols-2 gap-[30px]">
         {children}
       </div>
     </>

@@ -25,9 +25,9 @@ export default function Card({
 }:CardProps) {
     const bgColor = colorMap[color || "pink"];
   return (
-    <>
-        <div className="flex items-center justify-center p-5">
-            <div className="relative w-[550px] cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-1">
+    <div className="relative">
+        <div className="flex items-center justify-center">
+            <div className="relative w-full cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-1">
                 <div className="bg-white outline-2 rounded-t-2xl p-8">
                     <button className="absolute top-2 right-2 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
                         <PiDotsThreeOutlineVerticalFill className="text-xl text-black" />
@@ -44,6 +44,6 @@ export default function Card({
                 </div>
             </div>
         </div>
-    </>
+    </div>
   );
 }
