@@ -16,9 +16,9 @@ export default function MonthlyProgress() {
   const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
 
   const getBadgeIcon = (xp: number) => {
-    if (xp >= 1000) return "/dashboard/badge_3.svg";
-    if (xp >= 800) return "/dashboard/badge_2.svg";
-    if (xp >= 500) return "/dashboard/badge_1.svg";
+    if (xp >= 1000) return "/dashboard/badge_3.png";
+    if (xp >= 800) return "/dashboard/badge_2.png";
+    if (xp >= 500) return "/dashboard/badge_1.png";
     return null;
   };
 
@@ -105,7 +105,7 @@ export default function MonthlyProgress() {
                     className={[
                       "flex items-center justify-center relative",
                       "h-6 w-6 sm:h-10 sm:w-10 rounded-full overflow-hidden",
-                      today ? "bg-blue" : "",
+                      today ? "bg-pink" : "",
                       !badge ? "bg-black" : "",
                     ].join(" ")}
                   >
