@@ -1,52 +1,98 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import type { Swiper as SwiperType } from "swiper";
+import { Navigation, Keyboard } from "swiper/modules"; // ✅ include Keyboard too
 import "swiper/css";
+import "swiper/css/navigation";
 
-type CardCarouselProps<T> = {
-  cards: T[];
-  renderCard: (card: T, isActive: boolean, index: number) => React.ReactNode;
-  breakpoints?: Record<number, { slidesPerView: number; spaceBetween?: number }>;
+type Props = {
+  cards: any[];
+  renderCard: (card: any, isActive: boolean) => React.ReactNode;
+  breakpoints?: any;
+  onActiveChange?: (index: number) => void;
+  enableLoop?: boolean;
 };
 
-export default function CardCarousel<T>({
+export default function CardCarousel({
   cards,
   renderCard,
   breakpoints,
-}: CardCarouselProps<T>) {
-  const swiperRef = useRef<SwiperType | null>(null);
+  onActiveChange,
+  enableLoop = true,
+}: Props) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const prevRef = useRef<HTMLButtonElement | null>(null);
+  const nextRef = useRef<HTMLButtonElement | null>(null);
 
-  const handleCardClick = (index: number) => {
-    if (swiperRef.current) {
-      swiperRef.current.slideToLoop(index);
-    }
-  };
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prevRef.current?.click();
+      if (e.key === "ArrowRight") nextRef.current?.click();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   return (
-    <Swiper
-      onSwiper={(swiper) => (swiperRef.current = swiper)}
-      centeredSlides={true}
-      breakpoints={breakpoints}
-      slideToClickedSlide={true}
-      className="!overflow-visible"
-    >
-      {cards.map((card, idx) => (
-        <SwiperSlide key={idx} className="!h-auto">
-          {({ isActive }) => (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCardClick(idx);
-              }}
-              className="cursor-pointer"
-            >
-              {renderCard(card, isActive, idx)}
-            </div>
-          )}
-        </SwiperSlide>
-      ))}
-    </Swiper>
+    <div className="relative group w-full">
+      <button
+        ref={prevRef}
+        aria-label="Previous"
+        className="
+          absolute left-0 top-1/2 -translate-y-1/2 z-20 
+          p-2 rounded-full bg-black/50 hover:bg-lime text-white 
+          opacity-0 group-hover:opacity-100 transition cursor-pointer
+        "
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
+      <button
+        ref={nextRef}
+        aria-label="Next"
+        className="
+          absolute right-0 top-1/2 -translate-y-1/2 z-20 
+          p-2 rounded-full bg-black/50 hover:bg-lime text-white 
+          opacity-0 group-hover:opacity-100 transition cursor-pointer
+        "
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+
+      <Swiper
+        modules={[Navigation, Keyboard]}
+        navigation={{
+          prevEl: prevRef.current ?? undefined,
+          nextEl: nextRef.current ?? undefined,
+        }}
+        onBeforeInit={(swiper) => {
+          // assign nav refs before Swiper mounts
+          // @ts-ignore
+          swiper.params.navigation.prevEl = prevRef.current;
+          // @ts-ignore
+          swiper.params.navigation.nextEl = nextRef.current;
+        }}
+        breakpoints={breakpoints}
+        centeredSlides
+        loop={enableLoop}
+        keyboard={{ enabled: true, onlyInViewport: true }}
+        onSlideChange={(swiper) => {
+          setActiveIndex(swiper.realIndex);
+          onActiveChange?.(swiper.realIndex);
+        }}
+        {...(!breakpoints ? { slidesPerView: 1, spaceBetween: 12 } : { spaceBetween: 12 })}
+      >
+        {cards.map((card, index) => (
+          <SwiperSlide key={index}>
+            {renderCard(card, index === activeIndex)}
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
   );
 }
