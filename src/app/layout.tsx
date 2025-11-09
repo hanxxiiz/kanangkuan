@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
+import SupabaseProvider from "@/components/providers/SupabaseProvider";
 
 const poppinsBold = Poppins({
   subsets: ["latin"],
@@ -30,12 +31,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
     <html lang="en">
       <body
         className={`${poppinsBold.variable} ${poppinsNormal.variable} ${interRegular.variable} antialiased`}
       >
-        {children}
+        <SupabaseProvider>
+          {children}
+        </SupabaseProvider>
       </body>
     </html>
   );

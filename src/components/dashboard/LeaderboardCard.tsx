@@ -13,7 +13,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   rank = 1,
   name = "username",
   xp = 666,
-  imageSrc = "challenge.png",
+  imageSrc = "/dashboard/default-picture.png",
 }) => {
   return (
     <>
@@ -26,7 +26,6 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           ${rank === 2 ? "sm:-mr-12 lg:mr-0" : ""}
           ${rank === 3 ? "sm:-ml-12 lg:ml-0" : ""}`}
       >
-        {/* Top gradient area (height changes if rank === 1) */}
         <div
           className={`relative bg-gradient-to-b from-lime to-[#FFE566]
           transition-colors duration-[1000ms] ease-in-out group-hover:from-pink group-hover:to-[#FFE566]
@@ -36,7 +35,6 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
               : "md:h-[150px] lg:h-[200px]"
           }`}
         >
-          {/* Profile image with overlapping rank badge */}
           <div className="absolute left-1/2 -bottom-[5rem] -translate-x-1/2 w-[150px] h-[150px] lg:w-[190px] lg:h-[190px]">
             <div className="relative w-full h-full rounded-full bg-white border-[10px] border-white/80 overflow-hidden">
               {imageSrc ? (
@@ -49,7 +47,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
                 <div className="w-full h-full bg-[linear-gradient(45deg,_#e5e7eb_25%,_transparent_25%),_linear-gradient(-45deg,_#e5e7eb_25%,_transparent_25%),_linear-gradient(45deg,_transparent_75%,_#e5e7eb_75%),_linear-gradient(-45deg,_transparent_75%,_#e5e7eb_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]" />
               )}
             </div>
-            <div className="absolute -bottom-2 -right-2 w-14 h-14 rounded-full flex items-center justify-center text-[#65C110] font-main text-lg border-[4px] border-white">
+            <div className="absolute -bottom-2 -right-1 w-15 h-15 rounded-full flex items-center justify-center text-[#65C110] font-main text-lg border-[4px] border-white">
               <div
                 className="absolute inset-0 rounded-full bg-lime pointer-events-none"
                 aria-hidden
@@ -65,7 +63,6 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           </div>
         </div>
 
-        {/* Bottom white panel */}
         <div
           className={`pt-[5.75rem] px-6 bg-white ${
             rank === 1
@@ -90,9 +87,9 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             "0 15px 35px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.1)",
         }}
       >
-        <div className="relative h-[40px] bg-gradient-to-b from-[#8AFF00] to-[#FFE566]">
-          <div className="absolute left-20 -bottom-[5rem] -translate-x-1/2 w-[110px] h-[110px]">
-            <div className="relative w-full h-full rounded-full bg-white border-[7px] border-white/80 overflow-hidden">
+        <div className="relative h-[40px] bg-lime">
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5rem] w-[110px] h-[110px] z-10">
+            <div className="relative w-full h-full rounded-full bg-black border-[7px] border-black overflow-hidden">
               {imageSrc ? (
                 <img
                   src={imageSrc}
@@ -105,18 +102,18 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             </div>
             <div
               className="absolute bottom-0 -right-3 w-10 h-10 rounded-full flex items-center justify-center 
-              text-white font-main text-lg bg-lime"
+              text-white font-main text-lg bg-purple"
             >
               {rank}
             </div>
           </div>
         </div>
 
-        <div className="bg-white h-[90px]">
-          <h3 className="ml-25 text-[#101220] font-main text-2xl lg:text-3xl text-center">
+        <div className="bg-black pt-[80px] pb-4 px-4">
+          <h3 className="text-white font-main text-2xl text-center truncate">
             {name}
           </h3>
-          <p className="ml-6 -mt-1 text-[#101220] font-regular text-md md:text-lg lg:text-xl text-center">
+          <p className="text-white font-regular text-md text-center mt-1">
             {xp} XP
           </p>
         </div>
