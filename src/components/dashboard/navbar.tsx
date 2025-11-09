@@ -2,17 +2,30 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; 
 import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
-import LevelBar from "./levelBar";
+import LevelBar from "./LevelBar";
+import { useDashboard } from "@/components/dashboard/DashboardContext"; 
 
-const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const notificationCount = 5;
+const Navbar = ({ 
+  onMenuClick,
+  isDropdownOpen,
+  onDropdownToggle,
+  onSearchClick 
+}: { 
+  onMenuClick: () => void;
+  isDropdownOpen?: boolean;
+  onDropdownToggle?: () => void;
+  onSearchClick?: () => void; 
+}) => {
+  const router = useRouter(); 
+  const { profileUrl, unreadNotificationCount } = useDashboard(); // Get from context
+
 
   return (
     <nav
@@ -31,7 +44,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
 
             <Link href="/dashboard" className="flex items-center space-x-2">
               <Image
-                src="kanangkuan-logo.svg"
+                src="/kanangkuan-logo.svg"
                 alt="Kanang Kuan"
                 width={56}
                 height={56}
@@ -53,7 +66,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
             {/* Search icon - visible only on mobile */}
             <button
               className="lg:hidden relative rounded-full hover:cursor-pointer text-[#101220] transition"
-              onClick={() => console.log("Search clicked!")}
+              onClick={onSearchClick} 
             >
               <IoSearchOutline className="text-3xl" />
             </button>
@@ -61,30 +74,31 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
             {/* Notifications */}
             <button
               className="relative rounded-full hover:cursor-pointer hover:scale-105 text-[#101220] transition group"
-              onClick={() => console.log("Notifications clicked!")}
+              onClick={() => router.push("/notification")}
             >
               <IoNotificationsOutline className="text-3xl" />
-              {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-regular transition-colors group-hover:scale-105">
-                {notificationCount}
-              </span>
+              {unreadNotificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-regular transition-colors group-hover:scale-105">
+                  {unreadNotificationCount}
+                </span>
+              )}
             </button>
 
             {/* Profile + dropdown */}
-            <div className="flex items-center -space-x-1 sm:space-x-0">
+            <div className="flex items-center ml-1 -space-x-1 sm:space-x-0">
               <div className="flex items-center flex-shrink-0">
                 <Image
-                  src="/temporary.PNG"
+                  src={profileUrl || "/dashboard/default-picture.png"}
                   alt="Kanang Kuan"
-                  width={40}
-                  height={40}
-                  className="rounded-full w-[2.2rem] h-[2.2rem] sm:w-[3rem] sm:h-[3rem] hover:cursor-pointer"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  width={80}
+                  height={80}
+                  className="rounded-full w-[2.2rem] h-[2.2rem] sm:w-[2.5rem] sm:h-[2.5rem] hover:cursor-pointer"
+                  onClick={() => onDropdownToggle?.()}
                 />
               </div>
               <button
                 className="relative rounded-full hover:cursor-pointer hover:text-[#101220] transition flex-shrink-0"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                onClick={() => onDropdownToggle?.()} 
               >
                 <RiArrowDropDownLine
                   className={`text-3xl transform transition-transform duration-300 ${
