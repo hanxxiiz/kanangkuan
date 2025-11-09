@@ -26,7 +26,7 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
 
   const hasLayout =
     pathname.startsWith("/dashboard") &&
-    !pathname.startsWith("/practice/") &&
+    !pathname.startsWith("/practice/") ||
     dynamicRoutes.some(route => pathname.startsWith(route));
   
   const toggleSidebar = () => {
