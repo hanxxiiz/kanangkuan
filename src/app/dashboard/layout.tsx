@@ -1,4 +1,3 @@
-// app/dashboard/layout.tsx
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayoutClient from '@/components/dashboard/DashboardLayoutClient'

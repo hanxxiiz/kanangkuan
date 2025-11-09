@@ -19,10 +19,16 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   // Show layout for all /dashboard routes EXCEPT those starting with /practice/
-  const hasLayout = 
-    pathname.startsWith("/dashboard") && 
-    !pathname.startsWith("/practice/");
+  const dynamicRoutes = [
+    "/dashboard/my-decks/folder/",
+    "/dashboard/my-decks/",
+  ];
 
+  const hasLayout =
+    pathname.startsWith("/dashboard") &&
+    !pathname.startsWith("/practice/") &&
+    dynamicRoutes.some(route => pathname.startsWith(route));
+  
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
