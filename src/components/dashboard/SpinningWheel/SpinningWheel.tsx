@@ -2,31 +2,46 @@ import React, { useEffect, useRef, useState } from 'react';
 import './SpinningWheel.css';
 import ShowReward from './ShowReward';
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import { ProcessSpinReward } from "@/lib/actions/daily-rewards-actions";
+import { RewardType } from '@/types/dashboard';
+import { useDashboard } from '../DashboardContext';
+
 
 interface Sector {
   color: string;
   text: string;
   label: string;
   icon?: string;
+  rewardType: RewardType;  
+  rewardAmount: number;    
 }
 
 const sectors: Sector[] = [
-  { color: "#8AFF00", text: "#ffffffff", label: "+3 Lives", icon: "/dashboard/heart.svg" },
-  { color: "#FD14BB", text: "#ffffffff", label: "+1 Key", icon: "/dashboard/key.svg" },
-  { color: "#6715FF", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg"},
-  { color: "#C401DB", text: "#ffffffff", label: "+150 XP", icon: "/dashboard/star.svg" },
-  { color: "#8AFF00", text: "#ffffffff", label: "+5 Lives", icon: "/dashboard/heart.svg" },
-  { color: "#FD14BB", text: "#ffffffff", label: "+2 Keys", icon: "/dashboard/key.svg" },
-  { color: "#6715FF", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg" },
-  { color: "#C401DB", text: "#ffffffff", label: "+200 XP", icon: "/dashboard/star.svg" },
+  { color: "#8AFF00", text: "#ffffffff", label: "+3 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 3 },
+  { color: "#FD14BB", text: "#ffffffff", label: "+1 Key", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 1 },
+  { color: "#6715FF", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 2},
+  { color: "#C401DB", text: "#ffffffff", label: "+150 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 150 },
+  { color: "#8AFF00", text: "#ffffffff", label: "+5 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 5 },
+  { color: "#FD14BB", text: "#ffffffff", label: "+2 Keys", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 2 },
+  { color: "#6715FF", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 3 },
+  { color: "#C401DB", text: "#ffffffff", label: "+200 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 200 },
 ];
 
 type SpinningWheelProps = {
   isOpen: boolean;
   onClose: () => void;
+  onSpinComplete?: () => void;
 };
 
-const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
+type RewardConfig = {
+  type: RewardType;
+  amount: number;
+  label: string;
+  color: string;
+};
+
+
+const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [spinText, setSpinText] = useState("SPIN");
   const [spinBg, setSpinBg] = useState("#fff");
@@ -35,6 +50,8 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
   const [showReward, setShowReward] = useState(false);
   const [wonSector, setWonSector] = useState<Sector | null>(null);
   const [wheelSize, setWheelSize] = useState(600);
+  const [isVisible, setIsVisible] = useState(false);
+  const { updateSpinStatus } = useDashboard();
 
   const angVelRef = useRef(0);
   const angRef = useRef(0);
@@ -96,13 +113,25 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
     setSpinColor(sector.text);
   };
 
-  const frame = (ctx: CanvasRenderingContext2D, rad: number) => {
+  const frame = async(ctx: CanvasRenderingContext2D, rad: number) => {
     if (!angVelRef.current && spinButtonClickedRef.current) {
       const finalSector = sectors[getIndex()];
       console.log(`Woop! You won ${finalSector.label}`);
       spinButtonClickedRef.current = false;
+      
       setWonSector(finalSector);
       setShowReward(true);
+      
+      ProcessSpinReward(finalSector.rewardType, finalSector.rewardAmount)
+        .then(result => {
+          if (result.success && result.nextSpinTime) {
+            updateSpinStatus(true, result.nextSpinTime);
+          }
+        })
+        .catch(error => {
+          console.error("Failed to process reward:", error);
+        });
+      
       return;
     }
 
@@ -118,14 +147,24 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
     animationFrameRef.current = requestAnimationFrame(() => engine(ctx, rad));
   };
 
-  // Handles responsive wheel size
+   useEffect(() => {
+    if (isOpen) {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 10); 
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const updateWheelSize = () => {
       if (window.innerWidth < 640) {
-        // Mobile: smaller wheel
         setWheelSize(Math.min(window.innerWidth - 40, 400));
       } else {
-        // Desktop/tablet: full size
         setWheelSize(600);
       }
     };
@@ -158,7 +197,6 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
       const dia = canvas.width;
       const rad = dia / 2;
 
-      // Clear canvas before redrawing
       ctx.clearRect(0, 0, dia, dia);
       sectors.forEach((sector, i) => drawSector(ctx, sector, i, rad));
       rotate(ctx, rad);
@@ -209,6 +247,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
     setShowReward(false);
     setWonSector(null);
     setCanvasRotation(0);
+    setIsVisible(false); 
     onClose();
   };
 
@@ -222,16 +261,21 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={handleBackdropClick}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}      
     >
       <button
         onClick={handleClose}
-        className="cursor-pointer absolute top-4 right-4 sm:top-6 sm:right-6 text-white text-3xl sm:text-4xl hover:scale-105 transition-transform duration-200 z-40"
+        className={`cursor-pointer absolute top-4 right-4 sm:top-6 sm:right-6 text-white text-3xl sm:text-4xl hover:scale-105 transition-all duration-500 delay-100 z-40 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}      
       >
         <IoIosCloseCircleOutline />
       </button>
-      <div className="relative flex items-center justify-center w-full">
+      <div className={`relative flex items-center justify-center w-full transition-all duration-500 ${
+        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+      }`}>
         {/* Spinning wheel */}
         <div 
           id="spin_the_wheel"
@@ -283,8 +327,16 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose }) => {
           onClose={() => {
             setShowReward(false);
             setWonSector(null);
+            if (onSpinComplete) {
+              onSpinComplete();
+            }
           }}
-          onGoBack={handleClose}
+          onGoBack={() => {
+            handleClose();
+            if (onSpinComplete) {
+              onSpinComplete();
+            }
+          }}
           reward={wonSector.label}
           icon={wonSector.icon}
         />
