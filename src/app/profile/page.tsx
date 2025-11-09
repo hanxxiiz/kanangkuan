@@ -147,7 +147,7 @@ function ProfilePage() {
                         </div>
                     </section>
 
-                    {/* Feed Content */}
+                    {/* Panel Content */}
                     <section className="mt-6">
                         {activePanel === "feed" && <FeedPanel switchToDecks={() => 
                             {setActivePanel('decks');
