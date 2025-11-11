@@ -5,6 +5,7 @@ import { useModal } from "./modal";
 
 export const ModalContext = createContext<{
     setShowModal: Dispatch<SetStateAction<boolean>>;
+    showModal: boolean; 
     Modal: React.ComponentType<{
         heading: string;
         children: ReactNode;
@@ -14,18 +15,20 @@ export const ModalContext = createContext<{
     }>;
 }>({
     setShowModal: () => {},
+    showModal: false, 
     Modal: () => null
 })
 
 export default function ModalProvider({
     children,
 }: Readonly<{children: React.ReactNode}>) {
-    const { setShowModal, Modal } = useModal();
+    const { setShowModal, showModal, Modal } = useModal(); 
 
     return (
         <ModalContext.Provider
             value={{
                 setShowModal,
+                showModal, 
                 Modal,
             }}
         >

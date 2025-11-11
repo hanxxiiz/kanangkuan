@@ -2,17 +2,40 @@
 
 import CardCarousel from '@/components/CardCarousel';
 import { ModalContext } from '@/components/modals/providers';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface PracticeModalProps {
   currentDeckId: string;
+  onClose?: () => void; 
 }
 
-export default function PracticeModal({ currentDeckId }: PracticeModalProps) {
-  const { Modal, setShowModal } = useContext(ModalContext);
+export default function PracticeModal({ currentDeckId, onClose }: PracticeModalProps) {
+  const { Modal, setShowModal, showModal } = useContext(ModalContext); 
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
+  const hasCalledOnClose = useRef(false); 
+  const [wasOpen, setWasOpen] = useState(false);
+
+  useEffect(() => {
+    setShowModal(true);
+    hasCalledOnClose.current = false;
+    
+    return () => {
+      setShowModal(false);
+    };
+  }, [setShowModal]); 
+
+  useEffect(() => {
+    if (showModal) {
+      setWasOpen(true);
+    }
+    
+    if (!showModal && wasOpen && !hasCalledOnClose.current && onClose) {
+      hasCalledOnClose.current = true;
+      onClose(); 
+    }
+  }, [showModal, wasOpen, onClose]);
 
   const practiceSlides = [
     {
