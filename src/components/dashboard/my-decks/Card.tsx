@@ -4,7 +4,7 @@ import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
 
 interface CardProps{
     id: string,
-    color?: "pink" | "cyan" | "lime" | "purple" | "blue";
+    color?: string;
     front?: string;
     back?: string;
 }
@@ -18,12 +18,11 @@ const colorMap = {
 };
 
 export default function Card({
-    id,
     color = "pink",
     front,
     back,
 }:CardProps) {
-    const bgColor = colorMap[color || "pink"];
+    const bgColor = colorMap[color as keyof typeof colorMap] || colorMap.pink;
   return (
     <div className="relative">
         <div className="flex items-center justify-center">
@@ -33,13 +32,13 @@ export default function Card({
                         <PiDotsThreeOutlineVerticalFill className="text-xl text-black" />
                     </button>
                     <div className="text-black">
-                        <p className="text-md font-body">{front}</p>
+                        <p className="text-md font-body">{back}</p>
                     </div>
                 </div>
 
                 <div className={`relative ${bgColor} outline-2 rounded-b-2xl py-4 px-8 `}>
                     <div className="text-white">
-                        <h1 className="text-lg font-main">{back}</h1>
+                        <h1 className="text-lg font-main">{front}</h1>
                     </div>  
                 </div>
             </div>

@@ -66,3 +66,21 @@ body {
 .swiper-pagination-bullet-active {
   background: #4F46E5 !important;
 }
+
+@keyframes bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-bubble {
+  animation: bubble 0.35s ease-out forwards;
+}

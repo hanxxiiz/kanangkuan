@@ -25,3 +25,11 @@ export interface Deck {
     created_at: string;
     last_opened: string;
 }
+
+export interface Card {
+    id: string;
+    deck_id: string;
+    front: string;
+    back: string;
+    created_at: string;
+}
