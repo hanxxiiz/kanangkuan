@@ -9,7 +9,9 @@ export default function Flashcard() {
 
   const handleExplainClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation(); 
-    setShowChatbot(true);
+    if (!flipped) { 
+      setShowChatbot(true);
+    }
   };
 
   return (
@@ -33,7 +35,9 @@ export default function Flashcard() {
           >
             <button
               onClick={handleExplainClick}
-              className="cursor-pointer absolute top-5 right-5 flex items-center gap-2 px-4 py-2 border-1 border-white text-white rounded-full hover:bg-white hover:text-[#101220] transition-all duration-300 font-main text-md z-10"
+              className={`absolute top-5 right-5 flex items-center gap-2 px-4 py-2 border-1 border-white text-white rounded-full hover:bg-white hover:text-[#101220] transition-all duration-300 font-main text-md z-10 ${
+                flipped ? "pointer-events-none opacity-0" : "cursor-pointer"
+              }`}
             >
               <LuBot className="text-xl" />
               <span>Explain</span>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Flashcard from "@/components/dashboard/practice/basic-review/Flashcard";
 import { TbKeyFilled } from "react-icons/tb";
 import { GrLinkPrevious, GrLinkNext } from "react-icons/gr";
@@ -10,9 +10,12 @@ const BasicReview = () => {
   const [nextCard, setNextCard] = useState<number | null>(null);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
   const [animatingOut, setAnimatingOut] = useState(false);
+  const flashcardRef = useRef<HTMLDivElement>(null);
   const totalCards = 100;
   
   const handlePrevious = () => {
+    if (animatingOut) return; 
+    
     const newCard = currentCard > 0 ? currentCard - 1 : totalCards - 1;
     setSlideDirection('right');
     setNextCard(newCard);
@@ -26,6 +29,8 @@ const BasicReview = () => {
   };
   
   const handleNext = () => {
+    if (animatingOut) return; 
+    
     const newCard = currentCard < totalCards - 1 ? currentCard + 1 : 0;
     setSlideDirection('left');
     setNextCard(newCard);
@@ -38,9 +43,37 @@ const BasicReview = () => {
     }, 300);
   };
   
+  const handleFlip = () => {
+    if (flashcardRef.current) {
+      const clickableElement = flashcardRef.current.querySelector('[role="button"], button, .cursor-pointer') as HTMLElement;
+      if (clickableElement) {
+        clickableElement.click();
+      } else {
+        flashcardRef.current.click();
+      }
+    }
+  };
+  
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        handlePrevious();
+      } else if (event.key === 'ArrowRight') {
+        handleNext();
+      } else if (event.key === 'Enter') {
+        handleFlip();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentCard, animatingOut]);
+  
   return (
     <div className="w-full h-full flex flex-col items-center overflow-hidden pt-20 sm:pt-30 xl:pt-0">
-      {/* Keys Section*/}
       <div className="w-full max-w-[900px] flex justify-end px-6 flex-shrink-0 mb-4 sm:mb-10">
         <div className="flex items-center group">
           {Array.from({ length: keysRemaining }).map((_, index) => (
@@ -53,9 +86,10 @@ const BasicReview = () => {
       </div>
       
       {/* Flashcard Section */}
-      <div className="w-full max-w-[900px] px-6 flex-shrink-0">
-        <div className="relative w-full" style={{ height: '400px' }}>
+      <div className="w-full max-w-[900px] px-2 sm:px-6 flex-shrink-0">
+        <div className="relative w-full h-[400px]">
           <div
+            ref={flashcardRef}
             className="absolute inset-0 flex items-center justify-center"
             style={{
               animation: animatingOut 
@@ -84,7 +118,7 @@ const BasicReview = () => {
       </div>
 
       {/* Navigation Section */}
-      <div className="w-full max-w-[900px] flex justify-center items-center gap-10 px-6 flex-shrink-0 mt-15">
+      <div className="w-full max-w-[900px] flex justify-center items-center gap-5 sm:gap-10 px-6 flex-shrink-0 mt-5 sm:mt-15">
         <button
           onClick={handlePrevious}
           className="z-50 cursor-pointer border-[2px] border-[#101220] rounded-full px-8 py-4 text-[#101220] hover:bg-[#101220] hover:text-white transition-colors duration-300"
