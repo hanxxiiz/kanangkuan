@@ -5,48 +5,52 @@ import { ModalContext } from '@/components/modals/providers';
 import React, { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const practiceSlides = [
-  {
-    title: "Active Recall", 
-    description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
-    image: "/active-recall.png",
-    color: "bg-blue",
-    path: "/dashboard/practice/active-recall",
-  },
-  {
-    title: "Basic Review", 
-    description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
-    image: "/basic-review.png",
-    color: "bg-purple",
-    path: "/dashboard/practice/basic-review",
-  },
-  {
-    title: "Audio Player", 
-    description: "Tune in and listen to your notes anytime, anywhere.", 
-    image: "/audio-player.png",
-    color: "bg-cyan",
-    path: "/dashboard/practice/audio-player",
-  },
-  {
-    title: "Challenge", 
-    description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
-    image: "/challenge.png",
-    color: "bg-pink",
-    path: "/dashboard/practice/challenge",
-  },
-  {
-    title: "Lumbaanay", 
-    description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
-    image: "/lumbaanay.png",
-    color: "bg-lime",
-    path: "/dashboard/practice/lumbaanay",
-  }
-];
+interface PracticeModalProps {
+  currentDeckId: string;
+}
 
-export default function PracticeModal() {
+export default function PracticeModal({ currentDeckId }: PracticeModalProps) {
   const { Modal, setShowModal } = useContext(ModalContext);
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const practiceSlides = [
+    {
+      title: "Active Recall", 
+      description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
+      image: "/active-recall.png",
+      color: "bg-blue",
+      path: `/dashboard/practice/active-recall/${currentDeckId}`,
+    },
+    {
+      title: "Basic Review", 
+      description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
+      image: "/basic-review.png",
+      color: "bg-purple",
+      path: `/dashboard/practice/basic-review/${currentDeckId}`,
+    },
+    {
+      title: "Audio Player", 
+      description: "Tune in and listen to your notes anytime, anywhere.", 
+      image: "/audio-player.png",
+      color: "bg-cyan",
+      path: `/dashboard/practice/audio-player/${currentDeckId}`,
+    },
+    {
+      title: "Challenge", 
+      description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
+      image: "/challenge.png",
+      color: "bg-pink",
+      path: "/dashboard/practice/challenge",
+    },
+    {
+      title: "Lumbaanay", 
+      description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
+      image: "/lumbaanay.png",
+      color: "bg-lime",
+      path: "/dashboard/practice/lumbaanay",
+    }
+  ];
 
   const handlePlay = () => {
     const activeSlide = practiceSlides[activeIndex];

@@ -178,7 +178,7 @@ export default function CardsPageLayout({
       </div>
 
       {activeModal === "practice" && (
-          <PracticeModal />
+          <PracticeModal currentDeckId={currentDeckId}/>
       )}
 
       {activeModal === "new-card" && (
