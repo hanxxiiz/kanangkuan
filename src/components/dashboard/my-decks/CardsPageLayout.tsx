@@ -186,7 +186,7 @@ export default function CardsPageLayout({
       )}
 
       {activeModal === "ai-import" && (
-          <AIImportModal />
+        <AIImportModal/>
       )}
     </>
   );
