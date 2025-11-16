@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractText } from 'unpdf';
+import * as XLSX from 'xlsx';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const fileType = formData.get('fileType') as string;
 
     if (!file) {
       return NextResponse.json(
@@ -14,15 +15,22 @@ export async function POST(request: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer); // Convert to Uint8Array
+    const buffer = Buffer.from(arrayBuffer);
 
-    const { text } = await extractText(uint8Array); // Pass Uint8Array instead of Buffer
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    
+    let text = '';
+    workbook.SheetNames.forEach(sheetName => {
+      const sheet = workbook.Sheets[sheetName];
+      const csv = XLSX.utils.sheet_to_csv(sheet);
+      text += `Sheet: ${sheetName}\n${csv}\n\n`;
+    });
 
     return NextResponse.json({ success: true, text });
   } catch (error) {
-    console.error('PDF extraction error:', error);
+    console.error('XLSX/CSV extraction error:', error);
     return NextResponse.json(
-      { error: 'Failed to extract text from PDF' },
+      { error: 'Failed to extract text from file' },
       { status: 500 }
     );
   }

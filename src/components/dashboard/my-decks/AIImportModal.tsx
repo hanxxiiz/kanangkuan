@@ -6,6 +6,7 @@ import { FiUploadCloud } from "react-icons/fi";
 import { FaFileCsv, FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
 import { BiSolidFileTxt } from "react-icons/bi";
 import { RiFilePpt2Fill } from "react-icons/ri";
+import { uploadDocument } from '@/lib/actions/document-actions';
 
 const fileTypeIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
   pdf: { icon: <FaFilePdf />, bg: "from-pink to-dark-pink" },
@@ -19,10 +20,16 @@ const fileTypeIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
   csv: { icon: <FaFileCsv />, bg: "from-cyan to-dark-cyan" },
 };
 
-export default function AIImportModal() {
-  const { Modal } = useContext(ModalContext);
+interface AIImportModalProps {
+  currentDeckId: string;
+}
+
+export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
+  const { Modal, setShowModal } = useContext(ModalContext);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const acceptedTypes = [
@@ -37,15 +44,31 @@ export default function AIImportModal() {
     "text/csv",
   ];
 
+  const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) {
-      const file = e.target.files[0];
-      if (!acceptedTypes.includes(file.type)) {
-        alert("Unsupported file type. Please upload a valid document.");
-        return;
-      }
-      setSelectedFile(file);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Validate file type
+    if (!acceptedTypes.includes(file.type)) {
+      setError("Unsupported file type. Please upload PDF, DOCX, TXT, PPTX, XLSX, or CSV.");
+      return;
     }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File size exceeds 8MB limit. Please choose a smaller file.');
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+      return;
+    }
+
+    setError(null);
+    setSelectedFile(file);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -61,16 +84,82 @@ export default function AIImportModal() {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
+    
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Validate file type
     if (!acceptedTypes.includes(file.type)) {
-      alert("Unsupported file type. Please upload a valid document.");
+      setError("Unsupported file type. Please upload PDF, DOCX, TXT, PPTX, XLSX, or CSV.");
       return;
     }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File size exceeds 8MB limit. Please choose a smaller file.');
+      return;
+    }
+
+    setError(null);
     setSelectedFile(file);
   };
 
-  const openFileDialog = () => inputRef.current?.click();
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setError('Please select a file first');
+      return;
+    }
+
+    if (!currentDeckId) {
+      setError('Deck ID is missing');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      console.log('Starting upload...', {
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size,
+        fileType: selectedFile.type,
+        deckId: currentDeckId
+      });
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('deckId', currentDeckId);
+
+      console.log('Calling uploadDocument...');
+      const result = await uploadDocument(formData);
+      console.log('Upload result:', result);
+
+      if (result.success) {
+        console.log('Upload successful!');
+        // Success! Close modal and reset
+        setShowModal(false);
+        setSelectedFile(null);
+        if (inputRef.current) {
+          inputRef.current.value = '';
+        }
+        // Optionally show a success toast/notification here
+      } else {
+        console.error('Upload failed:', result.error);
+        setError(result.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const openFileDialog = () => {
+    inputRef.current?.click();
+  };
 
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split(".").pop()?.toLowerCase() || "";
@@ -86,7 +175,11 @@ export default function AIImportModal() {
 
   return (
     <div>
-      <Modal heading="AI Import" actionButtonText="Import">
+      <Modal 
+        heading="AI Import" 
+        actionButtonText={uploading ? "Uploading..." : "Import"}
+        onAction={handleUpload}
+      >
         {!selectedFile ? (
           <div
             className={`mt-3 w-full rounded-4xl border-3 border-dashed flex flex-col justify-center items-center py-10 cursor-pointer transition-colors ${
@@ -100,7 +193,7 @@ export default function AIImportModal() {
             <FiUploadCloud className="text-7xl" />
             <h2 className="text-base font-main mb-1">Upload or drag a file here</h2>
             <p className="text-xs font-body text-gray-300">
-              Accepted: PDF, DOC, DOCX, TXT, PPT, PPTX, XLS, XLSX, CSV
+              Accepted: PDF, DOCX, TXT, PPTX, XLSX, CSV (Max 8MB)
             </p>
             <input
               ref={inputRef}
@@ -115,10 +208,10 @@ export default function AIImportModal() {
             className={`mt-3 w-full rounded-4xl border-1 border-black flex flex-col justify-center items-center py-10 text-black`}
           >
             <div
-                className={`py-8 px-5 flex items-center justify-center rounded-2xl text-white text-7xl bg-gradient-to-b ${getFileIcon(selectedFile.name).bg}`}
-              >
-                {getFileIcon(selectedFile.name).icon}
-              </div>
+              className={`py-8 px-5 flex items-center justify-center rounded-2xl text-white text-7xl bg-gradient-to-b ${getFileIcon(selectedFile.name).bg}`}
+            >
+              {getFileIcon(selectedFile.name).icon}
+            </div>
 
             <h2
               className="mt-2 text-md font-main max-w-[250px] truncate text-center"
@@ -132,7 +225,8 @@ export default function AIImportModal() {
 
             <button
               onClick={openFileDialog}
-              className="px-4 py-2 rounded-full bg-black text-white text-sm hover:bg-gray-800 transition-colors cursor-pointer"
+              disabled={uploading}
+              className="px-4 py-2 rounded-full bg-black text-white text-sm hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Replace File
             </button>
@@ -144,6 +238,12 @@ export default function AIImportModal() {
               accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.csv"
               style={{ display: "none" }}
             />
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
       </Modal>
