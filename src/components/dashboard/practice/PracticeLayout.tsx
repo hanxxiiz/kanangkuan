@@ -13,6 +13,7 @@ import {
   GetUserKeys,
   GetUserProfilePic,
 } from "@/lib/queries/basic-review-queries";
+import { generateBlankWordsForDeck } from "@/lib/actions/generate-blank-words";
 
 type SortOrder = "oldest_first" | "newest_first" | "random_order";
 
@@ -49,42 +50,68 @@ export default function PracticeLayout({
   const [initialData, setInitialData] = useState<any>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
+  const isActiveRecall = pathname.includes("/dashboard/practice/active-recall");
   const showSettings = isBasicReview || pathname.includes("/dashboard/practice/audio-player");
+
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    async function loadData() {
-      if (!mounted) return;
+  let isCancelled = false;
 
-      setIsLoading(true);
-      try {
-        const settings = await GetUserSettings();
-        setSortOrder(settings.review_sort_order);
+  async function loadData() {
+    if (!mounted || !deckId) return;
 
-        if (!deckId) return;
+    setIsLoading(true);
+    try {
+      const settings = await GetUserSettings();
+      if (isCancelled) return;
+      setSortOrder(settings.review_sort_order);
 
-        const info = await GetDeckInfo(deckId);
-        setDeckInfo(info);
+      const info = await GetDeckInfo(deckId);
+      if (isCancelled) return;
+      setDeckInfo(info);
 
-        if (isBasicReview) {
-          const [cardsData, keysData, profilePicData] = await Promise.all([
-            GetCardsForReview(deckId, "oldest_first"),
-            GetUserKeys(),
-            GetUserProfilePic(),
-          ]);
-          setInitialData({ cards: cardsData, keys: keysData, profilePic: profilePicData });
+      if (isActiveRecall) {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('prepare') === 'true' && !isGenerating) {
+          setIsGenerating(true);
+          
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          const result = await generateBlankWordsForDeck(deckId);
+          
+          setIsGenerating(false);
+          
+          if (result.success) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('prepare');
+            window.history.replaceState({}, '', newUrl);
+          }
         }
-        // Add other modes here as needed
-      } finally {
+        
+        if (!isCancelled) {
+          const cardsData = await GetCardsForReview(deckId, "oldest_first");
+          setInitialData({ cards: cardsData });
+        }
+      }
+      
+    } finally {
+      if (!isCancelled) {
         setIsLoading(false);
       }
     }
+  }
 
-    loadData();
-  }, [mounted, deckId, pathname, isBasicReview]);
+  loadData();
+
+  return () => {
+    isCancelled = true;
+  };
+}, [mounted, deckId]);
 
   //will be changed with the loading component later on
   if (!mounted || isLoading) {

@@ -60,6 +60,7 @@ const MAX_CARDS_PER_DOCUMENT = 100;
 const MAX_TEXT_LENGTH = 50000; // characters
 const CARD_BATCH_SIZE = 10;
 const WRONG_OPTIONS_BATCH_SIZE = 10;
+const BLANK_WORDS_BATCH_SIZE = 10;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -195,6 +196,7 @@ async function saveCardsToDatabase(
           deck_id: deckId,
           front: card.front,
           back: card.back,
+          blank_word: null,
           created_at: new Date().toISOString(),
         })
         .select()
@@ -244,12 +246,15 @@ async function generateAndSaveWrongOptions(cardIds: string[]): Promise<void> {
   
   console.log('Background: Generating wrong options for', cardIds.length, 'cards');
 
+  let successCount = 0;
+  let failCount = 0;
+
   for (let i = 0; i < cardIds.length; i += WRONG_OPTIONS_BATCH_SIZE) {
     const batch = cardIds.slice(i, i + WRONG_OPTIONS_BATCH_SIZE);
     
     console.log(`Batch ${Math.floor(i / WRONG_OPTIONS_BATCH_SIZE) + 1}/${Math.ceil(cardIds.length / WRONG_OPTIONS_BATCH_SIZE)}`);
     
-    await Promise.allSettled(
+    const results = await Promise.allSettled(
       batch.map(async (cardId) => {
         const { data: card } = await supabase
           .from('cards')
@@ -257,11 +262,11 @@ async function generateAndSaveWrongOptions(cardIds: string[]): Promise<void> {
           .eq('id', cardId)
           .single();
 
-        if (!card) return;
+        if (!card) return false;
 
         const wrongOptions = await generateWrongOptions(card.front, card.back);
 
-        await supabase
+        const { error } = await supabase
           .from('card_options')
           .insert({
             card_id: cardId,
@@ -269,11 +274,103 @@ async function generateAndSaveWrongOptions(cardIds: string[]): Promise<void> {
             wrong_option_2: wrongOptions[1],
             wrong_option_3: wrongOptions[2],
           });
+
+        return !error;
       })
     );
+
+    // Count successes and failures
+    results.forEach(result => {
+      if (result.status === 'fulfilled' && result.value) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    });
   }
 
   console.log('Background: Finished generating wrong options');
+  console.log(`Successfully saved wrong options to database: ${successCount}/${cardIds.length} cards`);
+  if (failCount > 0) {
+    console.log(`Failed to save: ${failCount} cards`);
+  }
+}
+
+async function generateBlankWord(back: string): Promise<string | null> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  
+  try {
+    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ back }),
+    });
+
+    if (!response.ok) throw new Error(response.statusText);
+
+    const result = await response.json();
+    
+    if (result.success && result.blank_word) {
+      return result.blank_word;
+    }
+  } catch (error) {
+    console.error('Blank word generation error:', error);
+  }
+  
+  return null;
+}
+
+
+async function generateAndSaveBlankWords(cardIds: string[]): Promise<void> {
+  const supabase = await createClient();
+  
+  console.log('Background: Generating blank words for', cardIds.length, 'cards');
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < cardIds.length; i += BLANK_WORDS_BATCH_SIZE) {
+    const batch = cardIds.slice(i, i + BLANK_WORDS_BATCH_SIZE);
+    
+    console.log(`Batch ${Math.floor(i / BLANK_WORDS_BATCH_SIZE) + 1}/${Math.ceil(cardIds.length / BLANK_WORDS_BATCH_SIZE)}`);
+    
+    const results = await Promise.allSettled(
+      batch.map(async (cardId) => {
+        const { data: card } = await supabase
+          .from('cards')
+          .select('back')
+          .eq('id', cardId)
+          .single();
+
+        if (!card) return false;
+
+        const blankWord = await generateBlankWord(card.back);
+
+        if (!blankWord) return false;
+
+        const { error } = await supabase
+          .from('cards')
+          .update({ blank_word: blankWord })
+          .eq('id', cardId);
+
+        return !error;
+      })
+    );
+
+    results.forEach(result => {
+      if (result.status === 'fulfilled' && result.value) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    });
+  }
+
+  console.log('Background: Finished generating blank words');
+  console.log(`Successfully saved blank words: ${successCount}/${cardIds.length} cards`);
+  if (failCount > 0) {
+    console.log(`Failed to save: ${failCount} cards`);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -313,7 +410,7 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
       importRecord.file_type
     );
 
-    if (!extractedText || extractedText.trim().length < 50) {
+    if (!extractedText || extractedText.trim().length < 5) {
       throw new Error('Insufficient text content');
     }
     
@@ -362,6 +459,8 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
     // STEP 5: Background wrong options generation
     console.log('[STEP 5/5] Starting background wrong options generation...');
     generateAndSaveWrongOptions(cardIds).catch(console.error);
+    generateAndSaveBlankWords(cardIds).catch(console.error); 
+
 
     console.log('[PIPELINE COMPLETE] Success!');
 

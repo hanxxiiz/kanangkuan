@@ -3,11 +3,11 @@ import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req: Request) {
   try {
-    const { text } = await req.json();
+    const { back } = await req.json();
     
-    if (!text) {
+    if (!back) {
       return NextResponse.json(
-        { success: false, error: 'No text provided' },
+        { success: false, error: 'No back content provided' },
         { status: 400 }
       );
     }
@@ -17,24 +17,23 @@ export async function POST(req: Request) {
 
     const ai = new GoogleGenAI({ apiKey });
     
-    const systemInstruction = `You are an expert flashcard generator. Your task is to:
+    const systemInstruction = `You are an expert at selecting the most important word or phrase for active recall learning. Your task is to:
 
-    1. Analyze the provided text content
-    2. Generate high-quality question-and-answer flashcards
+    1. Analyze the provided answer text (back of flashcard)
+    2. Select the SINGLE most important word or short phrase (1-5 words max) that should be blanked out
     3. Return ONLY valid JSON - no markdown, no explanation, no extra text
-    4. Format: { "flashcards": [{ "front": "question", "back": "answer" }] }
+    4. Format: { "blank_word": "selected word or phrase" }
 
-    Rules for flashcard creation:
-    - Create clear, focused questions (front side)
-    - Provide accurate, concise answers (back side)
-    - Cover key concepts, definitions, facts, and important details
-    - Each flashcard should test one specific piece of knowledge
-    - Questions should be specific and answerable
-    - Answers should be complete but concise
-    - Generate between 5-20 flashcards depending on content length
-    - Ensure questions are diverse (definitions, explanations, examples, comparisons)
+    Selection criteria:
+    - Choose the MOST critical keyword, concept, term, or name
+    - Should be specific and meaningful (not generic words like "is", "the", "very")
+    - Should be a word/phrase that tests core understanding
+    - Prefer nouns, proper nouns, technical terms, or key concepts
+    - If it's a definition, choose the term being defined
+    - If it's a fact, choose the key detail (date, name, number, place)
+    - Keep it SHORT - ideally 1 word, maximum 5 words
 
-    CRITICAL: Return ONLY the JSON object. No markdown code blocks, no explanations.`;
+    CRITICAL: Return ONLY the JSON object with "blank_word" key. No markdown code blocks, no explanations.`;
 
     const contents = [
       {
@@ -43,11 +42,11 @@ export async function POST(req: Request) {
       },
       {
         role: 'model',
-        parts: [{ text: 'Understood. I will generate flashcards and return only valid JSON.' }],
+        parts: [{ text: 'Understood. I will select the best word/phrase for blanking and return only valid JSON.' }],
       },
       {
         role: 'user',
-        parts: [{ text: `Generate flashcards from this content:\n\n${text}` }],
+        parts: [{ text: `Select the best word/phrase to blank from this answer:\n\n${back}` }],
       },
     ];
 
@@ -57,7 +56,7 @@ export async function POST(req: Request) {
       const response = await ai.models.generateContentStream({
         model: 'gemini-2.5-flash',
         config: {
-          temperature: 0.7,
+          temperature: 0.3, 
           thinkingConfig: { thinkingBudget: -1 },
         },
         contents,
@@ -73,7 +72,7 @@ export async function POST(req: Request) {
         const fallbackResponse = await ai.models.generateContentStream({
           model: 'gemini-2.5-flash-lite',
           config: {
-            temperature: 0.7,
+            temperature: 0.3,
             thinkingConfig: { thinkingBudget: -1 },
           },
           contents,
@@ -88,7 +87,7 @@ export async function POST(req: Request) {
         const finalFallbackResponse = await ai.models.generateContentStream({
           model: 'gemini-2.0-flash',
           config: {
-            temperature: 0.7,
+            temperature: 0.3,
           },
           contents,
         });
@@ -99,7 +98,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Clean response and parse JSON
     const cleanedResponse = fullResponse
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -115,33 +113,29 @@ export async function POST(req: Request) {
     }
 
     // Validate structure
-    if (!parsedData.flashcards || !Array.isArray(parsedData.flashcards)) {
-      throw new Error('Invalid flashcard format');
+    if (!parsedData.blank_word || typeof parsedData.blank_word !== 'string') {
+      throw new Error('Invalid blank_word format');
     }
 
-    // Validate each flashcard
-    const validFlashcards = parsedData.flashcards.filter((card: any) => 
-      card.front && card.back && 
-      typeof card.front === 'string' && 
-      typeof card.back === 'string'
-    );
-
-    if (validFlashcards.length === 0) {
-      throw new Error('No valid flashcards generated');
+    // Trim and validate the blank word
+    const blankWord = parsedData.blank_word.trim();
+    
+    if (blankWord.length === 0 || blankWord.length > 50) {
+      throw new Error('Invalid blank_word length');
     }
 
     return NextResponse.json({ 
       success: true, 
-      flashcards: validFlashcards
+      blank_word: blankWord
     });
 
   } catch (error: any) {
-    console.error("Flashcard generation error:", error);
+    console.error("Blank word generation error:", error);
     return NextResponse.json(
       { 
         success: false, 
-        flashcards: null, 
-        error: error.message || 'Flashcard generation failed'
+        blank_word: null, 
+        error: error.message || 'Blank word generation failed'
       },
       { status: 500 }
     );
