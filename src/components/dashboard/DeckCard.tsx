@@ -38,20 +38,20 @@ const DeckCard: React.FC<DeckCardProps> = ({ deckId, deckName, cardCount = 0, de
   };
 
   return (
-    <div className="group bg-white border rounded-2xl shadow-md p-6 sm:p-8 flex items-center justify-between w-full hover:scale-101 hover:shadow-lg transition-transform transition-shadow duration-100 cursor-pointer"
+    <div className="group bg-white border border-gray-100 rounded-2xl shadow-lg p-6 sm:p-8 flex items-center justify-between w-full hover:scale-101 hover:shadow-xl transition-all duration-400 ease-out cursor-pointer"
       onClick={handleClick}
     >
       <div className="flex items-center min-w-0"> 
         <div className="mr-6 shrink-0">
-          <FaClone className={`transition-colors duration-200 ${hoverColorClasses[selectedColor]} w-6 h-6 sm:w-8 sm:h-8 ${colorClasses[selectedColor]}`} /> 
+          <FaClone className={`transition-all duration-300 ease-out ${hoverColorClasses[selectedColor]} w-6 h-6 sm:w-8 sm:h-8 ${colorClasses[selectedColor]}`} /> 
         </div>
 
         <div className="min-w-0">
-          <h3 className={`transition-colors duration-200 ${hoverColorClasses[selectedColor]} font-main text-xl sm:text-2xl 
+          <h3 className={`transition-all duration-300 ease-out ${hoverColorClasses[selectedColor]} font-main text-xl sm:text-2xl 
             text-black truncate overflow-hidden whitespace-nowrap max-w-[180px] sm:max-w-[450px] lg:max-w-[800px] xl:max-w-[1200px]`}>
             {deckName}
           </h3>
-          <p className={`transition-colors duration-200 ${hoverColorClasses[selectedColor]} font-body text-sm sm:text-lg
+          <p className={`transition-all duration-300 ease-out ${hoverColorClasses[selectedColor]} font-body text-sm sm:text-lg
             text-gray-700 truncate overflow-hidden whitespace-nowrap max-w-[180px] sm:max-w-[500px]`}>
             {cardCount} cards
           </p>
@@ -59,7 +59,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ deckId, deckName, cardCount = 0, de
       </div>
 
       <div className="shrink-0">
-        <FaAngleRight className={`transition-colors duration-200 ${hoverColorClasses[selectedColor]} w-4 h-4 sm:w-6 sm:h-6 text-[#101220]`} />
+        <FaAngleRight className={`transition-all duration-300 ease-out ${hoverColorClasses[selectedColor]} w-4 h-4 sm:w-6 sm:h-6 text-[#101220] sm:text-gray-300`} />
       </div>
     </div>
 
