@@ -2,11 +2,6 @@ import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '10mb', 
-    },
-  },
   images: {
     remotePatterns: [
       {
