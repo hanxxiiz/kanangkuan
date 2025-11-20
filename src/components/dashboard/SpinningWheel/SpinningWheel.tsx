@@ -19,11 +19,11 @@ interface Sector {
 const sectors: Sector[] = [
   { color: "#8AFF00", text: "#ffffffff", label: "+3 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 3 },
   { color: "#FD14BB", text: "#ffffffff", label: "+1 Key", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 1 },
-  { color: "#6715FF", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 2},
+  { color: "#10FFE2", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 2},
   { color: "#C401DB", text: "#ffffffff", label: "+150 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 150 },
   { color: "#8AFF00", text: "#ffffffff", label: "+5 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 5 },
   { color: "#FD14BB", text: "#ffffffff", label: "+2 Keys", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 2 },
-  { color: "#6715FF", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 3 },
+  { color: "#10FFE2", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 3 },
   { color: "#C401DB", text: "#ffffffff", label: "+200 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 200 },
 ];
 
