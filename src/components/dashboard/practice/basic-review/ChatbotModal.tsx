@@ -182,7 +182,7 @@ export default function ChatbotModal({
     }));
 
     try {
-      const res = await fetch("/api/ai/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
