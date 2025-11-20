@@ -8,17 +8,19 @@ import ModalProvider from "@/components/modals/providers";
 import ProfileDropdown from "@/components/dashboard/ProfileDropdown";
 import SearchModal from "./SearchModal";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import PracticeModal from "./my-decks/PracticeModal";
 
 const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const { allDecks, folders } = useDashboard(); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchMode, setSearchMode] = useState<"search" | "practice">("search"); // Track the mode
+  const [searchMode, setSearchMode] = useState<"search" | "practice">("search");
+  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
+  const [modalKey, setModalKey] = useState(0);
 
   const pathname = usePathname();
 
-  // Show layout for all /dashboard routes EXCEPT those starting with /dashboard/practice/
   const hasLayout = 
     pathname.startsWith("/dashboard") && 
     !pathname.startsWith("/dashboard/practice/");
@@ -37,6 +39,15 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
     setShowSearchModal(true);
   };
 
+  const handleDeckSelect = (deckId: string) => {
+    setSelectedDeckId(deckId);
+    setModalKey(prev => prev + 1);
+    setShowSearchModal(false);
+  };
+
+  const handlePracticeModalClose = () => {
+    setSelectedDeckId(null); 
+  };
 
   return (
     <ModalProvider>
@@ -75,13 +86,23 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
             <div className="p-6 pb-20 lg:pb-6">{children}</div>
           </main>
         </div>
+        
         <SearchModal 
           showModal={showSearchModal} 
           setShowModal={setShowSearchModal}
           mode={searchMode}
           allDecks={allDecks}
           folders={folders}
+          onDeckSelect={handleDeckSelect} 
         />
+
+        {selectedDeckId && (
+          <PracticeModal 
+            key={modalKey}
+            currentDeckId={selectedDeckId}
+            onClose={handlePracticeModalClose} 
+          />
+        )}
       </div>
     </ModalProvider>
   );

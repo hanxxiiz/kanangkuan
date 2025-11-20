@@ -3,18 +3,15 @@ import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req: Request) {
   try {
-    const { message, history } = await req.json();
+    const { message, history, cardContext, isInitialExplanation } = await req.json();
     
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_KEY;
-
-    console.log('API Key exists:', !!apiKey);
-    console.log('API Key first 10 chars:', apiKey?.substring(0, 10));
 
     if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
     const ai = new GoogleGenAI({ apiKey });
     
-    const systemInstruction = `You are Chika, a helpful and friendly AI assistant. Rules:
+    let systemInstruction = `You are Chika, a helpful and friendly AI assistant specialized in explaining flashcard concepts. Rules:
 
     1. Write in plain text only - NO markdown symbols (**, *, _, #, etc.)
     2. Be concise - short answers for simple questions, detailed only when needed
@@ -23,11 +20,18 @@ export async function POST(req: Request) {
     5. If uncertain, clearly state your uncertainty - never make up information
     6. Answer based on established knowledge and widely accepted facts
     7. Never invent statistics, dates, names, or specific details
-    8. For scientific topics, cite only widely accepted consensus
-    9. Keep responses warm, professional, and conversational
-    10. Use proper paragraphs with line breaks for readability
+    8. Keep responses warm, professional, and conversational
+    9. Use proper paragraphs with line breaks for readability
+    10. ALWAYS start your responses with "Hey classmate!" as a friendly greeting
+
 
     Remember: If you're unsure about something, clearly say so rather than guessing.`;
+
+    if (isInitialExplanation) {
+      systemInstruction += `\n\nThis is your first message. Directly explain the CONTENT and CONCEPT shown in this flashcard. Do NOT explain what a flashcard is or what "front" and "back" mean. Jump straight into explaining the actual topic, concept, or information presented. Provide helpful context, examples, or elaboration to help the user understand the material better.`;
+    } else if (cardContext) {
+      systemInstruction += `\n\nContext: You are helping explain this flashcard:\nFront: ${cardContext.front}\nBack: ${cardContext.back}\n\nAnswer the user's follow-up question while keeping this flashcard content in mind.`;
+    }
 
     const userMessage = message;
 
@@ -100,15 +104,14 @@ export async function POST(req: Request) {
       }
     }
 
-    // Strip out all markdown formatting that might slip through
     const cleanedResponse = fullResponse
-      .replace(/\*\*\*(.+?)\*\*\*/g, '$1')  // Remove ***text***
-      .replace(/\*\*(.+?)\*\*/g, '$1')      // Remove **text**
-      .replace(/\*(.+?)\*/g, '$1')          // Remove *text*
-      .replace(/__(.+?)__/g, '$1')          // Remove __text__
-      .replace(/_(.+?)_/g, '$1')            // Remove _text_
-      .replace(/^#{1,6}\s+/gm, '')          // Remove headers
-      .replace(/`(.+?)`/g, '$1')            // Remove `code`
+      .replace(/\*\*\*(.+?)\*\*\*/g, '$1')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/_(.+?)_/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/`(.+?)`/g, '$1')
       .trim();
 
     return NextResponse.json({ 
