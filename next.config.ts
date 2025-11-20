@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
+import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb', 
+    },
+  },
   images: {
     remotePatterns: [
       {
@@ -10,7 +16,14 @@ const nextConfig: NextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
-  },
+  }
 };
 
-export default nextConfig;
+const withPWASetup = withPWA({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+});
+
+export default withPWASetup(nextConfig);
