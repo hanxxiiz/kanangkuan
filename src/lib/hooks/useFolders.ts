@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { folderService } from "../services"
 import { useUser } from "./useUser";
-import { Deck, Folder } from "@/utils/supabase/models";
+import { Folder } from "@/utils/supabase/models";
 
 export function useFolders(folderId?: string) {
     const { user } = useUser(); 

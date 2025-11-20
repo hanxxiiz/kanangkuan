@@ -1,7 +1,19 @@
 import { createClient } from "@/utils/supabase/client";
-import { Card, Deck, Folder } from "@/utils/supabase/models";
+import { Card, Deck, Folder, Profile } from "@/utils/supabase/models";
 
 const supabase = createClient();
+
+export const profileService = {
+    async getProfiles(userId: string[]): Promise<Profile[]>{
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .in("id", userId)
+
+        if (error) throw error;
+        return data || [];
+    },
+}
 
 export const folderService = {
     async getFolders(userId: string): Promise<Folder[]> {

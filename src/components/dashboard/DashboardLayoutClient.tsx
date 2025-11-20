@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/dashboard/navbar";
 import Sidebar from "@/components/dashboard/sidebar";
-import ModalProvider from "@/components/modals/providers";
+import {ModalProvider} from "@/components/modals/providers";
 import ProfileDropdown from "@/components/dashboard/ProfileDropdown";
 import SearchModal from "./SearchModal";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
@@ -23,7 +23,8 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
 
   const hasLayout = 
     pathname.startsWith("/dashboard") && 
-    !pathname.startsWith("/dashboard/practice/");
+    !pathname.startsWith("/dashboard/practice/") &&
+    !pathname.startsWith("/dashboard/games/");
   
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
