@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation"; 
+import { useRouter } from "next/navigation"; 
 import Image from "next/image";
 import { IoMenu } from "react-icons/io5";
 import { IoNotificationsOutline } from "react-icons/io5";
-import { IoNotifications } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
 import LevelBar from "./LevelBar";
@@ -25,7 +24,6 @@ const Navbar = ({
   onSearchClick?: () => void; 
 }) => {
   const router = useRouter(); 
-  const pathname = usePathname(); // Get current path example: /dashboard/notification
   const { profileUrl, unreadNotificationCount } = useDashboard(); // Get from context
 
 
@@ -76,15 +74,9 @@ const Navbar = ({
             {/* Notifications */}
             <button
               className="relative rounded-full hover:cursor-pointer hover:scale-105 text-[#101220] transition group"
-              onClick={() => router.push("/dashboard/notification")}
+              onClick={() => router.push("/notification")}
             >
-              {/*Changes icons based on the current path or page */}
-              {pathname === "/dashboard/notification" ? (
-                <IoNotifications className="text-3xl" />
-              ) : (
-                <IoNotificationsOutline className="text-3xl" />
-              )}
-              
+              <IoNotificationsOutline className="text-3xl" />
               {unreadNotificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 text-white text-xs bg-red-500 rounded-full w-5 h-5 flex items-center justify-center font-regular transition-colors group-hover:scale-105">
                   {unreadNotificationCount}
