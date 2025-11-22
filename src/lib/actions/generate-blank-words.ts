@@ -88,7 +88,7 @@ export async function generateBlankWordsForDeck(
   const supabase = await createClient();
 
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     
     const effectiveUserId = userId || user?.id;
     
@@ -155,7 +155,6 @@ export async function generateBlankWordsForDeck(
 
     // Process cards in batches
     let successCount = 0;
-    let failCount = 0;
 
     for (let i = 0; i < cardsNeedingBlankWords.length; i += BATCH_SIZE) {
       const batch = cardsNeedingBlankWords.slice(i, i + BATCH_SIZE);
@@ -179,18 +178,16 @@ export async function generateBlankWordsForDeck(
             }
 
             return true;
-          } catch (error) {
+          } catch {
             return false;
           }
         })
       );
 
-      // Count successes and failures
+      // Count successes
       results.forEach((result) => {
         if (result.status === 'fulfilled' && result.value) {
           successCount++;
-        } else {
-          failCount++;
         }
       });
     }

@@ -241,7 +241,7 @@ export default function SearchModal({
           {emptyMessage ? (
             <EmptyState message={emptyMessage} />
           ) : (
-            finalResults.map((result, index) => (
+            finalResults.map((result) => (
               <SearchResult 
                 key={`${result.type}-${result.id}`} 
                 type={result.type} 

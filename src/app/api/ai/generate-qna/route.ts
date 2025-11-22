@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from '@google/genai';
 
+interface RequestBody {
+  text: string;
+}
+
+interface Flashcard {
+  front: string;
+  back: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const { text } = await req.json();
+    const { text } = await req.json() as RequestBody;
     
     if (!text) {
       return NextResponse.json(
@@ -66,7 +75,7 @@ export async function POST(req: Request) {
       for await (const chunk of response) {
         fullResponse += chunk.text || '';
       }
-    } catch (primaryError: any) {
+    } catch {
       console.log('Primary model failed, trying gemini-2.5-flash-lite...');
       
       try {
@@ -82,7 +91,7 @@ export async function POST(req: Request) {
         for await (const chunk of fallbackResponse) {
           fullResponse += chunk.text || '';
         }
-      } catch (fallbackError: any) {
+      } catch {
         console.log('Second model failed, trying gemini-2.0-flash...');
         
         const finalFallbackResponse = await ai.models.generateContentStream({
@@ -120,7 +129,7 @@ export async function POST(req: Request) {
     }
 
     // Validate each flashcard
-    const validFlashcards = parsedData.flashcards.filter((card: any) => 
+    const validFlashcards = parsedData.flashcards.filter((card: Flashcard) => 
       card.front && card.back && 
       typeof card.front === 'string' && 
       typeof card.back === 'string'
@@ -135,13 +144,14 @@ export async function POST(req: Request) {
       flashcards: validFlashcards
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Flashcard generation error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Flashcard generation failed';
     return NextResponse.json(
       { 
         success: false, 
         flashcards: null, 
-        error: error.message || 'Flashcard generation failed'
+        error: errorMessage
       },
       { status: 500 }
     );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-// @ts-ignore
+// @ts-expect-error - pptx-parser has no TypeScript definitions available
 import pptxParser from 'pptx-parser';
 
 export async function POST(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     const slides = await pptxParser(buffer);
-    const text = slides.map((slide: any) => slide.text).join('\n\n');
+    const text = slides.map((slide: { text: string }) => slide.text).join('\n\n');
 
     return NextResponse.json({ success: true, text });
   } catch (error) {

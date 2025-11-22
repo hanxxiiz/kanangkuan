@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './SpinningWheel.css';
 import ShowReward from './ShowReward';
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { ProcessSpinReward } from "@/lib/actions/daily-rewards-actions";
 import { RewardType } from '@/types/dashboard';
 import { useDashboard } from '../DashboardContext';
+import Image from 'next/image';
 
 
 interface Sector {
@@ -19,11 +20,11 @@ interface Sector {
 const sectors: Sector[] = [
   { color: "#8AFF00", text: "#ffffffff", label: "+3 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 3 },
   { color: "#FD14BB", text: "#ffffffff", label: "+1 Key", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 1 },
-  { color: "#6715FF", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 2},
+  { color: "#10FFE2", text: "#ffffffff", label: "+2 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 2},
   { color: "#C401DB", text: "#ffffffff", label: "+150 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 150 },
   { color: "#8AFF00", text: "#ffffffff", label: "+5 Lives", icon: "/dashboard/heart.svg", rewardType: "lives", rewardAmount: 5 },
   { color: "#FD14BB", text: "#ffffffff", label: "+2 Keys", icon: "/dashboard/key.svg", rewardType: "keys", rewardAmount: 2 },
-  { color: "#6715FF", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 3 },
+  { color: "#10FFE2", text: "#ffffffff", label: "+3 Hints", icon: "/dashboard/bulb.svg", rewardType: "hints", rewardAmount: 3 },
   { color: "#C401DB", text: "#ffffffff", label: "+200 XP", icon: "/dashboard/star.svg", rewardType: "xp", rewardAmount: 200 },
 ];
 
@@ -33,19 +34,9 @@ type SpinningWheelProps = {
   onSpinComplete?: () => void;
 };
 
-type RewardConfig = {
-  type: RewardType;
-  amount: number;
-  label: string;
-  color: string;
-};
-
 
 const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [spinText, setSpinText] = useState("SPIN");
-  const [spinBg, setSpinBg] = useState("#fff");
-  const [spinColor, setSpinColor] = useState("#fff");
   const [canvasRotation, setCanvasRotation] = useState(0);
   const [showReward, setShowReward] = useState(false);
   const [wonSector, setWonSector] = useState<Sector | null>(null);
@@ -66,9 +57,9 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
   const arc = TAU / sectors.length;
   const friction = 0.991;
 
-  const getIndex = () => Math.floor(tot - (angRef.current / TAU) * tot) % tot;
+  const getIndex = useCallback(() => Math.floor(tot - (angRef.current / TAU) * tot) % tot, [tot, TAU]);
 
-  const drawSector = (ctx: CanvasRenderingContext2D, sector: Sector, i: number, rad: number) => {
+  const drawSector = useCallback((ctx: CanvasRenderingContext2D, sector: Sector, i: number, rad: number) => {
     const ang = arc * i;
     ctx.save();
 
@@ -102,18 +93,13 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
     }
 
     ctx.restore();
-  };
+  }, [arc]);
 
-  const rotate = (ctx: CanvasRenderingContext2D, rad: number) => {
-    const sector = sectors[getIndex()];
+  const rotate = useCallback(() => {
     setCanvasRotation(angRef.current - PI / 2);
+  }, [PI]);
 
-    setSpinText(!angVelRef.current ? "SPIN" : sector.label);
-    setSpinBg(sector.color);
-    setSpinColor(sector.text);
-  };
-
-  const frame = async(ctx: CanvasRenderingContext2D, rad: number) => {
+  const frame = useCallback(async() => {
     if (!angVelRef.current && spinButtonClickedRef.current) {
       const finalSector = sectors[getIndex()];
       console.log(`Woop! You won ${finalSector.label}`);
@@ -139,13 +125,13 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
     if (angVelRef.current < 0.002) angVelRef.current = 0;
     angRef.current += angVelRef.current;
     angRef.current %= TAU;
-    rotate(ctx, rad);
-  };
+    rotate();
+  }, [friction, getIndex, rotate, TAU, updateSpinStatus]);
 
-  const engine = (ctx: CanvasRenderingContext2D, rad: number) => {
-    frame(ctx, rad);
+  const engine = useCallback((ctx: CanvasRenderingContext2D, rad: number) => {
+    frame();
     animationFrameRef.current = requestAnimationFrame(() => engine(ctx, rad));
-  };
+  }, [frame]);
 
    useEffect(() => {
     if (isOpen) {
@@ -199,7 +185,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
 
       ctx.clearRect(0, 0, dia, dia);
       sectors.forEach((sector, i) => drawSector(ctx, sector, i, rad));
-      rotate(ctx, rad);
+      rotate();
       engine(ctx, rad);
     };
 
@@ -207,7 +193,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
       initWheel();
     } else {
       imagesToLoad.forEach(iconUrl => {
-        const img = new Image();
+        const img = document.createElement('img') as HTMLImageElement;
         img.onload = () => {
           loadedImagesRef.current[iconUrl] = img;
           loadedCount++;
@@ -231,7 +217,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isOpen, wheelSize]);
+  }, [isOpen, wheelSize, drawSector, rotate, engine]);
 
   const handleSpin = () => {
     if (!angVelRef.current) {
@@ -249,12 +235,6 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
     setCanvasRotation(0);
     setIsVisible(false); 
     onClose();
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
   };
 
   if (!isOpen) return null;
@@ -301,23 +281,29 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
             }}
           >
             <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-              <img 
+              <Image 
                 src="/dashboard/spinning-wheel-button.svg" 
                 alt="Spin icon" 
+                width={wheelSize * 0.25}
+                height={wheelSize * 0.25}
                 className="w-full h-full object-contain"
               />
             </div>
           </div>
         </div>
       </div>
-      <img
+      <Image
         src="/dashboard/spinning-wheel-hero.svg"
         alt="Decorative"
+        width={400}
+        height={400}
         className="hidden xl:block absolute right-[150px] bottom-5 z-20 w-100 h-auto"
       />
-      <img
+      <Image
         src="/dashboard/cloud-2.svg"
         alt="Decorative"
+        width={500}
+        height={300}
         className="hidden xl:block absolute -bottom-35 -z-30 w-500 h-auto"
       />
       
@@ -338,7 +324,6 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ isOpen, onClose,  onSpinC
             }
           }}
           reward={wonSector.label}
-          icon={wonSector.icon}
         />
       )}
     </div>
