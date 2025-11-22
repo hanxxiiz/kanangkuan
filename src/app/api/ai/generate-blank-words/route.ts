@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from '@google/genai';
 
+interface RequestBody {
+  back: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const { back } = await req.json();
+    const { back } = await req.json() as RequestBody;
     
     if (!back) {
       return NextResponse.json(
@@ -65,7 +69,7 @@ export async function POST(req: Request) {
       for await (const chunk of response) {
         fullResponse += chunk.text || '';
       }
-    } catch (primaryError: any) {
+    } catch {
       console.log('Primary model failed, trying gemini-2.5-flash-lite...');
       
       try {
@@ -81,7 +85,7 @@ export async function POST(req: Request) {
         for await (const chunk of fallbackResponse) {
           fullResponse += chunk.text || '';
         }
-      } catch (fallbackError: any) {
+      } catch {
         console.log('Second model failed, trying gemini-2.0-flash...');
         
         const finalFallbackResponse = await ai.models.generateContentStream({
@@ -129,13 +133,14 @@ export async function POST(req: Request) {
       blank_word: blankWord
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Blank word generation error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Blank word generation failed';
     return NextResponse.json(
       { 
         success: false, 
         blank_word: null, 
-        error: error.message || 'Blank word generation failed'
+        error: errorMessage
       },
       { status: 500 }
     );

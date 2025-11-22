@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { processDocument } from './process-document';
-
+import { SupabaseClient } from '@supabase/supabase-js';
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'pptx', 'xlsx', 'csv'];
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
@@ -15,7 +15,7 @@ interface UploadResult {
   importId?: string;
 }
 
-async function checkPendingUploads(supabase: any, userId: string): Promise<boolean> {
+async function checkPendingUploads(supabase: SupabaseClient, userId: string): Promise<boolean> {
   try {
     const { count, error } = await supabase
       .from('ai_imports')

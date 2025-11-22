@@ -1,5 +1,6 @@
 import React from "react";
 import { useDashboard } from "./DashboardContext";
+import Image from "next/image";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -85,20 +86,6 @@ export default function MonthlyProgress() {
                 const badge = getBadgeIcon(xp);
                 const today = isToday(rowIndex, colIndex);
                 
-                const currentCellPosition = rowIndex * 7 + colIndex;
-                const totalCells = rows * 7;
-                let dayNumber = 0;
-                
-                for (let day = 1; day <= daysInMonth; day++) {
-                  const dayPosition = (firstDayOfMonth + day - 1) % totalCells;
-                  if (dayPosition === currentCellPosition) {
-                    dayNumber = day;
-                    break;
-                  }
-                }
-                
-                const isValidDay = dayNumber >= 1 && dayNumber <= daysInMonth;
-                
                 return (
                   <div
                     key={`${rowIndex}-${colIndex}`}
@@ -110,10 +97,12 @@ export default function MonthlyProgress() {
                     ].join(" ")}
                   >
                     {badge && (
-                      <img 
+                      <Image
                         src={badge} 
                         alt={`Badge for ${xp} XP`}
                         className="w-full h-full object-cover"
+                        width={40}
+                        height={40}
                       />
                     )}
                   </div>

@@ -6,7 +6,7 @@ export default function DecksPanel() {
             {/* Decks */}
                     <div className="my-3.5">
                         <div className="flex items-center justify-between">   
-                            <h1 className="font-bold text-3xl text-gray-900 py-3.5">[Username]'s Folder</h1>
+                            <h1 className="font-bold text-3xl text-gray-900 py-3.5">{`[Username]'s Folder`}</h1>
                         </div>
                         <div className="grid grid-cols-3 grid-rows-3 gap-y-6 mt-5 mb-20">
                             <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">

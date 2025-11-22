@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 
 const LevelBar = () => {
@@ -55,9 +56,11 @@ const LevelBar = () => {
       </span>
 
       {/* 3. Hero Image */}
-      <img
+      <Image
         src="/dashboard/levelBarHero.svg"
         alt="Level Hero"
+        width={40}
+        height={48}
         className="absolute left-9 top-7 -translate-y-1/2 w-10 h-12 z-20"
       />
     </div>

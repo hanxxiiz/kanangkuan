@@ -9,13 +9,11 @@ import DeckCard, {EmptyDeckState} from "@/components/dashboard/DeckCard";
 import SpinWheel from "@/components/dashboard/SpinningWheel/SpinningWheel";
 import MonthlyProgress from "@/components/dashboard/MonthlyProgress";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
-import { CheckAndResetDailyLimits, GetTimeUntilNextSpin } from "@/lib/actions/daily-rewards-actions";
-
 
 export default function Dashboard() {
   const router = useRouter(); 
 
-  const { userId, username, xp, profileUrl, leaderboardData, recentDecks, cardCounts, hasSpun, nextSpinTime, refreshDailyLimits } = useDashboard();
+  const { leaderboardData, recentDecks, cardCounts, hasSpun, nextSpinTime } = useDashboard();
   
   const [isMobile, setIsMobile] = useState(false);
   const [isWheelOpen, setIsWheelOpen] = useState(false);

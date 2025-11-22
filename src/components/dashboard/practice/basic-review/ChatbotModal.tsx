@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { IoClose } from "react-icons/io5";
 import { FaArrowUp } from "react-icons/fa6";
 import Image from "next/image";
@@ -55,10 +55,10 @@ function LoadingDots() {
 
 function ChatMessage({ sender, message, shouldAnimate = false, onUpdate, userProfilePic, onAnimationComplete }: ChatMessageProps) {
   const [displayedMessage, setDisplayedMessage] = useState(sender === "user" ? message : "");
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const hasAnimatedRef = useRef(false);
   
   useEffect(() => {
-    if (sender === "bot" && shouldAnimate && !hasAnimated) {
+    if (sender === "bot" && shouldAnimate && !hasAnimatedRef.current) {
       let index = 0;
       setDisplayedMessage("");
       
@@ -68,7 +68,7 @@ function ChatMessage({ sender, message, shouldAnimate = false, onUpdate, userPro
           index++;
           onUpdate?.();
         } else {
-          setHasAnimated(true);
+          hasAnimatedRef.current = true;
           clearInterval(interval);
           onAnimationComplete?.();
         }
@@ -77,10 +77,10 @@ function ChatMessage({ sender, message, shouldAnimate = false, onUpdate, userPro
       return () => clearInterval(interval);
     } else if (sender === "bot" && !shouldAnimate) {
       setDisplayedMessage(message);
-      setHasAnimated(true);
+      hasAnimatedRef.current = true;
       onAnimationComplete?.();
     }
-  }, []); 
+  }, [sender, message, shouldAnimate, onUpdate, onAnimationComplete]); 
   
   const avatarSrc = sender === "user" 
     ? (userProfilePic || "/dashboard/default-picture.png")
@@ -141,11 +141,11 @@ export default function ChatbotModal({
 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (shouldAutoScroll) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, [shouldAutoScroll]);
 
   const handleScroll = () => {
     if (messagesContainerRef.current) {
@@ -167,7 +167,7 @@ export default function ChatbotModal({
     }]);
   };
 
-  const handleApiError = (error: any) => {
+  const handleApiError = (error: string | undefined) => {
     if (error === "NO_KEYS_LEFT" || error === "INSUFFICIENT_KEYS") {
       setNoKeysLeft(true);
       return true;
@@ -175,7 +175,7 @@ export default function ChatbotModal({
     return false;
   };
 
-  const fetchChatResponse = async (userMessage: string, isInitial = false) => {
+  const fetchChatResponse = useCallback(async (userMessage: string, isInitial = false) => {
     const history = messages.map(msg => ({
       role: msg.sender === "user" ? "user" : "assistant",
       content: msg.message
@@ -193,6 +193,12 @@ export default function ChatbotModal({
         }),
       });
 
+      // Add this check
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('API Error Response:', text);
+        throw new Error(`API request failed: ${res.status}`);
+      }
       const result = await res.json();
       
       if (handleApiError(result.error)) return null;
@@ -207,7 +213,7 @@ export default function ChatbotModal({
       console.error("Fetch error:", error);
       return "Sorry, I encountered an error. Please try again.";
     }
-  };
+  }, [messages, cardFront, cardBack]);
 
   // Initialize with card explanation
   useEffect(() => {
@@ -236,7 +242,7 @@ export default function ChatbotModal({
           isInitializingRef.current = false;
         });
     }
-  }, [showModal, hasInitialized, cardFront, cardBack, hasKeys]);
+  }, [showModal, hasInitialized, cardFront, cardBack, hasKeys, fetchChatResponse]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -255,7 +261,7 @@ export default function ChatbotModal({
   // Auto-scroll on new messages
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -316,7 +322,7 @@ export default function ChatbotModal({
               className="w-full h-full object-contain"
             />
           </div>
-          <h2 className="cursor-default text-xl sm:text-2xl font-main hover:text-lime transition-colors duration-300 ease-in-out">
+          <h2 className="cursor-default text-xl sm:text-2xl font-main text-lime transition-colors duration-300 ease-in-out">
             Kanang Kuan
           </h2>
           <button
@@ -344,8 +350,8 @@ export default function ChatbotModal({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <p className="text-gray-200 font-main text-center text-lg">
-                You've used all your keys! Come back later!
+              <p className="text-black font-main text-center text-lg">
+                You&apos;ve used all your keys! Come back later!
               </p>
             </div>
           ) : (
@@ -376,7 +382,7 @@ export default function ChatbotModal({
                   <div className="flex-1">
                     <div className="font-body text-sm text-gray-300 mb-1">Chika</div>
                     <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
-                      <p className="text-gray-400 font-body text-base">
+                      <p className="text-black font-body text-base">
                         Thinking<LoadingDots />
                       </p>
                     </div>
@@ -392,12 +398,12 @@ export default function ChatbotModal({
         {/* Input Footer */}
         <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-200 rounded-b-lg">
           {noKeysLeft ? (
-            <div className="text-center py-3 text-gray-300 font-body">
+            <div className="text-center py-3 text-gray-400 font-body">
               No keys remaining. You cannot send messages.
             </div>
           ) : followUpCount >= MAX_FOLLOWUP_QUESTIONS ? (
-            <div className="text-center py-3 text-gray-300 font-body">
-              You've asked 2 follow-ups already—let's pause for now!
+            <div className="text-center py-3 text-gray-400 font-body">
+              You&apos;ve asked 2 follow-ups already—let&apos;s pause for now!
             </div>
           ) : (
             <div className="flex items-center gap-3">
@@ -408,7 +414,7 @@ export default function ChatbotModal({
                 onKeyDown={handleKeyPress}
                 placeholder="Ask a follow-up question"
                 disabled={isLoading || !canSendMessage}
-                className="flex-1 px-4 py-3 text-gray-400 border-1 border-gray-300 rounded-full focus:outline-none focus:border-black transition-colors font-body disabled:opacity-50"
+                className="flex-1 px-4 py-3 text-black border-1 border-gray-300 rounded-full focus:outline-none focus:border-black transition-colors font-body disabled:opacity-50"
               />
               <button
                 onClick={handleSend}

@@ -13,9 +13,14 @@ import {
   GetUserKeys,
   GetUserProfilePic,
 } from "@/lib/queries/basic-review-queries";
-import { generateBlankWordsForDeck } from "@/lib/actions/generate-blank-words";
 
 type SortOrder = "oldest_first" | "newest_first" | "random_order";
+
+interface PracticeInitialData {
+  cards: Awaited<ReturnType<typeof GetCardsForReview>>;
+  keys: Awaited<ReturnType<typeof GetUserKeys>>;
+  profilePic: Awaited<ReturnType<typeof GetUserProfilePic>>;
+}
 
 export const SortOrderContext = createContext<{
   sortOrder: SortOrder;
@@ -25,7 +30,7 @@ export const SortOrderContext = createContext<{
   updateSortOrder: () => {},
 });
 
-export const PracticeDataContext = createContext<any>(null);
+export const PracticeDataContext = createContext<PracticeInitialData | null>(null);
 
 const SORT_OPTIONS = [
   { label: "Oldest to Newest", value: "oldest_first" as SortOrder },
@@ -47,71 +52,45 @@ export default function PracticeLayout({
   const [sortOrder, setSortOrder] = useState<SortOrder>("oldest_first");
   const [deckInfo, setDeckInfo] = useState<DeckInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<PracticeInitialData | null>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
-  const isActiveRecall = pathname.includes("/dashboard/practice/active-recall");
   const showSettings = isBasicReview || pathname.includes("/dashboard/practice/audio-player");
-
-  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-  let isCancelled = false;
+    async function loadData() {
+      if (!mounted) return;
 
-  async function loadData() {
-    if (!mounted || !deckId) return;
+      setIsLoading(true);
+      try {
+        const settings = await GetUserSettings();
+        setSortOrder(settings.review_sort_order);
 
-    setIsLoading(true);
-    try {
-      const settings = await GetUserSettings();
-      if (isCancelled) return;
-      setSortOrder(settings.review_sort_order);
+        if (!deckId) return;
 
-      const info = await GetDeckInfo(deckId);
-      if (isCancelled) return;
-      setDeckInfo(info);
+        const info = await GetDeckInfo(deckId);
+        setDeckInfo(info);
 
-      if (isActiveRecall) {
-        const searchParams = new URLSearchParams(window.location.search);
-        if (searchParams.get('prepare') === 'true' && !isGenerating) {
-          setIsGenerating(true);
-          
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          const result = await generateBlankWordsForDeck(deckId);
-          
-          setIsGenerating(false);
-          
-          if (result.success) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('prepare');
-            window.history.replaceState({}, '', newUrl);
-          }
+        if (isBasicReview) {
+          const [cardsData, keysData, profilePicData] = await Promise.all([
+            GetCardsForReview(deckId, "oldest_first"),
+            GetUserKeys(),
+            GetUserProfilePic(),
+          ]);
+          setInitialData({ cards: cardsData, keys: keysData, profilePic: profilePicData });
         }
-        
-        if (!isCancelled) {
-          const cardsData = await GetCardsForReview(deckId, "oldest_first");
-          setInitialData({ cards: cardsData });
-        }
-      }
-      
-    } finally {
-      if (!isCancelled) {
+        // Add other modes here as needed
+      } finally {
         setIsLoading(false);
       }
     }
-  }
 
-  loadData();
-
-  return () => {
-    isCancelled = true;
-  };
-}, [mounted, deckId]);
+    loadData();
+  }, [mounted, deckId, pathname, isBasicReview]);
 
   //will be changed with the loading component later on
   if (!mounted || isLoading) {
@@ -171,7 +150,7 @@ export default function PracticeLayout({
           <div className="flex-1 min-h-0 w-full overflow-hidden">
             {React.Children.map(children, (child) =>
               React.isValidElement(child)
-                ? React.cloneElement(child, { initialData } as any)
+                ? React.cloneElement(child, { initialData } as Record<string, unknown>)
                 : child
             )}
           </div>

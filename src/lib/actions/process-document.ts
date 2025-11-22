@@ -51,6 +51,7 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -82,7 +83,7 @@ interface GeneratedCard {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function extractTextFromDocument(
-  supabase: any,
+  supabase: SupabaseClient,
   filePath: string,
   fileType: string
 ): Promise<string> {
@@ -157,13 +158,13 @@ async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
   const result = await response.json();
   
   const validCards = (result.flashcards || [])
-    .filter((card: any) => 
+    .filter((card: { front?: string; back?: string }) => 
       card?.front?.trim() && 
       card?.back?.trim() &&
       card.front.length <= 200 &&
       card.back.length <= 300
     )
-    .map((card: any) => ({
+    .map((card: { front: string; back: string }) => ({
       front: card.front.trim(),
       back: card.back.trim()
     }));
@@ -180,7 +181,7 @@ async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function saveCardsToDatabase(
-  supabase: any,
+  supabase: SupabaseClient,
   deckId: string,
   cards: GeneratedCard[]
 ): Promise<string[]> {
@@ -234,8 +235,8 @@ async function generateWrongOptions(front: string, back: string): Promise<string
     if (result.success && result.wrong_options) {
       return result.wrong_options;
     }
-  } catch (error) {
-    console.error('Wrong options generation error:', error);
+  } catch (_error) {
+    console.error('Wrong options generation error:', _error);
   }
   
   return ['Option A', 'Option B', 'Option C'];
@@ -313,8 +314,8 @@ async function generateBlankWord(back: string): Promise<string | null> {
     if (result.success && result.blank_word) {
       return result.blank_word;
     }
-  } catch (error) {
-    console.error('Blank word generation error:', error);
+  } catch (_error) {
+    console.error('Blank word generation error:', _error);
   }
   
   return null;

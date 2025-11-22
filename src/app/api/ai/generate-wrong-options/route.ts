@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from '@google/genai';
 
+interface RequestBody {
+  front: string;
+  back: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const { front, back } = await req.json();
+    const { front, back } = await req.json() as RequestBody;
     
     if (!front || !back) {
       return NextResponse.json(
@@ -72,7 +77,7 @@ export async function POST(req: Request) {
       for await (const chunk of response) {
         fullResponse += chunk.text || '';
       }
-    } catch (primaryError: any) {
+    } catch {
       console.log('Primary model failed, trying gemini-2.5-flash-lite...');
       
       try {
@@ -88,7 +93,7 @@ export async function POST(req: Request) {
         for await (const chunk of fallbackResponse) {
           fullResponse += chunk.text || '';
         }
-      } catch (fallbackError: any) {
+      } catch {
         console.log('Second model failed, trying gemini-2.0-flash...');
         
         const finalFallbackResponse = await ai.models.generateContentStream({
@@ -131,7 +136,7 @@ export async function POST(req: Request) {
     }
 
     // Validate each option is a non-empty string
-    const validOptions = parsedData.wrong_options.every((opt: any) => 
+    const validOptions = parsedData.wrong_options.every((opt: string) => 
       typeof opt === 'string' && opt.trim().length > 0
     );
 
@@ -144,13 +149,14 @@ export async function POST(req: Request) {
       wrong_options: parsedData.wrong_options
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Wrong options generation error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Wrong options generation failed';
     return NextResponse.json(
       { 
         success: false, 
         wrong_options: null, 
-        error: error.message || 'Wrong options generation failed'
+        error: errorMessage
       },
       { status: 500 }
     );

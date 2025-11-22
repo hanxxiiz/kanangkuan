@@ -6,10 +6,9 @@ import { Card } from "@/lib/queries/basic-review-queries";
 interface FlashcardProps {
   card: Card;
   onExplainClick: () => Promise<void>;
-  hasKeys: boolean; 
 }
 
-export default function Flashcard({ card, onExplainClick, hasKeys }: FlashcardProps) {
+export default function Flashcard({ card, onExplainClick }: FlashcardProps) {
   const [flipped, setFlipped] = useState(false);
 
   const handleExplainClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
