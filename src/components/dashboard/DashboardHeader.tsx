@@ -1,20 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 const DashboardHeader = () => {
   return (
-    <div className="relative mx-auto max-w-[1000px] lg:max-w-[1300px] 2xl:max-w-[1500px] mt-5 sm:mt-10 sm:px-4">
-      <img
+    <div className="relative mx-auto max-w-[1000px] lg:max-w-[1300px] 2xl:max-w-[1300px] mt-5 sm:mt-10 sm:px-4">
+      <Image
         src="/dashboard/dashboard-mascot-shadow.png"
         alt="Decorative"
+        width={330}
+        height={290}
         className="hidden lg:block absolute z-20 right-25 w-[330px] h-[290px] pointer-events-none opacity-90"
         style={{ bottom: 0 }}
       />
-      <img
+      <Image
         src="/dashboard/dashboard-mascot.png"
         alt="Decorative"
+        width={350}
+        height={350}
         className="hidden lg:block absolute z-20 right-0 w-[350px] h-auto pointer-events-none"
         style={{ bottom: 0 }}
       />
@@ -26,9 +31,11 @@ const DashboardHeader = () => {
 
         {/* Mobile/Tablet*/}
         <div className="absolute z-0 -right-7 -bottom-4 w-[280px] sm:w-[280px] md:w-[350px] lg:hidden ">
-          <img
+          <Image
             src="/dashboard/dashboard-mascot.png"
             alt="Decorative"
+            width={350}
+            height={350}
             className="w-full h-auto pointer-events-none"
           />
         </div>

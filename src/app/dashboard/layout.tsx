@@ -36,7 +36,7 @@ export default async function DashboardLayout({
     return null  
   }
 
-  const recentDecks = decks.slice(0, 5);
+  const recentDecks = decks.slice(0, 3);
 
   const recentDeckIds = recentDecks.map(deck => deck.id);
   const cardCounts = await GetDeckCardCounts(recentDeckIds);

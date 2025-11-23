@@ -2,57 +2,90 @@
 
 import CardCarousel from '@/components/CardCarousel';
 import { ModalContext } from '@/components/modals/providers';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
-const practiceSlides = [
-  {
-    title: "Active Recall", 
-    description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
-    image: "/active-recall.png",
-    color: "bg-blue",
-    path: "/dashboard/practice/active-recall",
-  },
-  {
-    title: "Basic Review", 
-    description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
-    image: "/basic-review.png",
-    color: "bg-purple",
-    path: "/dashboard/practice/basic-review",
-  },
-  {
-    title: "Audio Player", 
-    description: "Tune in and listen to your notes anytime, anywhere.", 
-    image: "/audio-player.png",
-    color: "bg-cyan",
-    path: "/dashboard/practice/audio-player",
-  },
-  {
-    title: "Challenge", 
-    description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
-    image: "/challenge.png",
-    color: "bg-pink",
-    path: "/dashboard/practice/challenge",
-  },
-  {
-    title: "Lumbaanay", 
-    description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
-    image: "/lumbaanay.png",
-    color: "bg-lime",
-    path: "/dashboard/practice/lumbaanay",
-  }
-];
+interface PracticeModalProps {
+  currentDeckId: string;
+  onClose?: () => void; 
+}
 
-export default function PracticeModal() {
-  const { Modal, setShowModal } = useContext(ModalContext);
+export default function PracticeModal({ currentDeckId, onClose }: PracticeModalProps) {
+  const { Modal, setShowModal, showModal } = useContext(ModalContext); 
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
+  const hasCalledOnClose = useRef(false); 
+  const [wasOpen, setWasOpen] = useState(false);
+
+  useEffect(() => {
+    setShowModal(true);
+    hasCalledOnClose.current = false;
+    
+    return () => {
+      setShowModal(false);
+    };
+  }, [setShowModal]); 
+
+  useEffect(() => {
+    if (showModal) {
+      setWasOpen(true);
+    }
+    
+    if (!showModal && wasOpen && !hasCalledOnClose.current && onClose) {
+      hasCalledOnClose.current = true;
+      onClose(); 
+    }
+  }, [showModal, wasOpen, onClose]);
+
+  const practiceSlides = [
+    {
+      title: "Active Recall", 
+      description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
+      image: "/active-recall.png",
+      color: "bg-blue",
+      path: `/dashboard/practice/active-recall/${currentDeckId}`,
+    },
+    {
+      title: "Basic Review", 
+      description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
+      image: "/basic-review.png",
+      color: "bg-purple",
+      path: `/dashboard/practice/basic-review/${currentDeckId}`,
+    },
+    {
+      title: "Audio Player", 
+      description: "Tune in and listen to your notes anytime, anywhere.", 
+      image: "/audio-player.png",
+      color: "bg-cyan",
+      path: `/dashboard/practice/audio-player/${currentDeckId}`,
+    },
+    {
+      title: "Challenge", 
+      description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
+      image: "/challenge.png",
+      color: "bg-pink",
+      path: "/dashboard/practice/challenge",
+    },
+    {
+      title: "Lumbaanay", 
+      description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
+      image: "/lumbaanay.png",
+      color: "bg-lime",
+      path: "/dashboard/practice/lumbaanay",
+    }
+  ];
 
   const handlePlay = () => {
     const activeSlide = practiceSlides[activeIndex];
     if (activeSlide?.path) {
       setShowModal(false);
-      router.push(activeSlide.path);
+      
+      if (activeSlide.title === "Active Recall") {
+        router.push(`${activeSlide.path}?prepare=true`);
+      } else {
+        router.push(activeSlide.path);
+      }
     }
   };
 
@@ -81,10 +114,12 @@ export default function PracticeModal() {
               >
                 <div className="w-full p-4 flex flex-col items-center justify-center">
                   <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-white shadow-sm">
-                    <img 
+                    <Image
                       src={card.image} 
                       alt={card.title}
                       className="w-full h-full object-cover border-1 rounded-xl"
+                      width={250}
+                      height={333}
                     />
                   </div>
                   <div className="justify-left m-2">

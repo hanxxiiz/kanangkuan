@@ -66,6 +66,7 @@ interface SearchModalProps {
   mode?: "search" | "practice"; 
   allDecks: Deck[];
   folders: Folder[];
+  onDeckSelect?: (deckId: string) => void;
 }
 
 export default function SearchModal({ 
@@ -73,7 +74,8 @@ export default function SearchModal({
   setShowModal,
   mode = "search", 
   allDecks, 
-  folders, 
+  folders,
+  onDeckSelect, 
 }: SearchModalProps) {
   const router = useRouter(); 
   const [searchValue, setSearchValue] = useState("");
@@ -89,6 +91,10 @@ export default function SearchModal({
   }, [showModal]);
 
   const handleItemClick = (type: "deck" | "folder", id: string) => {
+    if (mode === "practice" && type === "deck" && onDeckSelect) {
+      onDeckSelect(id);
+      return;
+    }
     if (type === "deck") {
       router.push(`/dashboard/my-decks/${id}`);
     } else {
@@ -235,7 +241,7 @@ export default function SearchModal({
           {emptyMessage ? (
             <EmptyState message={emptyMessage} />
           ) : (
-            finalResults.map((result, index) => (
+            finalResults.map((result) => (
               <SearchResult 
                 key={`${result.type}-${result.id}`} 
                 type={result.type} 

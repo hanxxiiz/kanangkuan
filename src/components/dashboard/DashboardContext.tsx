@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { DashboardContextType } from '@/types/dashboard';
+import { DashboardContextType, LeaderboardEntry, Deck, Folder } from '@/types/dashboard';
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
@@ -27,14 +27,14 @@ export function DashboardProvider({
   username: string;
   xp: number;
   profileUrl: string | null;
-  leaderboardData: any[];
-  recentDecks: any[];
-  allDecks: any[];
-  folders: any[];
+  leaderboardData: LeaderboardEntry[];
+  recentDecks: Deck[];
+  allDecks: Deck[];
+  folders: Folder[];
   cardCounts: Record<string, number>;
   unreadNotificationCount: number;
   monthlyXPData: Record<string, number>;
-    hasSpun: boolean;  
+  hasSpun: boolean;  
   nextSpinTime: string | null; 
 }) {
   const [followersCount, setFollowersCount] = useState<number>(0);
@@ -60,6 +60,7 @@ export function DashboardProvider({
   };
 
   const refreshNotificationCount = async () => {
+  const refreshNotificationCount = useCallback(async () => {
     try {
       const { count } = await supabase
         .from('notifications')
@@ -71,9 +72,9 @@ export function DashboardProvider({
     } catch (error) {
       console.error('Failed to refresh notification count:', error);
     }
-  };
+  }, [supabase, userId]);
 
-  const refreshXp = async () => {
+  const refreshXp = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -87,8 +88,9 @@ export function DashboardProvider({
     } catch (error) {
       console.error('Failed to refresh XP:', error);
     }
-  };
-   const refreshDailyLimits = async () => {
+  }, [supabase, userId]);
+
+  const refreshDailyLimits = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('user_daily_limits')
@@ -115,12 +117,12 @@ export function DashboardProvider({
     } catch (error) {
       console.error('Failed to refresh daily limits:', error);
     }
-  };
+  }, [supabase, userId]);
 
-  const updateSpinStatus = (newHasSpun: boolean, newNextSpinTime: string | null) => {
+  const updateSpinStatus = useCallback((newHasSpun: boolean, newNextSpinTime: string | null) => {
     setHasSpun(newHasSpun);
     setNextSpinTime(newNextSpinTime);
-  };
+  }, []);
 
    useEffect(() => {
     // Username changes
@@ -162,7 +164,7 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, supabase, refreshNotificationCount]);
 
   useEffect(() => {
     const channel = supabase
@@ -179,7 +181,7 @@ export function DashboardProvider({
           console.log('XP Update received:', payload);
           if (payload.new && 'xp' in payload.new) {
             console.log('Setting new XP:', payload.new.xp);
-            setCurrentXp(payload.new.xp);
+            setCurrentXp(payload.new.xp as number);
           }
         }
       )
@@ -190,7 +192,7 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, supabase]);
 
   // Fallback (if dim gana realtime): Poll for XP changes every 10 seconds
   useEffect(() => {
@@ -199,7 +201,7 @@ export function DashboardProvider({
     }, 10000); 
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshXp]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -209,7 +211,7 @@ export function DashboardProvider({
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [refreshNotificationCount, refreshXp]);
 
   return (
     <DashboardContext.Provider value={{

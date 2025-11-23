@@ -14,7 +14,6 @@ import { MdLibraryBooks } from "react-icons/md";
 
 const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; onSearchClick: () => void;  onPracticeClick: () => void;}) => {  
   const pathname = usePathname();
-  const [clickedItem, setClickedItem] = React.useState("/dashboard");
 
   const menuItems = [
     { icon: BsFillGridFill, label: "Dashboard", href: "/dashboard", iconSize: "text-xl" },
@@ -32,15 +31,12 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
           {menuItems.slice(0, 2).map((item) => {
             const Icon = item.icon;
             const displayLabel = item.label === "My Decks" ? "Decks" : item.label;
-            const isHighlighted = clickedItem === item.href; 
+            const isHighlighted = pathname === item.href || pathname.startsWith(item.href + '/'); // Match exact or sub-routes
 
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                onClick={(e) => {
-                  setClickedItem(item.href);
-                }}
                 className="flex flex-col items-center py-1 px-2 rounded-lg hover:bg-[#29411a] transition-all duration-200 group flex-1"
               >
                 <Icon className={`text-xl mb-1 transition-colors ${
@@ -63,18 +59,17 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
             href="/practice"
             onClick={(e) => {
               e.preventDefault();
-              setClickedItem("/practice");
               onPracticeClick();
             }}
             className="flex flex-col items-center py-1 px-2 rounded-lg transition-all duration-200 group flex-1"
           >
             <MdLibraryBooks className={`text-xl mb-1 transition-colors ${
-              (pathname === "/practice" || clickedItem === "/practice")
+              pathname.startsWith("/dashboard/practice")
                 ? "text-white" 
                 : "text-gray-300"
             }`} />
             <span className={`font-regular text-xs transition-colors text-center leading-tight ${
-              (pathname === "/practice" || clickedItem === "/practice")
+              pathname.startsWith("/dashboard/practice")
                 ? "text-white" 
                 : "text-gray-300"
             }`}>
@@ -84,14 +79,11 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
           
           {menuItems.slice(2, 4).map((item) => {
             const Icon = item.icon;
-            const isHighlighted = clickedItem === item.href;
+            const isHighlighted = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                onClick={(e) => {
-                  setClickedItem(item.href);
-                }}
                 className="flex flex-col items-center py-1 px-2 rounded-lg hover:bg-[#29411a] transition-all duration-200 group flex-1"
               >
                 <Icon className={`text-xl mb-1 transition-colors ${

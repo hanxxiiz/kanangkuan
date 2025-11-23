@@ -64,10 +64,10 @@ export interface DashboardContextType {
   username: string;
   xp: number;
   profileUrl: string | null;
-  leaderboardData: any[];
-  recentDecks: any[];
-  allDecks: any[];
-  folders: any[];
+  leaderboardData: LeaderboardEntry[];
+  recentDecks: Deck[];
+  allDecks: Deck[];
+  folders: Folder[];
   cardCounts: Record<string, number>;
   unreadNotificationCount: number;
   refreshNotificationCount: () => Promise<void>;
