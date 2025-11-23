@@ -1,7 +1,8 @@
 "use client";
-import React from "react";
+import React, {useState} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/buttons/PrimaryButton";
+import { useSupabase } from "../providers/SupabaseProvider";
 
 type ChangePasswordProps = {
   onClose: () => void;
@@ -9,6 +10,84 @@ type ChangePasswordProps = {
 };
 
 const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, isVisible = true }) => {
+  const { supabase } = useSupabase();
+
+  const [ currentPassword, setCurrentPassword ] = useState("");
+  const [ newPassword, setNewPassword ] = useState("");
+  const [ confirmNewPassword, setConfirmNewPassword ] = useState("");
+
+  const [ error, setError ] = useState<string | null>(null);
+  const [ success, setSuccess ] = useState<string | null>(null);
+  const [ loading, setLoading ] = useState(false);
+
+  const handleChangePassword = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!supabase) {
+      setError("Supabase client not initialized");
+      return;
+    }
+
+    if (!currentPassword.trim() || !newPassword.trim() || !confirmNewPassword.trim()) {
+      setError("All fields are required.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError("New password must be at least 6 characters long.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError("New passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Get current user email to reauthenticate
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user?.email) {
+        setError("Could not get your account information.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Reauthenticate using current password
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (reauthError) {
+        setError("Current password is incorrect.");
+        setLoading(false);
+        return;
+      }
+
+      // 3. Now update to the new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        setError(updateError.message);
+      } else {
+        setSuccess("Password updated successfully.");
+        setTimeout(() => onClose(), 1000);
+      }
+    } catch (err: any) {
+      setError(err.message || "Unexpected error.");
+    }
+
+    setLoading(false);
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -40,14 +119,19 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, isVisible = tr
                 {/* Current Password */}
                 <div className="mt-8">
                   <p className="text-xl font-body text-black mb-3">Current Password</p>
-                  <p className="text-lg font-body text-black">[Current Password]</p>
+                  <p className="tracking-widest select-none text-black">••••••••••••••••••</p>
                   <div className="border border-[#CFCECE] mt-3" />
                 </div>
 
                 {/* Re-enter New Password */}
                 <div className="mt-10">
                   <p className="text-xl font-body text-black mb-3">Re-enter New Password</p>
-                  <p className="text-lg font-body text-black mt-20 md:mt-25 sm:mt-20">[Re-enter New Password]</p>
+                  <input
+                    type="password"
+                    className="w-full text-lg mt-20 lg:mt-20 sm:mt-25 font-body text-black bg-transparent outline-none"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  />
                   <div className="border border-[#CFCECE] mt-3" />
                 </div>
               </div>
@@ -57,7 +141,14 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, isVisible = tr
                 <Button variant="outline" size="lg" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button variant="flat" size="lg">Change</Button>
+                <Button
+                  variant="flat"
+                  size="lg"
+                  onClick={handleChangePassword}
+                  disabled={loading}
+                >
+                  {loading ? "Changing..." : "Change"}
+                </Button>
               </div>
             </div>
           </motion.div>

@@ -37,11 +37,27 @@ export function DashboardProvider({
     hasSpun: boolean;  
   nextSpinTime: string | null; 
 }) {
+  const [followersCount, setFollowersCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
+  const [currentUsername, setCurrentUsername] = useState(username);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(initialCount);
   const [currentXp, setCurrentXp] = useState(initialXp);
   const [hasSpun, setHasSpun] = useState(initialHasSpun);  
   const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);  
   const supabase = createClient();
+
+  const refreshUsername = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single();
+      if (data && !error) setCurrentUsername(data.username);
+    } catch (err) {
+      console.error('Failed to refresh username:', err);
+    }
+  };
 
   const refreshNotificationCount = async () => {
     try {
@@ -106,6 +122,26 @@ export function DashboardProvider({
     setNextSpinTime(newNextSpinTime);
   };
 
+   useEffect(() => {
+    // Username changes
+    const usernameChannel = supabase
+      .channel('user_username_changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+        (payload) => {
+          if (payload.new && 'username' in payload.new) {
+            setCurrentUsername(payload.new.username);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(usernameChannel);
+    };
+  }, [userId]);
+
   useEffect(() => {
     const channel = supabase
       .channel('notifications_changes')
@@ -167,6 +203,7 @@ export function DashboardProvider({
 
   useEffect(() => {
     const handleFocus = () => {
+      refreshUsername();
       refreshNotificationCount();
       refreshXp();
     };
@@ -177,7 +214,7 @@ export function DashboardProvider({
   return (
     <DashboardContext.Provider value={{
       userId,
-      username,
+      username: currentUsername,
       xp: currentXp,
       profileUrl,
       leaderboardData,
@@ -188,11 +225,12 @@ export function DashboardProvider({
       unreadNotificationCount,
       refreshNotificationCount,
       refreshXp,
+      refreshUsername,
       monthlyXPData,
       hasSpun, 
       nextSpinTime,
       refreshDailyLimits,  
-      updateSpinStatus, 
+      updateSpinStatus,
     }}>
       {children}
     </DashboardContext.Provider>
