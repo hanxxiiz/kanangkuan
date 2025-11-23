@@ -9,7 +9,7 @@ type Top3CardProps = {
   rank?: 1 | 2 | 3;
   name?: string;
   xp?: number;
-  imageSrc?: string;
+  imageSrc?: string | null;
   // Gradient control
   variant?: Top3CardVariant;
 };
@@ -18,7 +18,7 @@ const Top3Card: React.FC<Top3CardProps> = ({
   rank = 1,
   name = "username",
   xp = 666,
-  imageSrc = "challenge.png",
+  imageSrc,
   variant = "limeToPink", // default
 }) => {
   const {
@@ -30,6 +30,14 @@ const Top3Card: React.FC<Top3CardProps> = ({
     badgeHover,
     badgeMobile,
   } = GradientSets[variant];
+
+  const FALLBACK = "/dashboard/default-picture.png"; 
+
+  const resolveSrc = (src?: any) => {
+    if (!src || typeof src !== "string") return FALLBACK;
+    const trimmed = src.trim();
+    return trimmed === "" ? FALLBACK : trimmed;
+  };
 
   return (
     <>
@@ -48,15 +56,14 @@ const Top3Card: React.FC<Top3CardProps> = ({
           {/* Profile image with overlapping rank badge */}
           <div className="absolute left-1/2 -bottom-[5rem] -translate-x-1/2 w-[150px] h-[150px] lg:w-[190px] lg:h-[190px]">
             <div className="relative w-full h-full rounded-full bg-white border-[10px] border-white/80 overflow-hidden">
-              {imageSrc ? (
-                <img
-                  src={imageSrc}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[linear-gradient(45deg,_#e5e7eb_25%,_transparent_25%),_linear-gradient(-45deg,_#e5e7eb_25%,_transparent_25%),_linear-gradient(45deg,_transparent_75%,_#e5e7eb_75%),_linear-gradient(-45deg,_transparent_75%,_#e5e7eb_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]" />
-              )}
+              <img
+                src={resolveSrc(imageSrc)}
+                onError={(e) => {
+                  e.currentTarget.src = FALLBACK;
+                }}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <div className="absolute -bottom-2 -right-2 w-14 h-14 rounded-full flex items-center justify-center text-[#65C110] font-main text-lg border-[4px] border-white">
@@ -96,8 +103,7 @@ const Top3Card: React.FC<Top3CardProps> = ({
       <div
         className="block sm:hidden relative w-full max-w-[500px] rounded-[1.5rem] overflow-hidden mb-5"
         style={{
-          boxShadow:
-            "0 15px 35px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.1)",
+          boxShadow: "0 15px 35px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.1)",
         }}
       >
         <div
@@ -107,15 +113,14 @@ const Top3Card: React.FC<Top3CardProps> = ({
         >
           <div className="absolute left-20 -bottom-[5rem] -translate-x-1/2 w-[110px] h-[110px]">
             <div className="relative w-full h-full rounded-full bg-white border-[7px] border-white/80 overflow-hidden">
-              {imageSrc ? (
-                <img
-                  src={imageSrc}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[linear-gradient(45deg,_#e5e7eb_25%,_transparent_25%),_linear-gradient(-45deg,_#e5e7eb_25%,_transparent_25%),_linear-gradient(45deg,_transparent_75%,_#e5e7eb_75%),_linear-gradient(-45deg,_transparent_75%,_#e5e7eb_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]" />
-              )}
+              <img
+                src={resolveSrc(imageSrc)}
+                onError={(e) => {
+                  e.currentTarget.src = FALLBACK;
+                }}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <div

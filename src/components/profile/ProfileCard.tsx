@@ -27,15 +27,15 @@ const ProfileCard = () => {
                 className="absolute bottom-0 m-10 max-w-xs max-h-xs w-50 h-50 rounded-full bg-gray-900 z-10 border-5 border-white"
               />
               {/* User Info */}
-              <div className="relative flex flex-col left-70 top-10">
+              <div className="relative flex flex-col left-70 top-15">
                 <p className="text-gray-900 text-4xl font-bold font-main">
                   {username}
                 </p>
-                <p className="text-gray-900 text-2xl font-body my-2">[Name]</p>
+                {/*<p className="text-gray-900 text-2xl font-body my-2">[Name]</p> */}
                 <div className="flex items-center">
                   <p className="text-gray-800 text-md font-body">0 Following</p>
                   <div className="w-1 h-1 bg-gray-900 rounded-full m-3"></div>
-                  <p className="text-gray-900 text-md font-body">0Followers</p>
+                  <p className="text-gray-900 text-md font-body">0 Followers</p>
                 </div>
               </div>
             </div>

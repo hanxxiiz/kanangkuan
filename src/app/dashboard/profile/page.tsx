@@ -7,9 +7,14 @@ import DecksPanel from "@/components/profile/DecksPanel";
 import Navbar from "@/components/profile/Navbar";
 import { FaShare } from "react-icons/fa";
 import ProfileCard from "@/components/profile/ProfileCard";
-import React from "react";
+
 
 const ProfilePage = () => {
+    const [activeIndex, setActiveIndex] = useState(0);
+
+     const handleNavChange = (index: number) => {
+    setActiveIndex(index);
+  };
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Main Section */}

@@ -59,7 +59,6 @@ export function DashboardProvider({
     }
   };
 
-  const refreshNotificationCount = async () => {
   const refreshNotificationCount = useCallback(async () => {
     try {
       const { count } = await supabase
@@ -72,7 +71,7 @@ export function DashboardProvider({
     } catch (error) {
       console.error('Failed to refresh notification count:', error);
     }
-  }, [supabase, userId]);
+  }, [supabase, userId]); 
 
   const refreshXp = useCallback(async () => {
     try {
