@@ -1,9 +1,8 @@
 "use client";
-import React, { useState, useEffect, useRef, useContext, useMemo } from "react";
+import React, { useState, useEffect, useRef, useContext, useMemo, useCallback } from "react";
 import Flashcard from "@/components/dashboard/practice/basic-review/Flashcard";
 import { TbKeyFilled } from "react-icons/tb";
 import { GrLinkPrevious, GrLinkNext } from "react-icons/gr";
-import { useParams } from "next/navigation";
 import { Card } from "@/lib/queries/basic-review-queries";
 import { DecrementUserKeys } from "@/lib/actions/basic-review-actions";
 import ChatbotModal from "@/components/dashboard/practice/basic-review/ChatbotModal";
@@ -21,8 +20,6 @@ function shuffleArray<T>(array: T[]): T[] {
 type SlideDirection = 'left' | 'right';
 
 const BasicReview = () => {
-  const params = useParams();
-  const deckId = params.deckId as string;
   const { sortOrder } = useContext(SortOrderContext);
   const initialData = useContext(PracticeDataContext);
 
@@ -102,7 +99,7 @@ const BasicReview = () => {
     }
   };
 
-  const navigateCard = (direction: SlideDirection) => {
+  const navigateCard = useCallback((direction: SlideDirection) => {
     if (animatingOut) return;
     
     const totalCards = cards.length;
@@ -119,15 +116,15 @@ const BasicReview = () => {
       setNextCard(null);
       setAnimatingOut(false);
     }, 300);
-  };
+  }, [animatingOut, cards.length, currentCard]);
 
-  const handleFlip = () => {
+  const handleFlip = useCallback(() => {
     const clickable = flashcardRef.current?.querySelector(
       '[role="button"], button, .cursor-pointer'
     ) as HTMLElement;
     
     (clickable || flashcardRef.current)?.click();
-  };
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -147,7 +144,7 @@ const BasicReview = () => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentCard, animatingOut]);
+  }, [navigateCard, handleFlip]);
 
   if (!cards.length) {
     return (
@@ -198,7 +195,6 @@ const BasicReview = () => {
               card={cards[currentCard]} 
               key={`current-${currentCard}`}
               onExplainClick={handleExplainClick}
-              hasKeys={keysRemaining > 0}  
             />
           </div>
           
@@ -212,7 +208,6 @@ const BasicReview = () => {
                 card={cards[nextCard]} 
                 key={`next-${nextCard}`}
                 onExplainClick={handleExplainClick}
-                hasKeys={keysRemaining > 0} 
               />
             </div>
           )}

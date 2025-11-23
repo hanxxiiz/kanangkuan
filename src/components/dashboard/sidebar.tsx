@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation"; // Add useRouter
 
@@ -14,7 +14,6 @@ import { MdLibraryBooks } from "react-icons/md";
 
 const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; onSearchClick: () => void;  onPracticeClick: () => void;}) => {  
   const pathname = usePathname();
-  const [clickedItem, setClickedItem] = React.useState("/dashboard");
 
   const menuItems = [
     { icon: BsFillGridFill, label: "Dashboard", href: "/dashboard", iconSize: "text-xl" },
@@ -23,10 +22,6 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
     { icon: BsBarChartFill, label: "Leaderboard", href: "/dashboard/leaderboard", iconSize: "text-xl" },
     { icon: IoSettingsSharp, label: "Settings", href: "/dashboard/settings", iconSize: "text-xl" },
   ];
-
-  useEffect(() => {
-    setClickedItem(pathname);
-  }, [pathname]);
 
   return (
     <>

@@ -16,6 +16,12 @@ import {
 
 type SortOrder = "oldest_first" | "newest_first" | "random_order";
 
+interface PracticeInitialData {
+  cards: Awaited<ReturnType<typeof GetCardsForReview>>;
+  keys: Awaited<ReturnType<typeof GetUserKeys>>;
+  profilePic: Awaited<ReturnType<typeof GetUserProfilePic>>;
+}
+
 export const SortOrderContext = createContext<{
   sortOrder: SortOrder;
   updateSortOrder: (newOrder: SortOrder) => void;
@@ -24,7 +30,7 @@ export const SortOrderContext = createContext<{
   updateSortOrder: () => {},
 });
 
-export const PracticeDataContext = createContext<any>(null);
+export const PracticeDataContext = createContext<PracticeInitialData | null>(null);
 
 const SORT_OPTIONS = [
   { label: "Oldest to Newest", value: "oldest_first" as SortOrder },
@@ -46,7 +52,7 @@ export default function PracticeLayout({
   const [sortOrder, setSortOrder] = useState<SortOrder>("oldest_first");
   const [deckInfo, setDeckInfo] = useState<DeckInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<PracticeInitialData | null>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
   const showSettings = isBasicReview || pathname.includes("/dashboard/practice/audio-player");
@@ -144,7 +150,7 @@ export default function PracticeLayout({
           <div className="flex-1 min-h-0 w-full overflow-hidden">
             {React.Children.map(children, (child) =>
               React.isValidElement(child)
-                ? React.cloneElement(child, { initialData } as any)
+                ? React.cloneElement(child, { initialData } as Record<string, unknown>)
                 : child
             )}
           </div>

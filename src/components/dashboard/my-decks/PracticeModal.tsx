@@ -4,6 +4,7 @@ import CardCarousel from '@/components/CardCarousel';
 import { ModalContext } from '@/components/modals/providers';
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 <<<<<<< Updated upstream
 interface PracticeModalProps {
@@ -119,7 +120,12 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
     const activeSlide = practiceSlides[activeIndex];
     if (activeSlide?.path) {
       setShowModal(false);
-      router.push(activeSlide.path);
+      
+      if (activeSlide.title === "Active Recall") {
+        router.push(`${activeSlide.path}?prepare=true`);
+      } else {
+        router.push(activeSlide.path);
+      }
     }
   };
 
@@ -148,10 +154,12 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
               >
                 <div className="w-full p-4 flex flex-col items-center justify-center">
                   <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-white shadow-sm">
-                    <img 
+                    <Image
                       src={card.image} 
                       alt={card.title}
                       className="w-full h-full object-cover border-1 rounded-xl"
+                      width={250}
+                      height={333}
                     />
                   </div>
                   <div className="justify-left m-2">

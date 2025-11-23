@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 type LeaderboardCardProps = {
   rank?: 1 | 2 | 3;
@@ -38,9 +39,11 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           <div className="absolute left-1/2 -bottom-[5rem] -translate-x-1/2 w-[150px] h-[150px] lg:w-[190px] lg:h-[190px]">
             <div className="relative w-full h-full rounded-full bg-white border-[10px] border-white/80 overflow-hidden">
               {imageSrc ? (
-                <img
+                <Image
                   src={imageSrc}
                   alt={name}
+                  width={190}
+                  height={190}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -91,9 +94,11 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5rem] w-[110px] h-[110px] z-10">
             <div className="relative w-full h-full rounded-full bg-black border-[7px] border-black overflow-hidden">
               {imageSrc ? (
-                <img
+                <Image
                   src={imageSrc}
                   alt={name}
+                  width={110}
+                  height={110}
                   className="w-full h-full object-cover"
                 />
               ) : (

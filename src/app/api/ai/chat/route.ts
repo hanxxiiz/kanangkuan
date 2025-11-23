@@ -1,9 +1,24 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from '@google/genai';
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface RequestBody {
+  message: string;
+  history: ChatMessage[];
+  cardContext?: {
+    front: string;
+    back: string;
+  };
+  isInitialExplanation?: boolean;
+}
+
 export async function POST(req: Request) {
   try {
-    const { message, history, cardContext, isInitialExplanation } = await req.json();
+    const { message, history, cardContext, isInitialExplanation } = await req.json() as RequestBody;
     
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_KEY;
 
@@ -44,7 +59,7 @@ export async function POST(req: Request) {
         role: 'model',
         parts: [{ text: 'Understood! I will provide accurate, concise responses in plain text based on facts and context provided.' }],
       },
-      ...history.map((msg: any) => ({
+      ...history.map((msg: ChatMessage) => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }],
       })),
@@ -69,7 +84,7 @@ export async function POST(req: Request) {
       for await (const chunk of response) {
         fullResponse += chunk.text || '';
       }
-    } catch (primaryError: any) {
+    } catch (primaryError: unknown) {
       console.log('Primary model (gemini-2.5-flash) failed, trying gemini-2.5-flash-lite...');
       console.error('Primary model error:', primaryError);
       
@@ -86,7 +101,7 @@ export async function POST(req: Request) {
         for await (const chunk of fallbackResponse) {
           fullResponse += chunk.text || '';
         }
-      } catch (fallbackError: any) {
+      } catch (fallbackError: unknown) {
         console.error('Second model (gemini-2.5-flash-lite) failed, trying gemini-2.0-flash...');
         console.error('Fallback model error:', fallbackError);
         
@@ -119,10 +134,11 @@ export async function POST(req: Request) {
       response: cleanedResponse, 
       error: null 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("All models failed:", error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
-      { success: false, response: null, error: error.message },
+      { success: false, response: null, error: errorMessage },
       { status: 500 }
     );
   }

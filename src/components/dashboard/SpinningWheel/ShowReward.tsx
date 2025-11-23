@@ -1,15 +1,15 @@
 import React, { useEffect } from "react";
 import confetti from "canvas-confetti";
+import Image from "next/image";
 
 type ShowRewardProps = {
   isOpen: boolean;
   onClose: () => void;
   onGoBack: () => void; 
   reward: string;
-  icon?: string;
 };
 
-const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, reward, icon }) => {
+const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onGoBack, reward }) => {
   useEffect(() => {
     if (isOpen) {
       const duration = 2000;
@@ -20,7 +20,7 @@ const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, rewa
         return Math.random() * (max - min) + min;
       }
 
-      const interval: any = setInterval(function() {
+      const interval = setInterval(function() {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
@@ -46,12 +46,6 @@ const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, rewa
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
 
   return (
     <div 
@@ -86,10 +80,12 @@ const ShowReward: React.FC<ShowRewardProps> = ({ isOpen, onClose, onGoBack, rewa
       <div className="animate-zoomIn relative w-full max-w-[480px] rounded-3xl overflow-visible shadow-2xl">
         <div className="relative h-[250px] bg-gradient-to-b from-pink-500 via-pink-400 to-orange-200 flex items-center justify-center rounded-t-3xl overflow-hidden">
         </div>
-        <img 
+        <Image
           src="/dashboard/reward-mascot.svg" 
           alt="Mascot" 
           className="absolute top-[-50px] left-1/2 -translate-x-1/2 w-[380px] h-[380px] object-contain z-10"
+          width={380}
+          height={380}
         />
         <div className="relative bg-gradient-to-b from-gray-900 to-black px-8 py-8 rounded-b-3xl z-20">
           <h1 className="text-3xl font-main text-white text-center mb-1">

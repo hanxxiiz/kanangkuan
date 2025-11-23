@@ -86,7 +86,7 @@ const SettingsPage = () => {
       <p className="text-black text-lg sm:text-xl font-body mx-2 sm:mx-10 my-3">Email</p>
       <div>
         <p className="text-black text-base sm:text-xl font-body px-2 sm:px-10">
-          [User's Email Address]
+          {`[User's Email Address]`}
         </p>
         <div className="border border-[#CFCECE] mt-2 sm:mt-0" />
       </div>
