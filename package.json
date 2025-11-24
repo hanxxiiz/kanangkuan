@@ -16,17 +16,23 @@
     "@supabase/supabase-js": "^2.74.0",
     "animate.css": "^4.1.1",
     "canvas-confetti": "^1.9.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
     "gsap": "^3.13.0",
+    "lucide-react": "^0.554.0",
     "mammoth": "^1.11.0",
     "mime": "^4.1.0",
     "next": "15.5.3",
+    "next-themes": "^0.4.6",
     "pptx-parser": "^1.1.7-beta.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
     "react-scroll-parallax": "^3.5.0",
+    "sonner": "^2.0.7",
     "swiper": "^12.0.2",
+    "tailwind-merge": "^3.4.0",
     "tesseract.js": "^6.0.1",
     "unpdf": "^1.4.0",
     "xlsx": "^0.18.5"
@@ -43,6 +49,7 @@
     "eslint-config-next": "15.5.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.13",
+    "tw-animate-css": "^1.4.0",
     "typescript": "^5"
   }
 }

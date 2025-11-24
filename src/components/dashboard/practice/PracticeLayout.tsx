@@ -13,13 +13,23 @@ import {
   GetUserKeys,
   GetUserProfilePic,
 } from "@/lib/queries/basic-review-queries";
+import {
+  GetCardsForActiveRecall,
+  GetUserDailyLimits,
+  ActiveRecallCard,
+  UserDailyLimits,
+} from "@/lib/queries/active-recall-queries";
 
 type SortOrder = "oldest_first" | "newest_first" | "random_order";
 
 interface PracticeInitialData {
-  cards: Awaited<ReturnType<typeof GetCardsForReview>>;
-  keys: Awaited<ReturnType<typeof GetUserKeys>>;
-  profilePic: Awaited<ReturnType<typeof GetUserProfilePic>>;
+  cards: Awaited<ReturnType<typeof GetCardsForReview>> | ActiveRecallCard[];
+  keys?: Awaited<ReturnType<typeof GetUserKeys>>;
+  profilePic?: Awaited<ReturnType<typeof GetUserProfilePic>>;
+  // Active recall specific fields (optional)
+  dailyLimits?: UserDailyLimits | null;
+  deckColor?: string; // Add deck color here
+  isActiveRecall?: boolean;
 }
 
 export const SortOrderContext = createContext<{
@@ -55,7 +65,10 @@ export default function PracticeLayout({
   const [initialData, setInitialData] = useState<PracticeInitialData | null>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
-  const showSettings = isBasicReview || pathname.includes("/dashboard/practice/audio-player");
+  const isActiveRecall = pathname.includes("/dashboard/practice/active-recall");
+  const isAudioPlayer = pathname.includes("/dashboard/practice/audio-player");
+  const showSettings = isBasicReview || isAudioPlayer;
+  const showDeckInfo = isBasicReview || isActiveRecall || isAudioPlayer;
 
   useEffect(() => {
     setMounted(true);
@@ -75,24 +88,40 @@ export default function PracticeLayout({
         const info = await GetDeckInfo(deckId);
         setDeckInfo(info);
 
-        if (isBasicReview) {
-          const [cardsData, keysData, profilePicData] = await Promise.all([
-            GetCardsForReview(deckId, "oldest_first"),
-            GetUserKeys(),
-            GetUserProfilePic(),
-          ]);
-          setInitialData({ cards: cardsData, keys: keysData, profilePic: profilePicData });
-        }
-        // Add other modes here as needed
-      } finally {
+        if (isActiveRecall) {
+  // Fetch data specific to active recall (always oldest first)
+  const [cardsData, dailyLimitsData] = await Promise.all([
+    GetCardsForActiveRecall(deckId),
+    GetUserDailyLimits(),
+  ]);
+  setInitialData({ 
+    cards: cardsData, 
+    dailyLimits: dailyLimitsData,
+    deckColor: info?.deck_color || "lime", // Add deck color
+    isActiveRecall: true 
+  });
+} else if (isBasicReview || isAudioPlayer) {
+  // Fetch data for basic review and audio player
+  const [cardsData, keysData, profilePicData] = await Promise.all([
+    GetCardsForReview(deckId, settings.review_sort_order),
+    GetUserKeys(),
+    GetUserProfilePic(),
+  ]);
+  setInitialData({ 
+    cards: cardsData, 
+    keys: keysData, 
+    profilePic: profilePicData,
+    deckColor: info?.deck_color || "lime", // Add deck color
+    isActiveRecall: false 
+  });
+} } finally {
         setIsLoading(false);
       }
     }
 
     loadData();
-  }, [mounted, deckId, pathname, isBasicReview]);
+  }, [mounted, deckId, pathname, isBasicReview, isActiveRecall, isAudioPlayer]);
 
-  //will be changed with the loading component later on
   if (!mounted || isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -136,10 +165,10 @@ export default function PracticeLayout({
               )}
             </div>
 
-            {isBasicReview && deckInfo && (
+            {showDeckInfo && deckInfo && (
               <div className="flex items-center gap-3 ml-5 sm:ml-6">
-                <FaClone className="text-2xl" style={{ color: deckInfo.deck_color }} />
-                <span className="text-black text-md sm:text-lg font-body truncate max-w-[185px] sm:max-w-none">
+                <FaClone className={`text-2xl text-${deckInfo.deck_color}`} />
+                <span className="text-black text-md sm:text-lg font-regular truncate max-w-[185px] sm:max-w-none">
                   {deckInfo.deck_name}
                 </span>
               </div>
