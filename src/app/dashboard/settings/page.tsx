@@ -5,10 +5,18 @@ import { Button } from "@/components/buttons/PrimaryButton";
 import ChangeUsername from "@/components/settings/ChangeUsername";
 import ChangePassword from "@/components/settings/ChangePassword";
 import { FaCircleExclamation } from "react-icons/fa6";
+import ProfileCard from "@/components/profile/ProfileCard";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
+import { useDashboard } from "@/components/dashboard/DashboardContext";
 
 const SettingsPage = () => {
   const [showChangeUsername, setShowChangeUsername] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const { session } = useSupabase();
+  const email = session?.user?.email ?? "Unknown";
+  
+  const { userId, username } = useDashboard();
 
   return (
     <div className="min-h-screen w-full bg-white px-4 sm:px-8 lg:px-16 py-6">
@@ -35,58 +43,15 @@ const SettingsPage = () => {
 
      {/* Profile Card */}
 <section className="border-2 rounded-2xl border-[#CFCECE] overflow-hidden">
-  <div className="relative w-full h-auto sm:h-70">
-    {/* Gradient Background */}
-    <div
-      className="absolute inset-0 h-50 sm:h-50 w-full rounded-2xl"
-      style={{
-        background: "linear-gradient(80deg, #8AFF00 0%, #00FFD1 44%, #00FFD1 100%)",
-      }}
-    ></div>
-
-    {/* Desktop Layout */}
-    <div className="hidden sm:flex relative items-start h-70 w-full">
-      {/* Profile Image */}
-      <img
-        src="mascot-hero.svg"
-        className="absolute bottom-0 m-10 max-w-xs max-h-xs w-50 h-50 rounded-full bg-gray-900 z-10"
-      />
-      {/* User Info */}
-      <div className="relative flex flex-col left-70 top-10">
-        <p className="text-gray-900 text-4xl font-bold font-main">[Username]</p>
-        <p className="text-gray-900 text-2xl font-body my-2">[Name]</p>
-        <div className="flex items-center">
-          <p className="text-gray-800 text-md font-body">0 Following</p>
-          <div className="w-1 h-1 bg-gray-900 rounded-full m-3"></div>
-          <p className="text-gray-900 text-md font-body">0 Followers</p>
-        </div>
-      </div>
-    </div>
-
-    {/* Mobile Layout */}
-    <div className="flex flex-col sm:hidden relative items-center pt-8 pb-4 text-center">
-      <p className="text-gray-900 text-3xl font-bold font-main">[Username]</p>
-      <p className="text-gray-900 text-xl font-body my-1">[Name]</p>
-      <div className="flex items-center justify-center mt-2">
-        <p className="text-gray-800 text-sm font-body">0 Following</p>
-        <div className="w-1 h-1 bg-gray-900 rounded-full mx-2"></div>
-        <p className="text-gray-900 text-sm font-body">0 Followers</p>
-      </div>
-      {/* Image below the info */}
-      <img
-        src="mascot-hero.svg"
-        className="mt-6 w-32 h-32 rounded-full bg-gray-900 z-10"
-      />
-    </div>
-  </div>
+  <ProfileCard/>
 
   {/* Email Section */}
   <div className="flex flex-col sm:flex-row m-6 sm:m-10 justify-between items-start sm:items-end gap-4">
     <div className="flex flex-col w-full sm:w-1/2">
       <p className="text-black text-lg sm:text-xl font-body mx-2 sm:mx-10 my-3">Email</p>
       <div>
-        <p className="text-black text-base sm:text-xl font-body px-2 sm:px-10">
-          {`[User's Email Address]`}
+        <p className="text-black text-body sm:text-xl font-body px-2 sm:px-10">
+          {email}
         </p>
         <div className="border border-[#CFCECE] mt-2 sm:mt-0" />
       </div>
@@ -111,7 +76,7 @@ const SettingsPage = () => {
             Username
           </p>
           <p className="text-black text-base sm:text-xl font-body px-2 sm:px-10">
-            [Current Username]
+            {username}
           </p>
           <div className="border border-[#CFCECE] mt-1" />
         </div>
@@ -133,9 +98,7 @@ const SettingsPage = () => {
           <p className="text-black text-lg sm:text-xl font-body mx-2 sm:mx-10 mb-4 sm:mb-8">
             Password
           </p>
-          <p className="text-black text-base sm:text-xl font-body px-2 sm:px-10">
-            [Current Password]
-          </p>
+          <p className="tracking-widest select-none ml-10 text-black">••••••••••••••••••</p>
           <div className="border border-[#CFCECE] mt-1" />
         </div>
         <div className="flex justify-end w-full sm:w-1/2 px-2 sm:pl-10">

@@ -7,7 +7,16 @@ type RankedCardProps = {
   imageUrl: string;
 };
 
+const FALLBACK = "/dashboard/default-picture.png"; //para sa dili ma kita ang picture
+
 const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl }) => {
+  
+  const resolveSrc = (src: any) => {
+    if (!src || typeof src !== "string") return FALLBACK;
+    const trimmed = src.trim();
+    return trimmed === "" ? FALLBACK : trimmed;
+  };
+  
   return (
     <div
       className="flex flex-col gap-4 rounded-3xl border border-[#CFCECE]
@@ -21,7 +30,7 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
       {/* Left Section: Avatar + Username + XP (for mobile) */}
       <div className="flex items-center gap-4 sm:gap-6">
         <img
-          src={imageUrl}
+          src={resolveSrc(imageUrl)}
           alt={username}
           className="h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
         />
