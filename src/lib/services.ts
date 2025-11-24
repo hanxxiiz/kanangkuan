@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
-import { Card, Deck, Folder, Profile } from "@/utils/supabase/models";
+import { Card, Challenge, Deck, Folder, Profile } from "@/utils/supabase/models";
 
 const supabase = createClient();
 
@@ -144,4 +144,93 @@ export const cardService = {
 
         return data;
     },
+}
+
+export const challengeService = {
+    async createChallenge(
+        challenge: Omit<Challenge, "id" | "max_players" | "created_at">        
+    ): Promise<Challenge> {
+        const { data, error } = await supabase
+            .from("challenges")
+            .insert(challenge)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async getChallenge(challengeId: string): Promise<Challenge> {
+        const { data, error } = await supabase
+            .from("challenges")
+            .select("*")
+            .eq("id", challengeId)
+            .single();
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async checkJoinCodeExists(joinCode: string): Promise<boolean> {
+        const { data, error } = await supabase
+            .from("challenges")
+            .select("join_code")
+            .eq("join_code", joinCode)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        return data !== null;
+    },
+
+    async generateUniqueJoinCode(): Promise<string> {
+        const generateCode = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 5; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        };
+
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (attempts < maxAttempts) {
+            const code = generateCode();
+            const exists = await this.checkJoinCodeExists(code);
+            
+            if (!exists) {
+                return code;
+            }
+            
+            attempts++;
+        }
+
+        throw new Error("Failed to generate unique code after multiple attempts");
+    },
+
+    async validateJoinCode(joinCode: string): Promise<{ isValid: boolean; challengeId?: string; message?: string }> {
+        const { data, error } = await supabase
+            .from("challenges")
+            .select("id, status")
+            .eq("join_code", joinCode)
+            .maybeSingle();
+
+        if (error) {
+            return { isValid: false, message: "Error validating code. Please try again." };
+        }
+
+        if (!data) {
+            return { isValid: false, message: "Invalid join code. Please check and try again." };
+        }
+
+        if (data.status !== "waiting") {
+            return { isValid: false, message: "This challenge is no longer available." };
+        }
+
+        return { isValid: true, challengeId: data.id };
+    }
 }

@@ -33,3 +33,12 @@ export interface Card {
     back: string;
     created_at: string;
 }
+
+export interface Challenge {
+    id: string;
+    host_id: string;
+    join_code: string;
+    max_players: number;
+    status: string | "waiting" | "play" | "finished";
+    created_at: string;
+}

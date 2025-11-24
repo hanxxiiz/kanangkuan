@@ -1,36 +1,28 @@
 "use client";
 
 import { ModalContext } from '@/components/modals/providers';
-import React, { useContext, useEffect, useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
-import { IoAdd } from "react-icons/io5";
+import React, { useContext, useEffect, useState } from 'react';
+import HostTab from './HostTab';
+import JoinTab from './JoinTab';
+import { useUser } from '@/lib/hooks/useUser';
+import { useRouter } from 'next/navigation';
+import { useChallenges } from '@/lib/hooks/useChallenges';
 
 export default function ChallengeSettings() {
   const { Modal, setShowModal } = useContext(ModalContext);
-  const [activeTab, setActiveTab] = useState<"host" | "join">("host");
+  const { user } = useUser();
+  const router = useRouter();
+  const { createChallenge, validateJoinCode } = useChallenges();
 
-  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  const [activeTab, setActiveTab] = useState<"host" | "join">("host");
+  const [joinCode, setJoinCode] = useState("");
+  const [hostUser, setHostUser] = useState("");
+  const [enteredJoinCode, setEnteredJoinCode] = useState("");
 
   useEffect(() => {
     setShowModal(true);
-  }, [setShowModal]);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
-    const value = e.target.value;
-
-    if (!/^[0-9]?$/.test(value)) return;
-
-    e.target.value = value;
-
-    if (value && index < inputsRef.current.length - 1) {
-      inputsRef.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === "Backspace" && !e.currentTarget.value && index > 0) {
-      inputsRef.current[index - 1]?.focus();
-    }
-  };
+    if (user?.id) setHostUser(user.id);
+  }, [setShowModal, user?.id]);
 
   const tabs = [
     { id: "host", label: "Host" },
@@ -38,52 +30,73 @@ export default function ChallengeSettings() {
   ];
 
   const tabContent = {
-    host: (
-      <div className="mt-2 flex flex-col items-center justify-center gap-2">
-        <div className="self-start flex items-center gap-2">
-          <IoAdd className="text-xl rounded-full border-2" />
-          <h5 className="text-base font-body">Add Participant</h5>
-        </div>
+    host: 
+      <HostTab onDataChange={(data) => {
+          setJoinCode(data.joinCode);
+          console.log("ChallengeSettings joinCode updated:", data.joinCode);
+        }} 
+      />,
+    join: 
+      <JoinTab onJoinCodeComplete={(code) => {
+          setEnteredJoinCode(code);
+          console.log("Join code entered:", code);
+        }}
+      />
+  };
 
-        <div className="w-full space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <input
-              key={i}
-              className="w-full p-4 border-2 border-gray-300 rounded-2xl outline-none text-xl focus:border-black transition-colors duration-200 ease-in-out"
-              placeholder={`Player ${i + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-    ),
+  const handlePlay = async () => {
+    console.log("Active tab:", activeTab);
 
-    join: (
-      <div className="my-5 flex flex-col items-center justify-center gap-2">
-        <div className="flex self-start">
-          <h5 className="text-base font-body">Enter Join Code</h5>
-        </div>
+    if (activeTab === "host") {
+      if (!joinCode) {
+        alert("Cannot play: Please generate a code first!");
+        return;
+      }
 
-        <div className="flex flex-row items-center justify-between gap-3">
-          {[...Array(5)].map((_, i) => (
-            <input
-              key={i}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              className="text-center h-35 w-23 px-1 border-2 border-gray-300 rounded-2xl outline-none text-7xl focus:border-black transition-colors duration-200 ease-in-out"
-              ref={(el) => { inputsRef.current[i] = el; }}
-              onChange={(e) => handleChange(e, i)}
-              onKeyDown={(e) => handleKeyDown(e, i)}
-            />
-          ))}
-        </div>
-      </div>
-    ),
+      const newChallenge = await createChallenge({
+        hostId: hostUser,
+        joinCode: joinCode,
+        status: "waiting",
+      });
+
+      if (!newChallenge?.id) {
+        alert("Failed to create challenge.");
+        return;
+      }
+
+      router.push(`/dashboard/games/challenge/${newChallenge.id}/waiting`);
+    }
+
+    if (activeTab === "join") {
+      if (!enteredJoinCode || enteredJoinCode.length !== 5) {
+        alert("Please enter a complete 5-character join code.");
+        return;
+      }
+
+      console.log("Validating join code:", enteredJoinCode);
+      
+      const validation = await validateJoinCode(enteredJoinCode);
+      
+      if (!validation.isValid) {
+        alert(validation.message || "Invalid join code.");
+        return;
+      }
+
+      if (validation.challengeId) {
+        router.push(`/dashboard/games/challenge/${validation.challengeId}/waiting`);
+      }
+    }
   };
 
   return (
     <div>
-      <Modal heading="Challenge" actionButtonText="Play">
+      <Modal 
+        heading="Challenge" 
+        actionButtonText="Play"
+        onAction={() => {
+          handlePlay();
+        }}
+      >
         <div className="flex justify-start mb-4">
           {tabs.map((tab) => (
             <button

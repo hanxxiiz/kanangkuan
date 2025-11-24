@@ -1,32 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Profile } from "@/utils/supabase/models";
 import { profileService } from "../services";
 
-export function useProfiles(userIds: string[]) {
-    const [profiles, setProfiles] = useState<Profile[]>([]);
-    const [profileLoading, setProfileLoading] = useState(true);
-    const [profileError, setProfileError] = useState<string | null>(null);
+type UseProfilesParams = {
+  userId?: string;
+  userIds?: string[];
+};
 
-    useEffect(() => {
-        if (userIds.length > 0) {
-            getProfiles();
-        }
-    }, [userIds]);
+export function useProfiles({ userId, userIds }: UseProfilesParams) {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    async function getProfiles() {
-        try {
-            setProfileLoading(true);
-            setProfileError(null);
-            const data = await profileService.getProfiles(userIds);
-            setProfiles(data);
-        } catch (err) {
-            setProfileError(err instanceof Error ? err.message : "Failed to get profiles.");
-        } finally {
-            setProfileLoading(false);
+  const stableUserIds = useMemo(() => userIds?.slice() || [], [userIds?.join(",")]);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (userId) {
+          const data = await profileService.getProfiles([userId]);
+          setProfile(data[0] || null);
+          setProfiles([]);
+        } else if (stableUserIds.length > 0) {
+          const data = await profileService.getProfiles(stableUserIds);
+          setProfiles(data);
+          setProfile(null);
+        } else {
+          setProfile(null);
+          setProfiles([]);
         }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch profile(s).");
+        setProfile(null);
+        setProfiles([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    return { profiles, profileLoading, profileError };
+    fetchData();
+  }, [userId, stableUserIds]);
+
+  return { profile, profiles, loading, error };
 }

@@ -6,50 +6,10 @@ import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-<<<<<<< Updated upstream
 interface PracticeModalProps {
   currentDeckId: string;
   onClose?: () => void; 
 }
-=======
-const practiceSlides = [
-  {
-    title: "Active Recall", 
-    description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
-    image: "/active-recall.png",
-    color: "bg-blue",
-    path: "/dashboard/practice/active-recall",
-  },
-  {
-    title: "Basic Review", 
-    description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
-    image: "/basic-review.png",
-    color: "bg-purple",
-    path: "/dashboard/practice/basic-review",
-  },
-  {
-    title: "Audio Player", 
-    description: "Tune in and listen to your notes anytime, anywhere.", 
-    image: "/audio-player.png",
-    color: "bg-cyan",
-    path: "/dashboard/practice/audio-player",
-  },
-  {
-    title: "Challenge", 
-    description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
-    image: "/challenge.png",
-    color: "bg-pink",
-    path: "/dashboard/games/challenge",
-  },
-  {
-    title: "Lumbaanay", 
-    description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
-    image: "/lumbaanay.png",
-    color: "bg-lime",
-    path: "/dashboard/games/lumbaanay",
-  }
-];
->>>>>>> Stashed changes
 
 export default function PracticeModal({ currentDeckId, onClose }: PracticeModalProps) {
   const { Modal, setShowModal, showModal } = useContext(ModalContext); 

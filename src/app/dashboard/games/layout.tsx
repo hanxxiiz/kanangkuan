@@ -2,7 +2,7 @@
 
 import React from "react";
 import { FaArrowLeft } from "react-icons/fa6";
-import {ModalProvider} from "@/components/modals/providers";
+import ModalProvider from "@/components/modals/providers";
 
 
 export default function GameLayout({
@@ -26,7 +26,9 @@ export default function GameLayout({
               </div>
           </div>
 
-          <div className="flex-1 min-h-0 w-full overflow-y-auto lg:overflow-hidden">{children}</div>
+          <div className="flex-1 min-h-0 w-full overflow-y-auto lg:overflow-hidden">
+              {children}
+          </div>
         </div>
     </ModalProvider>
   );

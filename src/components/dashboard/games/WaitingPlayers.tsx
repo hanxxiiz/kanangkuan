@@ -9,7 +9,7 @@ import { Button } from '@/components/buttons/PrimaryButton';
 export default function WaitingPlayers({ challengeId }: { challengeId: string }) {
     const { user } = useUser();
     const [joinedPlayers, setJoinedPlayers] = useState<string[]>([]);
-    const { profiles } = useProfiles(joinedPlayers);
+    const { profiles } = useProfiles({ userIds: joinedPlayers });
     const supabase = createClient();
 
     useEffect(() => {
@@ -57,7 +57,7 @@ export default function WaitingPlayers({ challengeId }: { challengeId: string })
                         />
                         <div className="flex flex-col justify-start items-start">
                             <h2 className="font-main text-xl text-lime">Joined</h2>
-                            <h3 className="font-body text-sm text-gray-600">{profile.username}</h3>
+                            <h3 className="font-body text-sm text-gray-600">@{profile.username}</h3>
                         </div>
                     </div>
                 ))}
