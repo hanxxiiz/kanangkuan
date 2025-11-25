@@ -48,6 +48,18 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
+  async function markPlayerReady(currentReadyPlayers: number) {
+    if (!challenge) return;
+
+    try {
+      const updatedChallenge = await challengeService.markPlayerReady(challenge.id, currentReadyPlayers);
+      setChallenge(updatedChallenge);
+      return updatedChallenge;
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : 'Failed to mark player ready.');
+    }
+  }
+
   async function generateUniqueJoinCode(): Promise<string> {
     try {
         return await challengeService.generateUniqueJoinCode();
@@ -72,6 +84,7 @@ export function useChallenges(challengeId?: string) {
     challengeError, 
     createChallenge,
     generateUniqueJoinCode,
-    validateJoinCode
+    validateJoinCode,
+    markPlayerReady
   }
 }

@@ -232,5 +232,21 @@ export const challengeService = {
         }
 
         return { isValid: true, challengeId: data.id };
+    },
+
+    async markPlayerReady(challengeId: string, currentReadyPlayers: number): Promise<Challenge> {
+        const { data, error } = await supabase
+        .from('challenges')
+        .update({
+            max_players: currentReadyPlayers + 1,
+            status: currentReadyPlayers + 1 >= 3 ? 'playing' : 'waiting',
+        })
+        .eq('id', challengeId)
+        .select()
+        .single();
+
+        if (error) throw error;
+
+        return data;
     }
 }

@@ -65,14 +65,14 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
       description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
       image: "/challenge.png",
       color: "bg-pink",
-      path: "/dashboard/practice/challenge",
+      path: "/dashboard/games/challenge",
     },
     {
       title: "Lumbaanay", 
       description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
       image: "/lumbaanay.png",
       color: "bg-lime",
-      path: "/dashboard/practice/lumbaanay",
+      path: "/dashboard/games/lumbaanay",
     }
   ];
 

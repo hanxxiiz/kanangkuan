@@ -39,6 +39,6 @@ export interface Challenge {
     host_id: string;
     join_code: string;
     max_players: number;
-    status: string | "waiting" | "play" | "finished";
+    status: string | "waiting" | "playing" | "finished";
     created_at: string;
 }
