@@ -48,6 +48,23 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
+  async function incrementMaxPlayers(id: string) {
+  try {
+    // Atomic increment in database
+    await challengeService.incrementMaxPlayers(id);
+
+    // Refetch the latest challenge state
+    const updatedChallenge = await challengeService.getChallenge(id);
+    setChallenge(updatedChallenge);
+
+    return updatedChallenge;
+  } catch (err) {
+    setChallengeError(err instanceof Error ? err.message : "Failed to increment max players.");
+    return false;
+  }
+}
+
+
   async function markPlayerReady(currentReadyPlayers: number) {
     if (!challenge) return;
 
@@ -83,6 +100,7 @@ export function useChallenges(challengeId?: string) {
     challengeLoading, 
     challengeError, 
     createChallenge,
+    incrementMaxPlayers,
     generateUniqueJoinCode,
     validateJoinCode,
     markPlayerReady

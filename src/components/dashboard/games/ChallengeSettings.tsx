@@ -12,7 +12,7 @@ export default function ChallengeSettings() {
   const { Modal, setShowModal } = useContext(ModalContext);
   const { user } = useUser();
   const router = useRouter();
-  const { createChallenge, validateJoinCode } = useChallenges();
+  const { createChallenge, incrementMaxPlayers, validateJoinCode } = useChallenges();
 
   const [activeTab, setActiveTab] = useState<"host" | "join">("host");
   const [joinCode, setJoinCode] = useState("");
@@ -83,6 +83,7 @@ export default function ChallengeSettings() {
       }
 
       if (validation.challengeId) {
+        await incrementMaxPlayers(validation.challengeId);
         router.push(`/dashboard/games/challenge/${validation.challengeId}/waiting`);
       }
     }

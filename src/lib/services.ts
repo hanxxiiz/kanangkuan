@@ -160,6 +160,17 @@ export const challengeService = {
 
         return data;
     },
+    
+    async  incrementMaxPlayers(id: string) {
+        const { error } = await supabase.rpc("increment_max_players", {
+            challenge_id: id,
+        });
+
+        if (error) throw error;
+
+        console.log("Incremented max_players successfully!");
+    },
+
 
     async getChallenge(challengeId: string): Promise<Challenge> {
         const { data, error } = await supabase
@@ -215,7 +226,7 @@ export const challengeService = {
     async validateJoinCode(joinCode: string): Promise<{ isValid: boolean; challengeId?: string; message?: string }> {
         const { data, error } = await supabase
             .from("challenges")
-            .select("id, status")
+            .select("id, status, max_players")
             .eq("join_code", joinCode)
             .maybeSingle();
 
@@ -229,6 +240,10 @@ export const challengeService = {
 
         if (data.status !== "waiting") {
             return { isValid: false, message: "This challenge is no longer available." };
+        }
+
+        if (data.max_players === 3) {
+            return { isValid: false, message: "This challenge already has max players." };
         }
 
         return { isValid: true, challengeId: data.id };
