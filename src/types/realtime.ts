@@ -1,4 +1,4 @@
-export interface PresenceEntry {
+export interface PresencePayload {
   user_id: string;
   ready: boolean;
   online_at: string;

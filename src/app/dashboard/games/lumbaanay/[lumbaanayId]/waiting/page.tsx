@@ -1,10 +1,10 @@
-import WaitingChallengePlayers from "@/components/dashboard/games/WaitingChallengePlayers";
+import WaitingLumbaanayPlayers from "@/components/dashboard/games/WaitingLumbaanayPlayers";
 
 
-export default async function ChallengeWaitingScreen({ params }: {
-    params: Promise<{ challengeId: string }>
+export default async function LumbaanayWaitingScreen({ params }: {
+    params: Promise<{ lumbaanayId: string }>
 }) {
-    const { challengeId } = await params;
+    const { lumbaanayId } = await params;
 
     return (
         <div className="relative min-h-screen flex items-center justify-center bg-black overflow-hidden">
@@ -19,7 +19,7 @@ export default async function ChallengeWaitingScreen({ params }: {
             />
 
             <div className="absolute z-50 bottom-[15%] ">
-                <WaitingChallengePlayers challengeId={challengeId} />
+                <WaitingLumbaanayPlayers lumbaanayId={lumbaanayId} />
             </div>
         </div>
     );

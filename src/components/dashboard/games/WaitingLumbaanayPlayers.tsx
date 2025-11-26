@@ -4,28 +4,33 @@ import React from "react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useProfiles } from "@/lib/hooks/useProfile";
 import { Button } from "@/components/buttons/PrimaryButton";
-import { useChallenges } from "@/lib/hooks/useChallenges";
+import { useLumbaanays } from "@/lib/hooks/useLumbaanays";
 import { useRealtime } from "@/lib/hooks/useRealtime";
+import { PresencePayload } from "@/types/realtime";
 
-export default function WaitingPlayers({ challengeId }: { challengeId: string }) {
+export default function WaitingLumbaanayPlayers({ lumbaanayId }: { lumbaanayId: string }) {
     const { user } = useUser();
-    const { challenge, challengeLoading } = useChallenges(challengeId);
+    const { lumbaanay, lumbaanayLoading } = useLumbaanays(lumbaanayId);
 
     const { presence, markReady, startGame } = useRealtime({
-        challengeId,
-        user,
-        challenge,
+        gameId: lumbaanayId,
+        userId: user?.id,
+        game: lumbaanay,
+        gameType: "lumbaanay"
     });
 
     const { profiles } = useProfiles({ userIds: Object.keys(presence) });
 
-    if (challengeLoading || !challenge) return <p className="text-white">Loading...</p>;
+    if (lumbaanayLoading || !lumbaanay) return <p className="text-white">Loading...</p>;
 
-    const isHost = user?.id === challenge.host_id;
+    const isHost = user?.id === lumbaanay.host_id;
 
-    const readyPlayers = Object.values(presence).filter((p: any) => p.ready);
+    const readyPlayers: PresencePayload[] = Object.values(presence).filter(
+        (p) => p.ready
+    );
+
     const readyNonHost = readyPlayers.filter(
-        (p: any) => p.user_id !== challenge.host_id
+        (p) => p.user_id !== lumbaanay!.host_id
     ).length;
 
     const canStart = readyNonHost >= 1;

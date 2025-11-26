@@ -3,51 +3,78 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { Challenge, Lumbaanay } from "@/utils/supabase/models";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { PresencePayload } from "@/types/realtime";
+import { gameService } from "../services";
 
 export function useRealtime({
-    challengeId,
-    user,
-    challenge,
+    gameId,
+    userId,
+    game,
+    gameType,
 }: {
-    challengeId: string;
-    user: any;
-    challenge: any;
+    gameId: string;
+    userId?: string;
+    game: Challenge | Lumbaanay | null;
+    gameType: string;
 }) {
     const router = useRouter();
     const supabase = createClient();
     const routerRef = useRef(router);
 
-    const [presence, setPresence] = useState<any>({});
-    const [channel, setChannel] = useState<any>(null);
+    const [presence, setPresence] =
+        useState<Record<string, PresencePayload>>({});
+    const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
     useEffect(() => {
-        if (!user?.id || !challenge) return;
+        if (!userId || !game) return;
 
-        const channel = supabase.channel(`challenge-${challengeId}`, {
-            config: { presence: { key: user.id } },
+        const channel = supabase.channel(`${gameType}-${gameId}`, {
+            config: { presence: { key: userId } },
         });
+
         setChannel(channel);
 
         const setup = async () => {
             channel.on("presence", { event: "sync" }, () => {
-                const state = channel.presenceState() as Record<string, any>;
-                const players: any = {};
+                const state = channel.presenceState() as Record<
+                    string,
+                    PresencePayload[]
+                >;
+
+                const players: Record<string, PresencePayload> = {};
+
                 for (const key in state) {
                     const entry = state[key][0];
                     if (entry?.user_id) players[entry.user_id] = entry;
                 }
+
                 setPresence(players);
             });
 
+            channel.on("presence", { event: "leave" }, async (payload) => {
+                console.log(`User ${payload.key} disconnected from game ${gameId}`);
+
+                try {
+                    await gameService.decrementMaxPlayers(gameType, gameId);
+                } catch (error) {
+                    console.error("Failed to decrement max players:", error);
+                }
+            });
+
             channel.on("broadcast", { event: "game-start" }, () => {
-                routerRef.current.push(`/dashboard/games/challenge/${challenge.id}/playing`);
+                routerRef.current.push(
+                    `/dashboard/games/${gameType}/${game.id}/playing`
+                );
             });
 
             await channel.subscribe();
 
-            const isHost = user.id === challenge.host_id;
+            const isHost = userId === game.host_id;
+
             await channel.track({
-                user_id: user.id,
+                user_id: userId,
                 ready: isHost,
                 online_at: new Date().toISOString(),
             });
@@ -58,16 +85,17 @@ export function useRealtime({
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user?.id, challenge, challengeId, supabase]);
+    }, [userId, game, gameId, supabase]);
 
     const markReady = useCallback(async () => {
         if (!channel) return;
+
         await channel.track({
-            user_id: user?.id!,
+            user_id: userId,
             ready: true,
             online_at: new Date().toISOString(),
         });
-    }, [channel, user?.id]);
+    }, [channel, userId]);
 
     const startGame = useCallback(async () => {
         if (!channel) return;
@@ -78,8 +106,12 @@ export function useRealtime({
             payload: { started: true },
         });
 
-        router.push(`/dashboard/games/challenge/${challenge.id}/playing`);
-    }, [channel, router, challenge?.id]);
+        await gameService.updateGameStatus(gameType, "playing", game!.id)
+
+        router.push(
+            `/dashboard/games/${gameType}/${game!.id}/playing`
+        );
+    }, [channel, router, game?.id]);
 
     return {
         presence,

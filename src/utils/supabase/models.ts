@@ -42,3 +42,12 @@ export interface Challenge {
     status: string | "waiting" | "playing" | "finished";
     created_at: string;
 }
+
+export interface Lumbaanay {
+    id: string;
+    host_id: string;
+    join_code: string;
+    max_players: number;
+    status: string | "waiting" | "playing" | "finished";
+    created_at: string;
+}

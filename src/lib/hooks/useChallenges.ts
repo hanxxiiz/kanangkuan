@@ -24,7 +24,7 @@ export function useChallenges(challengeId?: string) {
         const data = await challengeService.getChallenge(challengeId);
         setChallenge(data);
     } catch (err){
-        setChallengeError (err instanceof Error ? err.message : "Failed to load deck.");
+        setChallengeError (err instanceof Error ? err.message : "Failed to load challenge game.");
     } finally{
         setChallengeLoading(false);
     }
@@ -49,21 +49,18 @@ export function useChallenges(challengeId?: string) {
   }
 
   async function incrementMaxPlayers(id: string) {
-  try {
-    // Atomic increment in database
-    await challengeService.incrementMaxPlayers(id);
+    try {
+      await challengeService.incrementMaxPlayers(id);
 
-    // Refetch the latest challenge state
-    const updatedChallenge = await challengeService.getChallenge(id);
-    setChallenge(updatedChallenge);
+      const updatedChallenge = await challengeService.getChallenge(id);
+      setChallenge(updatedChallenge);
 
-    return updatedChallenge;
-  } catch (err) {
-    setChallengeError(err instanceof Error ? err.message : "Failed to increment max players.");
-    return false;
+      return updatedChallenge;
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : "Failed to increment max players.");
+      return false;
+    }
   }
-}
-
 
   async function markPlayerReady(currentReadyPlayers: number) {
     if (!challenge) return;
