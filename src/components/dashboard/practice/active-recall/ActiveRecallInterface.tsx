@@ -236,10 +236,15 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
         }
         .animate-slide-up {
           animation: slideUp 0.4s ease-out forwards;
-          animation-delay: 0.1s;
         }
         .card-container {
-          opacity: 1;
+          opacity: 0; /* Start hidden */
+        }
+        .card-container.animate-slide-up {
+          opacity: 1; /* Will be animated by the animation */
+        }
+        .card-container:not(.animate-slide-up) {
+          opacity: 1; /* Show immediately if not animating */
         }
       `}</style>
 
