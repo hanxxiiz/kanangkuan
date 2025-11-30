@@ -287,8 +287,8 @@ export default function ActiveRecallPage({
   // ============================================================================
 
   useEffect(() => {
-    // Only set listeners when correct, modal is closed, and continue is enabled
-    if (isCorrect && !showSuccessModal && canContinue) {
+    // Only set listeners when correct OR revealed, modal is closed, and continue is enabled
+    if ((isCorrect || isRevealed) && !showSuccessModal && canContinue) {
       const handleInteraction = () => {
         handleSuccessClose();
       };
@@ -313,7 +313,7 @@ export default function ActiveRecallPage({
         window.removeEventListener('touchstart', handleClick);
       };
     }
-  }, [isCorrect, showSuccessModal, canContinue]);
+  }, [isCorrect, isRevealed, showSuccessModal, canContinue]);
 
   // ============================================================================
   // EARLY RETURNS
@@ -403,7 +403,7 @@ export default function ActiveRecallPage({
       </div>
 
       {/* Continue prompt displayed after correct answer and before SuccessModal closes */}
-      {isCorrect && !showSuccessModal && (
+      {(isCorrect || isRevealed) && !showSuccessModal && canContinue && (
         <div className="fixed bottom-0 left-0 right-0 bg-black border-t-1 border-gray-200 py-8">
           <div className="flex items-center justify-center gap-3">
             <Image
