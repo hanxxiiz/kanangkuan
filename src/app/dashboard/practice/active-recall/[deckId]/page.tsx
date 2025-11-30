@@ -11,6 +11,7 @@ import OutOfLivesModal from '@/components/dashboard/practice/active-recall/OutOf
 import { toast } from "sonner";
 import { FaLightbulb } from "react-icons/fa6";
 import Image from 'next/image';
+import SummaryReport from '@/components/dashboard/practice/active-recall/SummaryReport';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -100,6 +101,10 @@ export default function ActiveRecallPage({
   const [shouldShake, setShouldShake] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
+  const [firstAttemptsCount, setFirstAttemptsCount] = useState(0);
+  const [reattempsCount, setReattempsCount] = useState(0);
+  const [showSummaryReport, setShowSummaryReport] = useState(false);
+
   // Ref to track previous card ID for animation logic
   const previousCardIdRef = useRef<string | null>(null);
 
@@ -166,7 +171,13 @@ export default function ActiveRecallPage({
     }
   }, [isRevealed, isCorrect]);
 
-  // ============================================================================
+  // Check if session is complete (all cards answered correctly, no cards in any queue)
+  useEffect(() => {
+    if (completedCards.size === totalCards && mainQueue.length === 0 && delayedQueue.length === 0) {
+      setShowSummaryReport(true);
+    }
+  }, [completedCards.size, mainQueue.length, delayedQueue.length, totalCards]);
+    // ============================================================================
   // EVENT HANDLERS
   // ============================================================================
 
@@ -180,18 +191,19 @@ export default function ActiveRecallPage({
     setXpEarned(xp);
     setTotalXpEarned(prev => prev + xp);
 
-    // Mark card as completed
+    // Track first attempt vs reattempt
+    if (currentCard.failCount === 0) {
+      setFirstAttemptsCount(prev => prev + 1);
+    } else {
+      setReattempsCount(prev => prev + 1);
+    }
+
+    // Mark card as completed (only for truly correct answers)
     const newCompleted = new Set(completedCards);
     newCompleted.add(currentCard.id);
     setCompletedCards(newCompleted);
 
     setShowSuccessModal(true);
-    // Check if session is complete (no cards left in main queue and no delayed cards)
-    if (newCompleted.size === totalCards) {
-      if (delayedQueue.length === 0 && mainQueue.length === 1) {
-        setTimeout(() => handleReturnToDeck(), 2000);
-      }
-    }
   };
 
   const handleWrongAnswer = () => {
@@ -216,7 +228,6 @@ export default function ActiveRecallPage({
   };
 
   const handleReveal = () => {
-    // Decrement lives for revealing
     const newLivesLeft = livesLeft - 1;
     setLivesLeft(newLivesLeft);
 
@@ -226,7 +237,14 @@ export default function ActiveRecallPage({
     }
 
     setIsRevealed(true);
-
+    
+    // Track as reattempt since it's not a correct answer
+    setReattempsCount(prev => prev + 1);
+    
+    // Increment fail count since this is not a first-try success
+    const updatedQueue = [...mainQueue];
+    updatedQueue[0] = { ...updatedQueue[0], failCount: updatedQueue[0].failCount + 1 };
+    setMainQueue(updatedQueue);
   };
 
   const handleUseHint = () => {
@@ -255,6 +273,7 @@ export default function ActiveRecallPage({
 
   const handleSuccessClose = () => {
     const hadPreviousFails = currentCard.failCount > 0;
+    const wasRevealed = isRevealed;
 
     setShowSuccessModal(false);
 
@@ -264,21 +283,29 @@ export default function ActiveRecallPage({
     // Process delayed queue first
     const { newDelayed, newMain } = processDelayedQueue(delayedQueue, newMainQueue);
 
-    if (hadPreviousFails) {
-      // If the card had previous fails, add it back to the delayed queue
+    if (wasRevealed) {
+      // Revealed cards always go back to delayed queue (NOT completed)
+      const retryDelay = getRetryDelay(currentCard.failCount);
+      const updatedDelayed = [...newDelayed, { card: currentCard, countdown: retryDelay }];
+
+      setDelayedQueue(updatedDelayed);
+      setMainQueue(newMain);
+    } else if (hadPreviousFails) {
+      // Cards with previous fails that are NOW correct
       const retryDelay = getRetryDelay(currentCard.failCount);
       const updatedDelayed = [...newDelayed, { card: currentCard, countdown: retryDelay }];
 
       setDelayedQueue(updatedDelayed);
       setMainQueue(newMain);
     } else {
-      // If no previous fails, just update queues normally
+      // Perfect first-try correct answers - these are truly done
       setDelayedQueue(newDelayed);
       setMainQueue(newMain);
     }
 
-    // Reset isCorrect state
+    // Reset states
     setIsCorrect(false);
+    setIsRevealed(false);
   };
 
 
@@ -327,6 +354,22 @@ export default function ActiveRecallPage({
     return (
       <div className="min-h-screen bg-white p-10 sm:p-5 flex items-center justify-center">
         <div className="text-xl">No cards available for review</div>
+      </div>
+    );
+  }
+
+  // Show summary report if session is complete
+  if (showSummaryReport) {
+    return (
+      <div className="h-[800px]  bg-white p-10 sm:p-5">
+        <SummaryReport
+          totalXpEarned={totalXpEarned}
+          itemsCompleted={completedCards.size}
+          firstAttempts={firstAttemptsCount}
+          reattempts={reattempsCount}
+          deckColor={deckColor}
+          onClose={handleReturnToDeck}
+        />
       </div>
     );
   }
