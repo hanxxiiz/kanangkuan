@@ -1,69 +1,67 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaRegLightbulb, FaHeart } from "react-icons/fa";
-import { FaLightbulb } from "react-icons/fa6";
+import { FaLightbulb, FaArrowUp } from "react-icons/fa6";
 import { LuBookOpen } from "react-icons/lu";
-import { FaArrowUp } from "react-icons/fa6";
 import { ActiveRecallCard } from "@/lib/queries/active-recall-queries";
 
 interface ActiveRecallInterfaceProps {
   card: ActiveRecallCard;
   hintsLeft: number;
   livesLeft: number;
-  deckColor: string; 
+  deckColor: string;
   onCorrectAnswer: (xp: number) => void;
   onWrongAnswer: () => void;
   onUseHint: () => boolean;
   onReveal: () => void;
   isRevealed: boolean;
+  isCorrect: boolean;
   shouldShake: boolean;
-  shouldAnimate: boolean;  // ADD THIS LINE
+  shouldAnimate: boolean;
 }
 
 const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
   card,
   hintsLeft,
   livesLeft,
-  deckColor, 
+  deckColor,
   onCorrectAnswer,
   onWrongAnswer,
   onUseHint,
   onReveal,
   isRevealed,
+  isCorrect,
   shouldShake,
-  shouldAnimate,  // ADD THIS LINE
+  shouldAnimate,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
-  const [isCorrect, setIsCorrect] = useState(false);
   const [displayXP, setDisplayXP] = useState(0);
   const [targetXP, setTargetXP] = useState(0);
   const [cardKey, setCardKey] = useState(0);
-  
-  // Timer state
+
+  // Timer state for calculating XP based on speed
   const startTimeRef = useRef<number | null>(null);
-const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
 
   const isInputActive = isFocused || inputValue.length > 0;
 
-  // Reset states when card changes
+  // Reset states when card changes (card prop change implies a new card is shown)
   useEffect(() => {
     setInputValue("");
     setIsFocused(false);
     setHintsUsed(0);
-    setIsCorrect(false);
     setCardKey(prev => prev + 1);
     startTimeRef.current = Date.now();
   }, [card]);
 
-  // Animate XP counter with faster speed
+  // Animate XP counter
   useEffect(() => {
     if (displayXP === targetXP) return;
-    
+
     const difference = Math.abs(targetXP - displayXP);
     const increment = targetXP > displayXP ? Math.ceil(difference / 20) : -Math.ceil(difference / 20);
     const duration = 20;
-    
+
     const timer = setTimeout(() => {
       setDisplayXP(prev => {
         const next = prev + increment;
@@ -74,11 +72,11 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
         }
       });
     }, duration);
-    
+
     return () => clearTimeout(timer);
   }, [displayXP, targetXP]);
 
-  // Helper function to get color classes
+  // Helper function to get Tailwind color classes based on deckColor
   const getColorClasses = () => {
     const colorMap: { [key: string]: any } = {
       cyan: {
@@ -127,6 +125,7 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
 
   const colors = getColorClasses();
 
+  // Handle user submitting an answer
   const handleSubmit = () => {
     if (!inputValue.trim()) return;
 
@@ -136,29 +135,29 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
     if (userAnswer === correctAnswer) {
       const endTime = Date.now();
       const timeTaken = startTimeRef.current ? (endTime - startTimeRef.current) / 1000 : 999;
-      
+      // Award more XP for faster answers
       const xpAwarded = timeTaken <= 10 ? 100 : 50;
-      
-      setIsCorrect(true);
+
       onCorrectAnswer(xpAwarded);
 
+      // Start XP animation
       setTimeout(() => {
         setTargetXP(prev => prev + xpAwarded);
       }, 100);
     } else {
-      // Clear input on wrong answer
       setInputValue("");
       onWrongAnswer();
     }
   };
 
+  // Handle hint button click
   const handleHintClick = (): void => {
     if (onUseHint()) {
       setHintsUsed(prev => prev + 1);
     }
   };
 
-  // Function to render back text with blank_word hidden or progressively revealed
+  // Function to render the back text, hiding the blank word or revealing it based on state
   const renderBackWithBlank = () => {
     if (!card.blank_word) {
       return <span className="text-black">{card.back}</span>;
@@ -168,9 +167,9 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
     const blankWord = card.blank_word;
     const lowerBackText = backText.toLowerCase();
     const lowerBlankWord = blankWord.toLowerCase();
-    
+
     const index = lowerBackText.indexOf(lowerBlankWord);
-    
+
     if (index === -1) {
       return <span className="text-black">{card.back}</span>;
     }
@@ -192,15 +191,18 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
     return (
       <span className="text-black">
         {before}
-        {isCorrect || (isRevealed && revealedCardIdRef.current === card.id) ? (
+        {isCorrect || isRevealed ? (
+          // Fully revealed/correct state
           <span className={`${colors.bg} text-black font-semibold decoration-2 underline-offset-2 px-1 rounded`}>
             {word}
           </span>
         ) : hintsUsed > 0 ? (
+          // Partially revealed state (using hints)
           <span className={`${colors.bg} text-black font-mono tracking-wider px-1 rounded whitespace-pre`}>
             {toUnderscoresWithReveal(word, hintsUsed)}
           </span>
         ) : (
+          // Hidden state (initial)
           <span className={`${colors.bg} text-black font-mono tracking-wider px-1 rounded whitespace-pre`}>
             {toUnderscoresWithReveal(word, 0)}
           </span>
@@ -213,46 +215,48 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
   return (
     <div className="w-full">
       <style>{`
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
-    20%, 40%, 60%, 80% { transform: translateX(8px); }
-  }
-  .animate-shake {
-    animation: shake 0.5s ease-in-out;
-  }
-  
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out forwards;
-    animation-delay: 0.1s;
-  }
-  .card-container {
-    opacity: 1;
-  }
-`}</style>
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+          20%, 40%, 60%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slideUp 0.4s ease-out forwards;
+          animation-delay: 0.1s;
+        }
+        .card-container {
+          opacity: 1;
+        }
+      `}</style>
 
       {/* Stats Row */}
       <div className="flex justify-between items-center text-black mb-2">
         <div className="text-lg font-main">
           +{displayXP}XP
         </div>
-        
+
         <div className="flex items-center gap-6 px-5 py-1.5 bg-black rounded-full">
+          {/* Hints Left */}
           <div className="flex items-center gap-2">
             <FaLightbulb className="text-white text-xl" />
             <span className="text-white font-main text-lg">{hintsLeft}</span>
           </div>
-          
+
+          {/* Lives Left */}
           <div className="flex items-center gap-2">
             <FaHeart className="text-white text-xl" />
             <span className="text-white font-main text-lg">{livesLeft}</span>
@@ -261,10 +265,10 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
       </div>
 
       {/* Main Card */}
-      {/* Main Card */}
-<div key={cardKey} className={`card-container ${shouldAnimate ? "animate-slide-up" : ""}`}>        <div className={`bg-white border-3 ${colors.border} rounded-3xl overflow-hidden mb-10 transition-transform ${
+      <div key={cardKey} className={`card-container ${shouldAnimate ? "animate-slide-up" : ""}`}>
+        <div className={`bg-white border-3 ${colors.border} rounded-3xl overflow-hidden mb-10 transition-transform ${
           shouldShake ? 'animate-shake' : ''
-        }`}> 
+        }`}>
           {/* Question Section - Upper Half */}
           <div className="p-5 py-4">
             <h2 className="text-xl font-main text-black">
@@ -296,7 +300,7 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
             disabled={isCorrect || isRevealed}
             className={`font-regular w-full px-5 py-3 pr-14 border-2 border-gray-300 rounded-full text-lg text-black placeholder-gray-300 focus:outline-none ${colors.focusBorder} peer transition-colors duration-300 disabled:bg-gray-100 disabled:cursor-not-allowed`}
           />
-          <button 
+          <button
             disabled={!isInputActive || isCorrect || isRevealed}
             onClick={handleSubmit}
             className={`absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-300 ${
@@ -311,6 +315,7 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
 
         {/* Buttons */}
         <div className="flex gap-4">
+          {/* Hint Button */}
           <button
             onClick={handleHintClick}
             disabled={isCorrect || isRevealed}
@@ -323,7 +328,8 @@ const revealedCardIdRef = useRef<string | null>(null);  // ADD THIS
             <FaRegLightbulb className="text-xl"/>
             Hint
           </button>
-          
+
+          {/* Reveal Button */}
           <button
             onClick={onReveal}
             disabled={isRevealed || isCorrect}
