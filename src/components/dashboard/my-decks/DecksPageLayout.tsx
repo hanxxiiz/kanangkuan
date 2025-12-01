@@ -54,7 +54,7 @@ export default function DecksPageLayout({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h1 className="text-5xl font-main">{title}</h1>
+        <h1 className="text-5xl text-black font-main">{title}</h1>
 
         <div className="relative" ref={addRef}>
           <Button

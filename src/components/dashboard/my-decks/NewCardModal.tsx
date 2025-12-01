@@ -43,33 +43,33 @@ export default function NewCardModal({currentDeckId} : {currentDeckId?: string})
         <div className="space-y-4">
           <div>
             <label
-              htmlFor="front"
-              className="block text-sm font-medium text-gray-600 mb-1"
+              htmlFor="back"
+              className="block text-sm font-medium text-black mb-1"
             >
-              Front
+              Back
             </label>
             <input
-              id="front"
+              id="back"
               type="text"
-              value={front}
-              onChange={(e) => setFront(e.target.value)}
-              className="w-full border-b border-gray-300 p-2 text-2xl bg-transparent focus:border-black focus:outline-none transition-colors duration-200"
+              value={back}
+              onChange={(e) => setBack(e.target.value)}
+              className="w-full border-b border-gray-300 text-black p-2 text-2xl bg-transparent focus:border-black focus:outline-none transition-colors duration-200"
             />
           </div>
 
           <div>
             <label
-              htmlFor="back"
-              className="block text-sm font-medium text-gray-600 mb-1"
+              htmlFor="front"
+              className="block text-sm font-medium text-black mb-1"
             >
-              Back
+              Front
             </label>
             <textarea
-              id="back"
-              value={back}
-              onChange={(e) => setBack(e.target.value)}
+              id="front"
+              value={front}
+              onChange={(e) => setFront(e.target.value)}
               rows={5}
-              className="w-full border border-gray-300 rounded-md p-3 text-lg font-body resize-y focus:border-black outline-none transition-colors duration-200"
+              className="w-full border text-black border-gray-300 rounded-md p-3 text-lg font-body resize-y focus:border-black outline-none transition-colors duration-200"
             />
           </div>
         </div>

@@ -60,7 +60,7 @@ export default function CardsPageLayout({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h1 className="text-5xl font-main">{title}</h1>
+        <h1 className="text-5xl font-main text-black">{title}</h1>
         <div className="flex items-center justify-end gap-2">
           <button className="flex items-center p-3 bg-white rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
             <IoShareSocialSharp className="text-xl text-black" />

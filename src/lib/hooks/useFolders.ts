@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { folderService } from "../services"
 import { useUser } from "./useUser";
-import { Deck, Folder } from "@/utils/supabase/models";
+import { Folder } from "@/utils/supabase/models";
 
 export function useFolders(folderId?: string) {
     const { user } = useUser(); 
@@ -12,15 +12,7 @@ export function useFolders(folderId?: string) {
     const [folderLoading, setFolderLoading] = useState(true);
     const [folderError, setFolderError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (user && folderId) {
-            getFolder(folderId)
-        }else if (user){
-            loadFolders();
-        }
-    }, [user, folderId]);
-
-    async function loadFolders() {
+    const loadFolders = useCallback( async () =>  {
         if (!user) return;
 
         try{
@@ -33,9 +25,10 @@ export function useFolders(folderId?: string) {
         } finally{
             setFolderLoading(false);
         }
-    }
+    }, [user]);
 
-    async function getFolder(folderId: string) {
+    const getFolder = useCallback(
+        async (folderId: string) => {
         if (!user) return;
 
         try{
@@ -48,7 +41,15 @@ export function useFolders(folderId?: string) {
         } finally{
             setFolderLoading(false);
         }
-    }
+    }, [user]);
+
+    useEffect(() => {
+        if (user && folderId) {
+            getFolder(folderId);
+        } else if (user) {
+            loadFolders();
+        }
+    }, [user, folderId, getFolder, loadFolders]);
 
     async function createFolder(folderData: {
         folderName: string,
@@ -67,5 +68,5 @@ export function useFolders(folderId?: string) {
             setFolderError (err instanceof Error ? err.message : "Failed to create folder.");
         }
     }
-    return {folders, folder, folderLoading, folderError, createFolder}
+    return {folders, folder, folderLoading, folderError, getFolder, loadFolders, createFolder}
 }

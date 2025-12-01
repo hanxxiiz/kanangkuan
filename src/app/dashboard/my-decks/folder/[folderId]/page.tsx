@@ -37,7 +37,7 @@ export default function MyFolderPage({
             }));
     }, [decks, folderId]);
 
-    const { viewMode, setViewMode, sortedItems } = useViewMode({
+    const { setViewMode, sortedItems } = useViewMode({
         items: folderDecks,
         getDate: (item) => item.date,
         getName: (item) => item.name,
