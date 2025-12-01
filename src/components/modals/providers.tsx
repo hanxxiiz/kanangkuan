@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, Dispatch, SetStateAction, ReactNode, useState } from "react"
+import { createContext, Dispatch, SetStateAction, ReactNode } from "react"
 import { useModal } from "./modal";
 
 export const ModalContext = createContext<{

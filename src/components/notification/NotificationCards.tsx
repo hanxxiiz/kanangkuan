@@ -17,7 +17,6 @@ export default function NotificationCards({
   action,
   type,
   profileUrl,
-  isLast = false,
 }: NotificationCardsProps) {
   const [isChecked, setIsChecked] = useState(false);
 
