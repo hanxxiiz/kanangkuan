@@ -5,7 +5,6 @@ import FeedPanel from "@/components/profile/FeedPanel";
 import StatsPanel from "@/components/profile/StatsPanel";
 import DecksPanel from "@/components/profile/DecksPanel";
 import Navbar from "@/components/profile/Navbar";
-import { FaShare } from "react-icons/fa";
 import ProfileCard from "@/components/profile/ProfileCard";
 
 
