@@ -8,7 +8,17 @@ interface SummaryReportProps {
   reattempts: number;
   deckColor: string;
   onClose: () => void;
+  onRetry?: () => void;
 }
+
+type ColorClasses = {
+  border: string;
+  bg: string;
+  text: string;
+  focusBorder: string;
+  hover: string;
+  hoverBorder: string;
+};
 
 const SummaryReport: React.FC<SummaryReportProps> = ({
   totalXpEarned,
@@ -17,32 +27,53 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   reattempts,
   deckColor,
   onClose,
+  onRetry,
 }) => {
   // Calculate mastery rating
   const masteryRating = ((firstAttempts + 0.5 * reattempts) / itemsCompleted * 100).toFixed(1);
 
   // Helper function to get Tailwind color classes
   const getColorClasses = () => {
-    const colorMap: { [key: string]: any } = {
+    const colorMap: { [key: string]: ColorClasses } = {
       cyan: {
+        border: 'border-cyan',
         bg: 'bg-cyan',
         text: 'text-cyan',
+        focusBorder: 'focus:border-cyan',
+        hover: 'hover:!bg-cyan',
+        hoverBorder: 'hover:!border-cyan',
       },
       pink: {
+        border: 'border-pink',
         bg: 'bg-pink',
         text: 'text-pink',
+        focusBorder: 'focus:border-pink',
+        hover: 'hover:!bg-pink',
+        hoverBorder: 'hover:!border-pink',
       },
       lime: {
+        border: 'border-lime',
         bg: 'bg-lime',
         text: 'text-lime',
+        focusBorder: 'focus:border-lime',
+        hover: 'hover:!bg-lime',
+        hoverBorder: 'hover:!border-lime',
       },
       purple: {
+        border: 'border-purple',
         bg: 'bg-purple',
         text: 'text-purple',
+        focusBorder: 'focus:border-purple',
+        hover: 'hover:!bg-purple',
+        hoverBorder: 'hover:!border-purple',
       },
       blue: {
+        border: 'border-blue',
         bg: 'bg-blue',
         text: 'text-blue',
+        focusBorder: 'focus:border-blue',
+        hover: 'hover:!bg-blue',
+        hoverBorder: 'hover:!border-blue',
       },
     };
     return colorMap[deckColor] || colorMap.lime;
@@ -63,90 +94,78 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   const grade = getGrade();
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+    <div className="max-w-2xl mx-auto mt-8">
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .modal-fade-in {
-          animation: fadeIn 0.3s ease-out;
+          animation: fadeIn 0.4s ease-out;
         }
       `}</style>
 
-      <div className="bg-white rounded-3xl p-8 max-w-md w-full modal-fade-in border-3 border-black">
+      <div className="bg-white rounded-3xl w-full modal-fade-in border-3 border-black overflow-hidden">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className={`inline-flex items-center justify-center w-20 h-20 ${colors.bg} rounded-full mb-4`}>
-            <FaTrophy className="text-4xl text-black" />
-          </div>
-          <h2 className="text-3xl font-main text-black mb-2">Session Complete!</h2>
-          <p className="text-gray-600 font-regular">Here's how you did</p>
+        <div className={`${colors.bg} px-8 py-6 border-b-3 border-black`}>
+          <h2 className="text-3xl font-main text-white">Summary Report</h2>
         </div>
 
-        {/* Mastery Rating - Highlighted */}
-        <div className={`${colors.bg} rounded-2xl p-6 mb-6 border-2 border-black`}>
-          <div className="text-center">
-            <p className="text-black font-main text-sm mb-2">MASTERY RATING</p>
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <span className="text-5xl font-main text-black">{masteryRating}%</span>
-              <div className="flex flex-col items-start">
-                <span className="text-3xl font-main text-black leading-none">{grade.letter}</span>
-                <span className="text-sm font-regular text-black/80">{grade.label}</span>
+        {/* Content */}
+        <div className="p-8">
+          <div className="flex gap-8">
+            {/* Left: Mastery Rating */}
+            <div className={`${colors.bg} rounded-2xl p-8 border-3 border-black flex-shrink-0`} style={{width: '280px'}}>
+              <div className="text-center">
+                <p className="text-black font-main text-sm mb-4">MASTERY RATING</p>
+                <div className="text-7xl font-main text-black mb-2">{masteryRating}%</div>
+              </div>
+            </div>
+
+            {/* Right: Stats */}
+            <div className="flex-1 space-y-6">
+              {/* XP Earned */}
+              <div className="flex items-center justify-between">
+                <span className="font-main text-xl text-black">XP EARNED</span>
+                <span className="font-main text-2xl text-black">{totalXpEarned} XP</span>
+              </div>
+
+              {/* Items Completed */}
+              <div className="flex items-center justify-between">
+                <span className="font-main text-xl text-black">ITEMS COMPLETED</span>
+                <span className="font-main text-2xl text-black">{itemsCompleted} items</span>
+              </div>
+
+              {/* First Attempts */}
+              <div className="flex items-center justify-between">
+                <span className="font-main text-xl text-black">FIRST ATTEMPTS</span>
+                <span className="font-main text-2xl text-black">{firstAttempts} items</span>
+              </div>
+
+              {/* Reattempts */}
+              <div className="flex items-center justify-between">
+                <span className="font-main text-xl text-black">REATTEMPTS</span>
+                <span className="font-main text-2xl text-black">{reattempts} items</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="space-y-4 mb-8">
-          {/* Total XP */}
-          <div className="flex items-center justify-between py-3 border-b-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <FaStar className={`text-2xl ${colors.text}`} />
-              <span className="font-main text-lg text-black">Total XP Earned</span>
-            </div>
-            <span className="font-main text-2xl text-black">+{totalXpEarned}</span>
-          </div>
+      </div>
 
-          {/* Items Completed */}
-          <div className="flex items-center justify-between py-3 border-b-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full ${colors.bg} flex items-center justify-center`}>
-                <span className="text-black font-main text-sm">✓</span>
-              </div>
-              <span className="font-main text-lg text-black">Items Completed</span>
-            </div>
-            <span className="font-main text-2xl text-black">{itemsCompleted}</span>
-          </div>
-
-          {/* First Attempts */}
-          <div className="flex items-center justify-between py-3 border-b-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <FaFire className="text-2xl text-orange-500" />
-              <span className="font-main text-lg text-black">First Attempts</span>
-            </div>
-            <span className="font-main text-2xl text-black">{firstAttempts}</span>
-          </div>
-
-          {/* Reattempts */}
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-black font-main text-sm">↻</span>
-              </div>
-              <span className="font-main text-lg text-black">Reattempts</span>
-            </div>
-            <span className="font-main text-2xl text-black">{reattempts}</span>
-          </div>
-        </div>
-
-        {/* Close Button */}
+      {/* Buttons */}
+      <div className="mt-6 flex gap-4">
         <button
           onClick={onClose}
-          className={`w-full py-4 ${colors.bg} hover:bg-black text-black hover:text-white border-2 border-black rounded-full font-main text-lg transition-all duration-300`}
+          className="flex-1 py-4 bg-white hover:bg-gray-100 text-black border-2 border-black rounded-full font-main text-lg transition-all duration-300"
         >
-          Continue
+          Go Back
+        </button>
+        <button
+          onClick={onRetry}
+          className={`flex-1 py-4 bg-black text-white border-2 border-black rounded-full font-main text-lg transition-all duration-300 ${colors.hover}`}
+        >
+          Retry
         </button>
       </div>
     </div>

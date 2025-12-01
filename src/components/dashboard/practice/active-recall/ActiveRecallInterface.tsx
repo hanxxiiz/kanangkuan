@@ -19,6 +19,15 @@ interface ActiveRecallInterfaceProps {
   shouldAnimate: boolean;
 }
 
+type ColorClasses = {
+  border: string;
+  bg: string;
+  text: string;
+  focusBorder: string;
+  hover: string;
+  hoverBorder: string;
+};
+
 const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
   card,
   hintsLeft,
@@ -78,7 +87,7 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
 
   // Helper function to get Tailwind color classes based on deckColor
   const getColorClasses = () => {
-    const colorMap: { [key: string]: any } = {
+    const colorMap: { [key: string]: ColorClasses } = {
       cyan: {
         border: 'border-cyan',
         bg: 'bg-cyan',

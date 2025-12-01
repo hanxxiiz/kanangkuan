@@ -148,7 +148,7 @@ export default function ActiveRecallPage({
 
       previousCardIdRef.current = currentCard.id;
     }
-  }, [currentCard?.id]);
+  }, [currentCard]);
 
   // Enable continue after reveal OR correct answer
   useEffect(() => {
