@@ -2,14 +2,12 @@
 import ProfileLevelBar from "./Levelbar"
 import ProfileMonthlyProgress from "./ProfileMonthlyProgress"
 import RecentDeck from "./RecentDeck";
-import { useDashboard } from "../dashboard/DashboardContext";
 
 type FeedPanelProps = {
     switchToDecks: () => void;
 }
 
 export default function Feed({switchToDecks}: FeedPanelProps) {
-    const { userId } = useDashboard();
 
     return (
         <div>

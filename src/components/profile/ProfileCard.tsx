@@ -1,9 +1,10 @@
 "use client";
 
 import { useDashboard } from "../dashboard/DashboardContext";
+import Image from "next/image";
 
 const ProfileCard = () => {
-    const { userId, username, profileUrl} = useDashboard();
+    const {  username} = useDashboard();
     return (
         <div>
             {/* Profile Card */}
@@ -21,9 +22,12 @@ const ProfileCard = () => {
             {/* Desktop Layout */}
             <div className="hidden sm:flex relative items-start h-70 w-full">
               {/* Profile Image */}
-              <img
-                alt="/dashboard/default-picture.png"
+              <Image
+                alt={username}
                 src="/dashboard/default-picture.png"
+                  width={0}
+                  height={0}
+                  sizes="100vw"
                 className="absolute bottom-0 m-10 max-w-xs max-h-xs w-50 h-50 rounded-full bg-gray-900 z-10 border-5 border-white"
               />
               {/* User Info */}
@@ -52,9 +56,13 @@ const ProfileCard = () => {
                 <p className="text-gray-900 text-sm font-body">0 Followers</p>
               </div>
               {/* Image below the info */}
-              <img
+              <Image
+                alt={`${username}`}
                 src="/dashboard/default-picture.png"
                 className="mt-6 w-32 h-32 rounded-full bg-gray-900 z-10"
+                width={0}
+                height={0}
+                sizes="100vw"
               />
             </div>
           </div>

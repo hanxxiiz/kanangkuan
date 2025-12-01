@@ -3,24 +3,13 @@
 import DecksPageLayout from "@/components/profile/DecksPageLayout";
 import Folder from "@/components/dashboard/my-decks/Folder";
 import Deck from "@/components/dashboard/my-decks/Deck";
-import { ModalContext } from "@/components/modals/providers";
-import { useContext, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useCards } from "@/lib/hooks/useCards";
 import { useViewMode } from "@/lib/hooks/useViewMode";
 
-
-type ModalType = "folder" | "deck" | null;
-
 export default function MyDecksPage() {
-  const { setShowModal } = useContext(ModalContext);
-  const [activeModal, setActiveModal] = useState<ModalType>(null);
-
-  const openModal = (type: ModalType) => {
-    setActiveModal(type);
-    setShowModal(true);
-  };
 
   const { folders, folderLoading, folderError } = useFolders();
   const { decks, deckLoading, deckError } = useDecks();
@@ -47,7 +36,7 @@ export default function MyDecksPage() {
     ];
   }, [folders, decks]);
 
-  const { viewMode, setViewMode, sortedItems } = useViewMode({
+  const { setViewMode, sortedItems } = useViewMode({
     items: allItems,
     getDate: (item) => item.date,
     getName: (item) => item.name,
@@ -65,13 +54,6 @@ export default function MyDecksPage() {
     <div className="w-full bg-white p-10">
       <DecksPageLayout
         title="My Decks"
-        onAddClick={() => {
-          console.log("Add button clicked!");
-        }}
-        addOptions={[
-          { label: "New Folder", onClick: () => openModal("folder") },
-          { label: "New Deck", onClick: () => openModal("deck") },
-        ]}
         filterOptions={[
           { label: "All", onClick: () => setViewMode("all") },
           { label: "A–Z", onClick: () => setViewMode("a-z") },

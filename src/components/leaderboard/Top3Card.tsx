@@ -2,6 +2,7 @@
 
 import React from "react";
 import { GradientSets } from "./GradientSets";
+import Image from "next/image";
 
 type Top3CardVariant = keyof typeof GradientSets;
 
@@ -33,7 +34,7 @@ const Top3Card: React.FC<Top3CardProps> = ({
 
   const FALLBACK = "/dashboard/default-picture.png"; 
 
-  const resolveSrc = (src?: any) => {
+  const resolveSrc = (src?: string | null) => {
     if (!src || typeof src !== "string") return FALLBACK;
     const trimmed = src.trim();
     return trimmed === "" ? FALLBACK : trimmed;
@@ -56,12 +57,15 @@ const Top3Card: React.FC<Top3CardProps> = ({
           {/* Profile image with overlapping rank badge */}
           <div className="absolute left-1/2 -bottom-[5rem] -translate-x-1/2 w-[150px] h-[150px] lg:w-[190px] lg:h-[190px]">
             <div className="relative w-full h-full rounded-full bg-white border-[10px] border-white/80 overflow-hidden">
-              <img
+              <Image
                 src={resolveSrc(imageSrc)}
                 onError={(e) => {
                   e.currentTarget.src = FALLBACK;
                 }}
                 alt={name}
+                width={0}
+                height={0}
+                sizes="100vw"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -113,12 +117,15 @@ const Top3Card: React.FC<Top3CardProps> = ({
         >
           <div className="absolute left-20 -bottom-[5rem] -translate-x-1/2 w-[110px] h-[110px]">
             <div className="relative w-full h-full rounded-full bg-white border-[7px] border-white/80 overflow-hidden">
-              <img
+              <Image
                 src={resolveSrc(imageSrc)}
                 onError={(e) => {
                   e.currentTarget.src = FALLBACK;
                 }}
                 alt={name}
+                width={0}
+                height={0}
+                sizes="100vw"
                 className="w-full h-full object-cover"
               />
             </div>
