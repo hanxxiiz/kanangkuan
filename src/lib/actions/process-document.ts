@@ -58,7 +58,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // ═══════════════════════════════════════════════════════════════════════════
 
 const MAX_CARDS_PER_DOCUMENT = 100;
-const MAX_TEXT_LENGTH = 50000; // characters
+const MAX_TEXT_LENGTH = 100000; // characters
 const CARD_BATCH_SIZE = 10;
 const WRONG_OPTIONS_BATCH_SIZE = 10;
 const BLANK_WORDS_BATCH_SIZE = 10;
@@ -131,11 +131,19 @@ async function extractTextFromDocument(
 
   const result = await response.json();
   
-  if (!result.success || !result.text) {
-    throw new Error('No text extracted from document');
+  console.log('Extraction result:', result); // Keep this for debugging
+  
+  // Updated to handle new response format
+  if (!result.success) {
+    const errorMsg = result.message || result.error || 'Text extraction failed';
+    throw new Error(errorMsg);
   }
 
-  return String(result.text);
+  if (!result.text || result.text.trim().length === 0) {
+    throw new Error('No text content found in the document. The file may be empty or contain only images.');
+  }
+
+  return String(result.text).trim();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
