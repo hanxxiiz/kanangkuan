@@ -21,6 +21,7 @@
     "mammoth": "^1.11.0",
     "mime": "^4.1.0",
     "next": "15.5.3",
+    "officeparser": "^5.2.2",
     "pptx-parser": "^1.1.7-beta.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
