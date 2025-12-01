@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/profile/Navbar";
-import Top3Card from "../../../components/leaderboard/Top3Card";
+import LeaderboardCard from "../../../components/dashboard/LeaderboardCard";
 import RankedCard from "../../../components/leaderboard/RankedCard";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
+import { useDashboard } from "@/components/dashboard/DashboardContext";
 
 interface LeaderboardUser {
   id: string;
@@ -16,13 +17,19 @@ interface LeaderboardUser {
 
 const LeaderboardPage = () => {
   const { supabase } = useSupabase();
-
+  const { leaderboardData } = useDashboard();
   // Navbar
   const tabs = ["All Time", "Top 100", "XP"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
+
+   const gradientMap = {
+    0: "limeToPink", // All Time
+    1: "blueToPink", // Top 100
+    2: "cyanToPink", // XP
+  } as const;
 
   // Detect mobile viewport
   useEffect(() => {
@@ -83,6 +90,16 @@ const LeaderboardPage = () => {
     ? [...top3].sort((a, b) => a.rank === 1 ? -1 : b.rank === 1 ? 1 : a.rank - b.rank)
     : top3;
 
+      const sortedLeaderboard = isMobile
+    ? [...leaderboardData].sort((a, b) => {
+        if (a.rank === 1) return -1;
+        if (b.rank === 1) return 1;
+        return a.rank - b.rank;
+      })
+    : [...leaderboardData].sort((a, b) => { 
+        const order = { 2: 0, 1: 1, 3: 2 };
+        return (order[a.rank as keyof typeof order] ?? a.rank) - (order[b.rank as keyof typeof order] ?? b.rank);
+      });
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center">
       <section className="w-full max-w-6xl px-4 sm:px-6 lg:px-16 py-8 flex flex-col items-center">
@@ -92,13 +109,6 @@ const LeaderboardPage = () => {
           <h1 className="font-main text-3xl sm:text-4xl lg:text-5xl text-gray-900">
             Leaderboard
           </h1>
-
-          {/* Hide This On Mobile */}
-          <div className="hidden sm:flex">
-            <div className="border border-gray-900 px-4 py-2 rounded-full text-gray-900 font-body font-bold text-sm sm:text-base">
-              Leaderboard
-            </div>
-          </div>
         </div>
 
         {/* Navbar */}
@@ -111,21 +121,14 @@ const LeaderboardPage = () => {
           <div className="w-full flex flex-col items-center">
             
             {/* Top 3 */}
-            <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-              {mobileTop3.map((user) => (
-                <Top3Card
+            <div className="flex justify-center items-center grid grid-cols-3 sm:gap-0 lg:gap-6 flex-wrap md:flex-no-wrap lg:flex-wrap">
+              {sortedLeaderboard.map((user) => (
+                <LeaderboardCard
                   key={user.rank}
                   rank={user.rank as 1 | 2 | 3}
-                  name={user.name}
+                  name={user.username}
                   xp={user.xp}
-                  imageSrc={user.profileUrl}
-                  variant={
-                    activeIndex === 0
-                      ? "cyanToPink"
-                      : activeIndex === 1
-                      ? "blueToPink"
-                      : "limeToPink"
-                  }
+                  imageSrc={user.profile_url || undefined}
                 />
               ))}
             </div>

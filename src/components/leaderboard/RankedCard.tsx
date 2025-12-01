@@ -30,6 +30,14 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
     >
       {/* Left Section: Avatar + Username + XP (for mobile) */}
       <div className="flex items-center gap-4 sm:gap-6">
+
+        {/* Rank on the right (mobile only) */}
+        <p className="ml-auto block sm:hidden font-main text-2xl text-pink">
+          {ranking}
+        </p>
+
+        <p className="font-main text-pink text-2xl ml-5 sm:text-4xl">{ranking}</p>
+        
         <Image
           src={resolveSrc(imageUrl)}
           alt={username}
@@ -39,21 +47,18 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
         />
 
         <div className="flex flex-col">
-          <p className="font-body text-2xl text-gray-900 sm:text-3xl">{username}</p>
+          <p className="font-body text-2xl font-main text-gray-900 sm:text-3xl">{username}</p>
           {/* XP below username on mobile */}
-          <p className="block sm:hidden font-body text-lg text-gray-900">{xp} XP</p>
+          <p className="block sm:hidden font-body text-md text-gray-900">{xp} XP</p>
         </div>
 
-        {/* Rank on the right (mobile only) */}
-        <p className="ml-auto block sm:hidden font-main text-2xl text-gray-900">
-          {ranking + 3}
-        </p>
+        
       </div>
 
       {/* Right Section: XP + Rank (for desktop/tablet) */}
       <div className="hidden sm:flex items-center justify-end gap-6">
-        <p className="font-body text-lg text-gray-900 sm:text-2xl">{xp} XP</p>
-        <p className="font-main text-2xl text-gray-900 sm:text-4xl">{ranking + 3}</p>
+        <p className="font-body text-md text-gray-900 sm:text-xl">{xp} XP</p>
+        
       </div>
     </div>
   );

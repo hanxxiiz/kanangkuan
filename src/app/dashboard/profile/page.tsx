@@ -21,20 +21,9 @@ const ProfilePage = () => {
       <section className="min-h-screen w-full transition-all duration-500 ease-in-out px-6 sm:px-12 md:px-16">
         {/* Header */}
         <div className="flex flex-col sm:flex-row my-6 mb-10 items-center justify-between max-w-full">
-          <h1 className="font-bold text-4xl md:text-5xl text-gray-900 mb-4 sm:mb-0">
+          <h1 className="font-main text-4xl md:text-5xl text-gray-900 mb-4 sm:mb-0">
             Profile
           </h1>
-
-          <div className="flex items-center">
-            <div className="flex items-center justify-center w-8 h-8 mx-2 rounded-full cursor-pointer 
-                transition-all duration-200 transform hover:scale-110">
-              <FaShare className="text-black" />
-            </div>
-
-            <div className="flex w-32 h-8 mx-2 rounded-full items-center justify-center text-black font-body font-bold border border-black transition-all duration-200 transform hover:scale-110">
-              Profile
-            </div>
-          </div>
         </div>
 
         <ProfileCard />
