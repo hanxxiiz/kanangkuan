@@ -1,9 +1,21 @@
 "use client";
-
+import { useState } from "react";
 import { useDashboard } from "../dashboard/DashboardContext";
+import { usePathname } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 const ProfileCard = () => {
     const { userId, username, profileUrl} = useDashboard();
+    const pathname = usePathname();
+    const supabase = createClient();
+    const canEdit = pathname === `/dashboard/settings`;
+
+    const [uploading, setuploading] = useState(false);
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLIFrameElement>) => {
+
+      
+    }
+ 
     return (
         <div>
             {/* Profile Card */}
