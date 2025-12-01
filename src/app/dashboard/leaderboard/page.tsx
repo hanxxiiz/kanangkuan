@@ -6,6 +6,14 @@ import Top3Card from "../../../components/leaderboard/Top3Card";
 import RankedCard from "../../../components/leaderboard/RankedCard";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 
+interface LeaderboardUser {
+  id: string;
+  username: string;
+  xp: number;
+  profile_url: string | null;
+}
+
+
 const LeaderboardPage = () => {
   const { supabase } = useSupabase();
 
@@ -13,8 +21,7 @@ const LeaderboardPage = () => {
   const tabs = ["All Time", "Top 100", "XP"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Detect mobile viewport

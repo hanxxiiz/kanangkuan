@@ -34,16 +34,20 @@ const ChangeUsername: React.FC<ChangeUsernameProps> = ({ onClose, isVisible = tr
     setError(null);
 
     try {
-      const { error } = await supabase
+      await supabase
         .from("profiles")
         .update({ username: newUsername })
         .eq("id", userId);
 
       await refreshUsername(); // update context
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to update username");
-    } finally {
+    } catch (err: unknown) {
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError("Failed to change username.");
+  }
+} finally {
       setLoading(false);
     }
   };
@@ -91,7 +95,7 @@ const ChangeUsername: React.FC<ChangeUsernameProps> = ({ onClose, isVisible = tr
                 </Button>
                 <Button variant="flat" size="lg"
                 onClick={handleChangeUsername}>
-                  Change
+                  {loading ? "Changing..." : "Change"}
                 </Button>
               </div>
             </div>
