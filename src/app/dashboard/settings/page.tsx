@@ -16,7 +16,7 @@ const SettingsPage = () => {
   const { session } = useSupabase();
   const email = session?.user?.email ?? "Unknown";
   
-  const { userId, username } = useDashboard();
+  const { username } = useDashboard();
 
   return (
     <div className="min-h-screen w-full bg-white px-4 sm:px-8 lg:px-16 py-6">

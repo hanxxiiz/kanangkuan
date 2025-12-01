@@ -81,8 +81,8 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, isVisible = tr
         setSuccess("Password updated successfully.");
         setTimeout(() => onClose(), 1000);
       }
-    } catch (err: any) {
-      setError(err.message || "Unexpected error.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error.");
     }
 
     setLoading(false);
@@ -119,22 +119,47 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ onClose, isVisible = tr
                 {/* Current Password */}
                 <div className="mt-8">
                   <p className="text-xl font-body text-black mb-3">Current Password</p>
-                  <p className="tracking-widest select-none text-black">••••••••••••••••••</p>
+                  <input
+                    type="password"
+                    className="w-full text-lg font-body text-black bg-transparent outline-none"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
                   <div className="border border-[#CFCECE] mt-3" />
                 </div>
 
-                {/* Re-enter New Password */}
+                {/* New Password */}
                 <div className="mt-10">
-                  <p className="text-xl font-body text-black mb-3">Re-enter New Password</p>
+                  <p className="text-xl font-body text-black mb-3">New Password</p>
                   <input
                     type="password"
-                    className="w-full text-lg mt-20 lg:mt-20 sm:mt-25 font-body text-black bg-transparent outline-none"
+                    className="w-full text-lg font-body text-black bg-transparent outline-none"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <div className="border border-[#CFCECE] mt-3" />
+                </div>
+
+                {/* Confirm New Password */}
+                <div className="mt-10">
+                  <p className="text-xl font-body text-black mb-3">Confirm New Password</p>
+                  <input
+                    type="password"
+                    className="w-full text-lg font-body text-black bg-transparent outline-none"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
                   />
                   <div className="border border-[#CFCECE] mt-3" />
                 </div>
               </div>
+
+              {error && (
+                  <p className="text-red-500 text-sm mt-4">{error}</p>
+                )}
+
+                {success && (
+                  <p className="text-green-600 text-sm mt-4">{success}</p>
+                )}
 
               {/* Footer Buttons */}
               <div className="flex justify-end items-end w-full gap-3">

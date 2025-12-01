@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FaUser, FaSignOutAlt } from "react-icons/fa"; 
 import { IoSettingsSharp } from "react-icons/io5";
+import { signout } from "@/lib/auth-actions";
 
 interface ProfileDropdownProps {
   isOpen: boolean;
@@ -10,6 +11,11 @@ interface ProfileDropdownProps {
 }
 
 const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
+  const handleSignOut = async () => {
+    onClose();
+    await signout();
+  };
+
   return (
     <>
       <div 
@@ -49,10 +55,7 @@ const ProfileDropdown = ({ isOpen, onClose }: ProfileDropdownProps) => {
           <li>
             <button 
               className="flex items-center space-x-3 px-5 py-3 hover:bg-gray-100 cursor-pointer text-gray-800 text-md transition-colors text-left w-full"
-              onClick={() => {
-                onClose();
-                window.location.href = "/";
-              }}
+              onClick={handleSignOut}
             >
               <FaSignOutAlt className="text-md" />
               <span>Log out</span>

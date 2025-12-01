@@ -42,11 +42,12 @@ const Navigation = () => {
                 <Image
                   src="kanangkuan-logo.svg"
                   alt="Kanang Kuan"
-                  width={56}     
-                  height={56}
+                  width={0}     
+                  height={0}
+                  sizes="100vw"
                   className="w-[3.5rem] h-[3.5rem]"
                 />
-                <h2 className="font-main text-2xl hover:text-pink transition-colors">Kanang Kuan</h2>
+                <h2 className="font-main text-2xl text-black hover:text-pink transition-colors">Kanang Kuan</h2>
               </Link>
             </div>
 

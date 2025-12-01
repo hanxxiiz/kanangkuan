@@ -1,5 +1,6 @@
 import React from "react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import Image from "next/image";
 
 const ProfileLevelBar = () => {
   const { xp } = useDashboard();
@@ -55,10 +56,13 @@ const ProfileLevelBar = () => {
       </span>
 
       {/* 3. Hero Image */}
-        <img
+        <Image
             src="/dashboard/levelBarHero.svg"
             alt="Level Hero"
             className="absolute left-9 top-2/5 -translate-y-1/2 w-25 h-27 z-20"
+            width={0}
+            height={0}
+            sizes="100vw"
       />
     </div>
   );

@@ -3,12 +3,11 @@
 import Deck from "@/components/dashboard/my-decks/Deck";
 import DecksPageLayout from "@/components/profile/DecksPageLayout";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
-import { ModalContext } from "@/components/modals/providers";
 import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useViewMode } from "@/lib/hooks/useViewMode";
-import { use, useContext, useMemo } from "react";
+import { use, useMemo } from "react";
 
 export default function MyFolderPage({
     params,
@@ -19,7 +18,6 @@ export default function MyFolderPage({
     const { decks, deckLoading, deckError } = useDecks();
     const { cards } = useCards();
     const { folder, folderLoading, folderError } = useFolders(folderId);
-    const { setShowModal } = useContext(ModalContext);
 
     const folderName = folderLoading
         ? "Loading..."
@@ -37,7 +35,7 @@ export default function MyFolderPage({
             }));
     }, [decks, folderId]);
 
-    const { viewMode, setViewMode, sortedItems } = useViewMode({
+    const { setViewMode, sortedItems } = useViewMode({
         items: folderDecks,
         getDate: (item) => item.date,
         getName: (item) => item.name,
@@ -55,9 +53,6 @@ export default function MyFolderPage({
         <div className="w-full bg-white p-10">
             <DecksPageLayout
                 title={folderName}
-                onAddClick={() => {
-                    setShowModal(true);
-                }}
                 filterOptions={[
                     { label: "All", onClick: () => setViewMode("all") },
                     { label: "A–Z", onClick: () => setViewMode("a-z") },
