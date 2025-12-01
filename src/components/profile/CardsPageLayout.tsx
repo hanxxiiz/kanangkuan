@@ -1,7 +1,6 @@
 import { useState, ReactNode, useContext, useRef, useEffect } from "react";
 import { Button } from "@/components/buttons/PrimaryButton";
-import { IoFilter, IoShareSocialSharp, IoAdd } from "react-icons/io5";
-import { RiQuillPenAiFill , RiQuillPenFill } from "react-icons/ri";
+import { IoFilter, IoShareSocialSharp } from "react-icons/io5";
 import { ModalContext } from "@/components/modals/providers";
 import PracticeModal from "../dashboard/my-decks/PracticeModal";
 
@@ -24,13 +23,11 @@ export default function CardsPageLayout({
   children: ReactNode;
 }) {
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]?.label || "All");
-  const [showAddOptions, setShowAddOptions] = useState(false);
   const [showFilterOptions, setShowFilterOptions] = useState(false);
   const { setShowModal } = useContext(ModalContext);
   
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
-  const addRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
   const openModal = (type: ModalType) => {
@@ -41,12 +38,9 @@ export default function CardsPageLayout({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
-        addRef.current &&
-        !addRef.current.contains(e.target as Node) &&
         filterRef.current &&
         !filterRef.current.contains(e.target as Node)
       ) {
-        setShowAddOptions(false);
         setShowFilterOptions(false);
       }
     };
@@ -58,7 +52,7 @@ export default function CardsPageLayout({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h1 className="text-5xl font-main">{title}</h1>
+        <h1 className="text-5xl text-black font-main">{title}</h1>
         <div className="flex items-center justify-end gap-2">
           <button className="flex items-center p-3 bg-white rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
             <IoShareSocialSharp className="text-xl text-black" />
@@ -116,7 +110,7 @@ export default function CardsPageLayout({
       </div>
 
       {activeModal === "practice" && (
-          <PracticeModal />
+          <PracticeModal currentDeckId={currentDeckId}/>
       )}
     </>
   );

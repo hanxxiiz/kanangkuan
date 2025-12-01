@@ -1,5 +1,6 @@
 import React from "react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
+import Image from "next/image";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -86,18 +87,16 @@ export default function ProfileMonthlyProgress() {
                 
                 const currentCellPosition = rowIndex * 7 + colIndex;
                 const totalCells = rows * 7;
-                let dayNumber = 0;
+              
                 
                 for (let day = 1; day <= daysInMonth; day++) {
                   const dayPosition = (firstDayOfMonth + day - 1) % totalCells;
                   if (dayPosition === currentCellPosition) {
-                    dayNumber = day;
+                
                     break;
                   }
                 }
-                
-                const isValidDay = dayNumber >= 1 && dayNumber <= daysInMonth;
-                
+                              
                 return (
                   <div
                     key={`${rowIndex}-${colIndex}`}
@@ -109,9 +108,12 @@ export default function ProfileMonthlyProgress() {
                     ].join(" ")}
                   >
                     {badge && (
-                      <img 
+                      <Image
                         src={badge} 
                         alt={`Badge for ${xp} XP`}
+                        width={0}
+                        height={0}
+                        sizes="100vwS"
                         className="w-full h-full object-cover"
                       />
                     )}

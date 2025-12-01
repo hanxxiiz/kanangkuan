@@ -8,12 +8,12 @@ export default function ActiveRecallPage({
 }: { 
   params: Promise<{ deckId: string }> 
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { deckId } = use(params);
   const initialData = useContext(PracticeDataContext);
   
-  // PracticeLayout already generated blank words and loaded cards
-  // So cards are ready to use here!
-  const cards = initialData?.cards || [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _cards = initialData?.cards || [];
 
   return (
     <div>

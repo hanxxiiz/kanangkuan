@@ -1,17 +1,18 @@
 import React from "react";
+import Image from "next/image";
 
 type RankedCardProps = {
   username: string;
   xp: number;
   ranking: number;
-  imageUrl: string;
+  imageUrl: string | null;
 };
 
 const FALLBACK = "/dashboard/default-picture.png"; //para sa dili ma kita ang picture
 
 const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl }) => {
   
-  const resolveSrc = (src: any) => {
+  const resolveSrc = (src: string | null): string => {
     if (!src || typeof src !== "string") return FALLBACK;
     const trimmed = src.trim();
     return trimmed === "" ? FALLBACK : trimmed;
@@ -29,9 +30,11 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
     >
       {/* Left Section: Avatar + Username + XP (for mobile) */}
       <div className="flex items-center gap-4 sm:gap-6">
-        <img
+        <Image
           src={resolveSrc(imageUrl)}
           alt={username}
+          width={80}
+          height={80}
           className="h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
         />
 
