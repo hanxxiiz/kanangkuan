@@ -12,10 +12,11 @@ import { toast } from "sonner";
 import { FaLightbulb } from "react-icons/fa6";
 import Image from 'next/image';
 import SummaryReport from '@/components/dashboard/practice/active-recall/SummaryReport';
-
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
+import {
+  DecrementHints,
+  DecrementLives,
+  AddXPTransaction
+} from '@/lib/actions/active-recall-actions';
 
 interface CardWithState extends ActiveRecallCard {
   failCount: number;
@@ -26,20 +27,13 @@ interface DelayedCard {
   countdown: number;
 }
 
-// ============================================================================
-// QUEUE MANAGEMENT UTILITIES
-// ============================================================================
-
 /**
  * Determines how many cards to wait before retrying based on fail count
- * failCount 1 -> 3 cards wait
- * failCount 2 -> 2 cards wait 
- * failCount >= 3 -> 1 card wait
  */
 function getRetryDelay(failCount: number): number {
   if (failCount === 1) return 3;
   if (failCount === 2) return 2;
-  return 1; // failCount >= 3
+  return 1;
 }
 
 /**
@@ -69,10 +63,6 @@ function processDelayedQueue(
     newMain: [...readyCards, ...mainQueue]
   };
 }
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
 
 export default function ActiveRecallPage({
   params
@@ -138,7 +128,6 @@ export default function ActiveRecallPage({
   // Reset card-specific state when current card changes
   useEffect(() => {
     if (currentCard) {
-      // Check if card actually changed
       const cardChanged = previousCardIdRef.current !== null && previousCardIdRef.current !== currentCard.id;
 
       if (cardChanged) {
@@ -171,25 +160,33 @@ export default function ActiveRecallPage({
     }
   }, [isRevealed, isCorrect]);
 
-  // Check if session is complete (all cards answered correctly, no cards in any queue)
+  // Check if session is complete
   useEffect(() => {
     if (completedCards.size === totalCards && mainQueue.length === 0 && delayedQueue.length === 0) {
+      // Save total XP to database when session completes
+      if (totalXpEarned > 0) {
+        AddXPTransaction(totalXpEarned).then(result => {
+          if (!result.success) {
+            console.error("Failed to save XP:", result.error);
+          }
+        });
+      }
+      
       setShowSummaryReport(true);
     }
-  }, [completedCards.size, mainQueue.length, delayedQueue.length, totalCards]);
-    // ============================================================================
-  // EVENT HANDLERS
-  // ============================================================================
+  }, [completedCards.size, mainQueue.length, delayedQueue.length, totalCards, totalXpEarned]);
 
   const handleReturnToDeck = async () => {
     const resolvedParams = await params;
     router.push(`/dashboard/my-decks/${resolvedParams.deckId}`);
   };
 
-  const handleCorrectAnswer = (xp: number) => {
+  const handleCorrectAnswer = async (xp: number) => {
     setIsCorrect(true);
     setXpEarned(xp);
     setTotalXpEarned(prev => prev + xp);
+
+    // DON'T save XP to database here anymore - just accumulate locally
 
     // Track first attempt vs reattempt
     if (currentCard.failCount === 0) {
@@ -198,7 +195,7 @@ export default function ActiveRecallPage({
       setReattempsCount(prev => prev + 1);
     }
 
-    // Mark card as completed (only for truly correct answers)
+    // Mark card as completed
     const newCompleted = new Set(completedCards);
     newCompleted.add(currentCard.id);
     setCompletedCards(newCompleted);
@@ -206,13 +203,27 @@ export default function ActiveRecallPage({
     setShowSuccessModal(true);
   };
 
-  const handleWrongAnswer = () => {
-    const newLivesLeft = livesLeft - 1;
-    setLivesLeft(newLivesLeft);
+  const handleWrongAnswer = async () => {
+    // Decrement lives in the database
+    const result = await DecrementLives();
 
-    if (newLivesLeft <= 0) {
-      setShowOutOfLivesModal(true);
-      return;
+    if (result.success && result.newValue !== undefined) {
+      setLivesLeft(result.newValue);
+
+      if (result.newValue <= 0) {
+        setShowOutOfLivesModal(true);
+        return;
+      }
+    } else {
+      console.error("Failed to decrement lives:", result.error);
+      // Still update UI even if DB update fails
+      const newLivesLeft = livesLeft - 1;
+      setLivesLeft(newLivesLeft);
+
+      if (newLivesLeft <= 0) {
+        setShowOutOfLivesModal(true);
+        return;
+      }
     }
 
     setShouldAnimate(false);
@@ -228,20 +239,41 @@ export default function ActiveRecallPage({
   };
 
   const handleReveal = () => {
+    // Update UI immediately
     const newLivesLeft = livesLeft - 1;
     setLivesLeft(newLivesLeft);
 
     if (newLivesLeft <= 0) {
       setShowOutOfLivesModal(true);
+
+      // Update database in background
+      DecrementLives().then(result => {
+        if (!result.success) {
+          console.error("Failed to decrement lives:", result.error);
+        }
+      });
       return;
     }
 
+    // Update database in background (fire and forget)
+    DecrementLives().then(result => {
+      if (!result.success) {
+        console.error("Failed to decrement lives:", result.error);
+      } else if (result.newValue !== undefined) {
+        // Sync with actual DB value to be safe
+        setLivesLeft(result.newValue);
+      }
+    });
+
     setIsRevealed(true);
     
-    // Track as reattempt since it's not a correct answer
+    // Show success modal when revealing (ADD THIS)
+    setShowSuccessModal(true);
+
+    // Track as reattempt
     setReattempsCount(prev => prev + 1);
-    
-    // Increment fail count since this is not a first-try success
+
+    // Increment fail count
     const updatedQueue = [...mainQueue];
     updatedQueue[0] = { ...updatedQueue[0], failCount: updatedQueue[0].failCount + 1 };
     setMainQueue(updatedQueue);
@@ -249,7 +281,19 @@ export default function ActiveRecallPage({
 
   const handleUseHint = () => {
     if (hintsLeft > 0) {
+      // Update UI immediately
       setHintsLeft(hintsLeft - 1);
+
+      // Update database in background (fire and forget)
+      DecrementHints().then(result => {
+        if (!result.success) {
+          console.error("Failed to decrement hints:", result.error);
+        } else if (result.newValue !== undefined) {
+          // Sync with actual DB value to be safe
+          setHintsLeft(result.newValue);
+        }
+      });
+
       return true;
     }
 
@@ -284,7 +328,7 @@ export default function ActiveRecallPage({
     const { newDelayed, newMain } = processDelayedQueue(delayedQueue, newMainQueue);
 
     if (wasRevealed) {
-      // Revealed cards always go back to delayed queue (NOT completed)
+      // Revealed cards always go back to delayed queue
       const retryDelay = getRetryDelay(currentCard.failCount);
       const updatedDelayed = [...newDelayed, { card: currentCard, countdown: retryDelay }];
 
@@ -298,7 +342,7 @@ export default function ActiveRecallPage({
       setDelayedQueue(updatedDelayed);
       setMainQueue(newMain);
     } else {
-      // Perfect first-try correct answers - these are truly done
+      // Perfect first-try correct answers
       setDelayedQueue(newDelayed);
       setMainQueue(newMain);
     }
@@ -309,12 +353,8 @@ export default function ActiveRecallPage({
   };
 
 
-  // ============================================================================
   // KEYBOARD/CLICK HANDLING FOR CONTINUE
-  // ============================================================================
-
   useEffect(() => {
-    // Only set listeners when correct OR revealed, modal is closed, and continue is enabled
     if ((isCorrect || isRevealed) && !showSuccessModal && canContinue) {
       const handleInteraction = () => {
         handleSuccessClose();
@@ -342,10 +382,7 @@ export default function ActiveRecallPage({
     }
   }, [isCorrect, isRevealed, showSuccessModal, canContinue]);
 
-  // ============================================================================
   // EARLY RETURNS
-  // ============================================================================
-
   if (!initialData) {
     return null;
   }
@@ -361,7 +398,7 @@ export default function ActiveRecallPage({
   // Show summary report if session is complete
   if (showSummaryReport) {
     return (
-      <div className="h-[800px]  bg-white p-10 sm:p-5">
+      <div className="h-[800px]  bg-white p-10 sm:p-5">
         <SummaryReport
           totalXpEarned={totalXpEarned}
           itemsCompleted={completedCards.size}
@@ -383,10 +420,7 @@ export default function ActiveRecallPage({
     );
   }
 
-  // ============================================================================
   // RENDER
-  // ============================================================================
-
   return (
     <div className="min-h-screen bg-white p-10 sm:p-5">
       <style>{`
@@ -446,7 +480,8 @@ export default function ActiveRecallPage({
       </div>
 
       {/* Continue prompt displayed after correct answer and before SuccessModal closes */}
-      {(isCorrect || isRevealed) && !showSuccessModal && canContinue && (
+      {/* Continue prompt displayed ONLY after reveal, not after correct answer */}
+      {isRevealed && !showSuccessModal && canContinue && (
         <div className="fixed bottom-0 left-0 right-0 bg-black border-t-1 border-gray-200 py-8">
           <div className="flex items-center justify-center gap-3">
             <Image

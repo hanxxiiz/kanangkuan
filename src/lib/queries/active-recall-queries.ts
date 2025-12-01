@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export interface ActiveRecallCard {
   id: string;
@@ -14,6 +15,16 @@ export interface ActiveRecallCard {
 export interface UserDailyLimits {
   hints_left: number;
   lives_left: number;
+}
+
+// Fisher-Yates shuffle algorithm for true random shuffling
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 export async function GetCardsForActiveRecall(
@@ -33,7 +44,10 @@ export async function GetCardsForActiveRecall(
       return [];
     }
 
-    return (data || []).map(card => ({
+    // Shuffle the cards using Fisher-Yates algorithm
+    const shuffledData = shuffleArray(data || []);
+
+    return shuffledData.map(card => ({
       id: card.id,
       deck_id: card.deck_id,
       front: card.front,
@@ -113,93 +127,6 @@ export async function UpdateUserDailyLimits(
     return { success: true };
   } catch (error) {
     console.error("Error in UpdateUserDailyLimits:", error);
-    return { success: false, error: "An unexpected error occurred" };
-  }
-}
-
-// Optional: Decrement a specific limit (for convenience)
-export async function DecrementHints(): Promise<{ success: boolean; newValue?: number; error?: string }> {
-  const supabase = await createClient();
-
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return { success: false, error: "User not authenticated" };
-    }
-
-    // Get current value
-    const { data: currentData, error: fetchError } = await supabase
-      .from("user_daily_limits")
-      .select("hints_left")
-      .eq("user_id", user.id)
-      .single();
-
-    if (fetchError || !currentData) {
-      return { success: false, error: "Could not fetch current hints" };
-    }
-
-    const newValue = Math.max(0, currentData.hints_left - 1);
-
-    // Update
-    const { error: updateError } = await supabase
-      .from("user_daily_limits")
-      .update({ hints_left: newValue })
-      .eq("user_id", user.id);
-
-    if (updateError) {
-      return { success: false, error: updateError.message };
-    }
-
-    return { success: true, newValue };
-  } catch (error) {
-    console.error("Error in DecrementHints:", error);
-    return { success: false, error: "An unexpected error occurred" };
-  }
-}
-
-export async function DecrementLives(): Promise<{ success: boolean; newValue?: number; error?: string }> {
-  const supabase = await createClient();
-
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return { success: false, error: "User not authenticated" };
-    }
-
-    // Get current value
-    const { data: currentData, error: fetchError } = await supabase
-      .from("user_daily_limits")
-      .select("lives_left")
-      .eq("user_id", user.id)
-      .single();
-
-    if (fetchError || !currentData) {
-      return { success: false, error: "Could not fetch current lives" };
-    }
-
-    const newValue = Math.max(0, currentData.lives_left - 1);
-
-    // Update
-    const { error: updateError } = await supabase
-      .from("user_daily_limits")
-      .update({ lives_left: newValue })
-      .eq("user_id", user.id);
-
-    if (updateError) {
-      return { success: false, error: updateError.message };
-    }
-
-    return { success: true, newValue };
-  } catch (error) {
-    console.error("Error in DecrementLives:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
