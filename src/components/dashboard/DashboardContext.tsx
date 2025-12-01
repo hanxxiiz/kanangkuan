@@ -37,11 +37,25 @@ export function DashboardProvider({
   hasSpun: boolean;  
   nextSpinTime: string | null; 
 }) {
+  const [currentUsername, setCurrentUsername] = useState(username);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(initialCount);
   const [currentXp, setCurrentXp] = useState(initialXp);
   const [hasSpun, setHasSpun] = useState(initialHasSpun);  
   const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);  
   const supabase = createClient();
+
+  const refreshUsername = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single();
+      if (data && !error) setCurrentUsername(data.username);
+    } catch (err) {
+      console.error('Failed to refresh username:', err);
+    }
+  }, [supabase, userId]);
 
   const refreshNotificationCount = useCallback(async () => {
     try {
@@ -55,7 +69,7 @@ export function DashboardProvider({
     } catch (error) {
       console.error('Failed to refresh notification count:', error);
     }
-  }, [supabase, userId]);
+  }, [supabase, userId]); 
 
   const refreshXp = useCallback(async () => {
     try {
@@ -107,6 +121,27 @@ export function DashboardProvider({
     setNextSpinTime(newNextSpinTime);
   }, []);
 
+   useEffect(() => {
+    // Username changes
+    const usernameChannel = supabase
+      .channel('user_username_changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+        (payload) => {
+          if (payload.new && 'username' in payload.new) {
+            setCurrentUsername(payload.new.username);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(usernameChannel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   useEffect(() => {
     const channel = supabase
       .channel('notifications_changes')
@@ -127,7 +162,8 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, supabase, refreshNotificationCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshNotificationCount]);
 
   useEffect(() => {
     const channel = supabase
@@ -155,7 +191,8 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   // Fallback (if dim gana realtime): Poll for XP changes every 10 seconds
   useEffect(() => {
@@ -168,17 +205,18 @@ export function DashboardProvider({
 
   useEffect(() => {
     const handleFocus = () => {
+      refreshUsername();
       refreshNotificationCount();
       refreshXp();
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [refreshNotificationCount, refreshXp]);
+  }, [refreshNotificationCount, refreshXp, refreshUsername]);
 
   return (
     <DashboardContext.Provider value={{
       userId,
-      username,
+      username: currentUsername,
       xp: currentXp,
       profileUrl,
       leaderboardData,
@@ -189,11 +227,12 @@ export function DashboardProvider({
       unreadNotificationCount,
       refreshNotificationCount,
       refreshXp,
+      refreshUsername,
       monthlyXPData,
       hasSpun, 
       nextSpinTime,
       refreshDailyLimits,  
-      updateSpinStatus, 
+      updateSpinStatus,
     }}>
       {children}
     </DashboardContext.Provider>

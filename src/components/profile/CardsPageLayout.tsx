@@ -1,48 +1,46 @@
-"use client";
-
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { useState, ReactNode, useContext, useRef, useEffect } from "react";
 import { Button } from "@/components/buttons/PrimaryButton";
-import { IoFilter } from "react-icons/io5";
+import { IoFilter, IoShareSocialSharp } from "react-icons/io5";
+import { ModalContext } from "@/components/modals/providers";
+import PracticeModal from "../dashboard/my-decks/PracticeModal";
+
+type ModalType = "new-card" | "ai-import" | "practice" | null;
 
 type FilterOption = {
   label: string;
   onClick: () => void;
 };
 
-type AddOption = {
-  label: string;
-  onClick: () => void;
-};
-
-export default function DecksPageLayout({
+export default function CardsPageLayout({
+  currentDeckId,
   title,
-  onAddClick,
   filterOptions = [],
   children,
-  addOptions = [],
 }: {
+  currentDeckId: string;
   title: string;
-  onAddClick?: () => void;
   filterOptions?: FilterOption[];
   children: ReactNode;
-  addOptions?: AddOption[];
 }) {
   const [selectedFilter, setSelectedFilter] = useState(filterOptions[0]?.label || "All");
-  const [showAddOptions, setShowAddOptions] = useState(false);
   const [showFilterOptions, setShowFilterOptions] = useState(false);
+  const { setShowModal } = useContext(ModalContext);
+  
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
 
-  const addRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
+
+  const openModal = (type: ModalType) => {
+    setActiveModal(type);
+    setShowModal(true);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
-        addRef.current &&
-        !addRef.current.contains(e.target as Node) &&
         filterRef.current &&
         !filterRef.current.contains(e.target as Node)
       ) {
-        setShowAddOptions(false);
         setShowFilterOptions(false);
       }
     };
@@ -55,44 +53,17 @@ export default function DecksPageLayout({
     <>
       <div className="flex justify-between items-center">
         <h1 className="text-5xl text-black font-main">{title}</h1>
-
-        <div className="relative" ref={addRef}>
+        <div className="flex items-center justify-end gap-2">
+          <button className="flex items-center p-3 bg-white rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+            <IoShareSocialSharp className="text-xl text-black" />
+          </button>
           <Button
             variant="outline"
-            className="py-1 px-15 outline-1"
-            onClick={() => {
-              if (addOptions.length > 0) {
-                setShowAddOptions((prev) => !prev);
-              } else if (onAddClick) {
-                onAddClick();
-              }
-            }}
+            className="py-1 px-4"
+            onClick={() => openModal("practice")}
           >
-            + Add
+            Practice
           </Button>
-
-          <div
-            className={`absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10 
-              transform transition-all duration-200 origin-top
-              ${showAddOptions ? "opacity-100 scale-100 visible" : "opacity-0 scale-95 invisible"}
-            `}
-          >
-            {addOptions.map((option, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  option.onClick();
-                  setShowAddOptions(false);
-                }}
-                className={`px-4 py-3 hover:bg-black hover:text-white cursor-pointer text-black text-sm font-main
-                  ${idx === 0 ? "first:rounded-t-lg" : ""}
-                  ${idx === addOptions.length - 1 ? "last:rounded-b-lg" : "border-b border-gray-100"}
-                `}
-              >
-                {option.label}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -134,9 +105,13 @@ export default function DecksPageLayout({
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-x-[60px] gap-y-[70px]">
+      <div className="grid lg:grid-cols-2 gap-[30px]">
         {children}
       </div>
+
+      {activeModal === "practice" && (
+          <PracticeModal currentDeckId={currentDeckId}/>
+      )}
     </>
   );
 }

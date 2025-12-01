@@ -1,55 +1,96 @@
-"use client"
+"use client";
 
-export default function DecksPanel() {
-    return (
-        <div>
-            {/* Decks */}
-                    <div className="my-3.5">
-                        <div className="flex items-center justify-between">   
-                            <h1 className="font-bold text-3xl text-gray-900 py-3.5">{`[Username]'s Folder`}</h1>
-                        </div>
-                        <div className="grid grid-cols-3 grid-rows-3 gap-y-6 mt-5 mb-20">
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            <div className="flex flex-col bg-gray-300 text-white w-4/5 h-40 p-5 justify-end space-y-1">
-                                <p className="text-xl font-main font-bold">CPE 335</p>
-                                <p className="text-md font-body text-sm">23 Decks</p>
-                            </div>
-                            
-                        </div>
-                        
-                    </div>     
-        </div>
-    )
+import DecksPageLayout from "@/components/profile/DecksPageLayout";
+import Folder from "@/components/dashboard/my-decks/Folder";
+import Deck from "@/components/dashboard/my-decks/Deck";
+import { useMemo } from "react";
+import { useFolders } from "@/lib/hooks/useFolders";
+import { useDecks } from "@/lib/hooks/useDecks";
+import { useCards } from "@/lib/hooks/useCards";
+import { useViewMode } from "@/lib/hooks/useViewMode";
+
+export default function MyDecksPage() {
+
+  const { folders, folderLoading, folderError } = useFolders();
+  const { decks, deckLoading, deckError } = useDecks();
+  const { cards } = useCards();
+
+  const allItems = useMemo(() => {
+    return [
+      ...folders.map(folder => ({
+        type: 'folder' as const,
+        data: folder,
+        id: folder.id,
+        name: folder.folder_name,
+        date: new Date(folder.created_at || 0)
+      })),
+      ...decks
+        .filter(deck => deck.folder_id === null)
+        .map(deck => ({
+          type: 'deck' as const,
+          data: deck,
+          id: deck.id,
+          name: deck.deck_name,
+          date: new Date(deck.created_at || 0)
+        }))
+    ];
+  }, [folders, decks]);
+
+  const { setViewMode, sortedItems } = useViewMode({
+    items: allItems,
+    getDate: (item) => item.date,
+    getName: (item) => item.name,
+  });
+  
+  if (folderLoading || deckLoading) {
+    return <div>My Decks Page is Loading...</div>
+  }
+
+  if (folderError || deckError) {
+    return <div>Sorry something went wrong in My Decks Page... {folderError} {deckError} </div>
+  }
+
+  return (
+    <div className="w-full bg-white p-10">
+      <DecksPageLayout
+        title="My Decks"
+        filterOptions={[
+          { label: "All", onClick: () => setViewMode("all") },
+          { label: "A–Z", onClick: () => setViewMode("a-z") },
+          { label: "Newest to Oldest", onClick: () => setViewMode("newest") },
+          { label: "Oldest to Newest", onClick: () => setViewMode("oldest") },
+        ]}
+      >
+        {sortedItems.length === 0 ? (
+          <div className="text-gray-500 text-7xl font-main">Nothing here yet</div>
+        ) : (
+          <>
+            {sortedItems.map((item) => {
+              if (item.type === 'folder') {
+                return (
+                  <Folder
+                    key={`folder-${item.id}`}
+                    id={item.id}
+                    color={item.data.folder_color}
+                    folderName={item.data.folder_name}
+                    deckCount={decks.filter((deck) => deck.folder_id === item.id).length}
+                  />
+                );
+              } else {
+                return (
+                  <Deck
+                    key={`deck-${item.id}`}
+                    id={item.id}
+                    color={item.data.deck_color}
+                    deckName={item.data.deck_name}
+                    cardCount={cards.filter((card) => card.deck_id === item.id).length}
+                  />
+                );
+              }
+            })}
+          </>
+        )}
+      </DecksPageLayout>
+    </div>
+  );
 }

@@ -92,7 +92,7 @@ export default function ActiveRecallPage({
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
   const [firstAttemptsCount, setFirstAttemptsCount] = useState(0);
-  const [reattempsCount, setReattempsCount] = useState(0);
+  const [reattemptsCount, setReattemptsCount] = useState(0);
   const [showSummaryReport, setShowSummaryReport] = useState(false);
 
   // Ref to track previous card ID for animation logic
@@ -186,44 +186,37 @@ export default function ActiveRecallPage({
     setXpEarned(xp);
     setTotalXpEarned(prev => prev + xp);
 
-    // DON'T save XP to database here anymore - just accumulate locally
-
     // Track first attempt vs reattempt
     if (currentCard.failCount === 0) {
       setFirstAttemptsCount(prev => prev + 1);
+      
+      // Only mark as completed if answered correctly on first try (no reattempts)
+      const newCompleted = new Set(completedCards);
+      newCompleted.add(currentCard.id);
+      setCompletedCards(newCompleted);
     } else {
-      setReattempsCount(prev => prev + 1);
+      setReattemptsCount(prev => prev + 1);
+      // Don't mark as completed - it will cycle back
     }
-
-    // Mark card as completed
-    const newCompleted = new Set(completedCards);
-    newCompleted.add(currentCard.id);
-    setCompletedCards(newCompleted);
 
     setShowSuccessModal(true);
   };
 
   const handleWrongAnswer = async () => {
-    // Decrement lives in the database
-    const result = await DecrementLives();
+    // Update UI immediately (optimistic update)
+    const newLivesLeft = livesLeft - 1;
+    setLivesLeft(newLivesLeft);
 
-    if (result.success && result.newValue !== undefined) {
-      setLivesLeft(result.newValue);
-
-      if (result.newValue <= 0) {
-        setShowOutOfLivesModal(true);
-        return;
-      }
-    } else {
-      console.error("Failed to decrement lives:", result.error);
-      // Still update UI even if DB update fails
-      const newLivesLeft = livesLeft - 1;
-      setLivesLeft(newLivesLeft);
-
-      if (newLivesLeft <= 0) {
-        setShowOutOfLivesModal(true);
-        return;
-      }
+    if (newLivesLeft <= 0) {
+      setShowOutOfLivesModal(true);
+      
+      // Update database in background
+      DecrementLives().then(result => {
+        if (!result.success) {
+          console.error("Failed to decrement lives:", result.error);
+        }
+      });
+      return;
     }
 
     setShouldAnimate(false);
@@ -236,6 +229,16 @@ export default function ActiveRecallPage({
     // Trigger shake animation
     setShouldShake(true);
     setTimeout(() => setShouldShake(false), 500);
+
+    // Update database in background (fire and forget)
+    DecrementLives().then(result => {
+      if (!result.success) {
+        console.error("Failed to decrement lives:", result.error);
+      } else if (result.newValue !== undefined) {
+        // Sync with actual DB value to be safe
+        setLivesLeft(result.newValue);
+      }
+    });
   };
 
   const handleReveal = () => {
@@ -266,16 +269,13 @@ export default function ActiveRecallPage({
     });
 
     setIsRevealed(true);
-    
-    // Show success modal when revealing (ADD THIS)
-    setShowSuccessModal(true);
 
     // Track as reattempt
-    setReattempsCount(prev => prev + 1);
+    setReattemptsCount(prev => prev + 1);
 
     // Increment fail count
     const updatedQueue = [...mainQueue];
-    updatedQueue[0] = { ...updatedQueue[0], failCount: updatedQueue[0].failCount + 1 };
+    updatedQueue[0] = { ...updatedQueue[0], failCount: 3 };
     setMainQueue(updatedQueue);
   };
 
@@ -318,6 +318,7 @@ export default function ActiveRecallPage({
   const handleSuccessClose = () => {
     const hadPreviousFails = currentCard.failCount > 0;
     const wasRevealed = isRevealed;
+    const wasCorrect = isCorrect;
 
     setShowSuccessModal(false);
 
@@ -328,21 +329,19 @@ export default function ActiveRecallPage({
     const { newDelayed, newMain } = processDelayedQueue(delayedQueue, newMainQueue);
 
     if (wasRevealed) {
-      // Revealed cards always go back to delayed queue
-      const retryDelay = getRetryDelay(currentCard.failCount);
-      const updatedDelayed = [...newDelayed, { card: currentCard, countdown: retryDelay }];
-
+      // Revealed cards always go back to delayed queue with countdown of 1
+      const updatedDelayed = [...newDelayed, { card: currentCard, countdown: 1 }];
       setDelayedQueue(updatedDelayed);
       setMainQueue(newMain);
-    } else if (hadPreviousFails) {
-      // Cards with previous fails that are NOW correct
+    } else if (wasCorrect && hadPreviousFails) {
+      // Correct answer but had reattempts - send back with RESET failCount
       const retryDelay = getRetryDelay(currentCard.failCount);
-      const updatedDelayed = [...newDelayed, { card: currentCard, countdown: retryDelay }];
-
+      const cardWithResetFailCount = { ...currentCard, failCount: 0 }; // RESET to 0!
+      const updatedDelayed = [...newDelayed, { card: cardWithResetFailCount, countdown: retryDelay }];
       setDelayedQueue(updatedDelayed);
       setMainQueue(newMain);
     } else {
-      // Perfect first-try correct answers
+      // Perfect first-try correct answer - card is done
       setDelayedQueue(newDelayed);
       setMainQueue(newMain);
     }
@@ -403,7 +402,7 @@ export default function ActiveRecallPage({
           totalXpEarned={totalXpEarned}
           itemsCompleted={completedCards.size}
           firstAttempts={firstAttemptsCount}
-          reattempts={reattempsCount}
+          reattempts={reattemptsCount}
           deckColor={deckColor}
           onClose={handleReturnToDeck}
         />

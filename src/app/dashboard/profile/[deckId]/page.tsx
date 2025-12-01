@@ -1,7 +1,7 @@
 "use client";
 
 import Card from "@/components/dashboard/my-decks/Card";
-import CardsPageLayout from "@/components/dashboard/my-decks/CardsPageLayout";
+import CardsPageLayout from "@/components/profile/CardsPageLayout";
 import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useViewMode } from "@/lib/hooks/useViewMode";
@@ -32,7 +32,7 @@ export default function MyDeckPage({
             }));
     }, [cards, deckId]);
 
-    const { setViewMode, sortedItems } = useViewMode({
+    const {  setViewMode, sortedItems } = useViewMode({
         items: deckCards,
         getDate: (item) => item.date,
         getName: (item) => item.name,
