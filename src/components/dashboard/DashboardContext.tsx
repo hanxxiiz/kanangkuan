@@ -37,8 +37,6 @@ export function DashboardProvider({
   hasSpun: boolean;  
   nextSpinTime: string | null; 
 }) {
-  const [followersCount, setFollowersCount] = useState<number>(0);
-  const [followingCount, setFollowingCount] = useState<number>(0);
   const [currentUsername, setCurrentUsername] = useState(username);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(initialCount);
   const [currentXp, setCurrentXp] = useState(initialXp);
@@ -46,7 +44,7 @@ export function DashboardProvider({
   const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);  
   const supabase = createClient();
 
-  const refreshUsername = async () => {
+  const refreshUsername = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -57,7 +55,7 @@ export function DashboardProvider({
     } catch (err) {
       console.error('Failed to refresh username:', err);
     }
-  };
+  }, [supabase, userId]);
 
   const refreshNotificationCount = useCallback(async () => {
     try {
@@ -141,6 +139,7 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(usernameChannel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
@@ -163,7 +162,8 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, supabase, refreshNotificationCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refreshNotificationCount]);
 
   useEffect(() => {
     const channel = supabase
@@ -191,7 +191,8 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   // Fallback (if dim gana realtime): Poll for XP changes every 10 seconds
   useEffect(() => {
@@ -210,7 +211,7 @@ export function DashboardProvider({
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [refreshNotificationCount, refreshXp]);
+  }, [refreshNotificationCount, refreshXp, refreshUsername]);
 
   return (
     <DashboardContext.Provider value={{
