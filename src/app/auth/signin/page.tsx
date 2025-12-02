@@ -6,8 +6,22 @@ import { signInWithGoogle } from '@/lib/auth-actions';
 import { FcGoogle } from "react-icons/fc";
 import 'animate.css';
 import Image from 'next/image';
+import { useState } from 'react';
+import { GrFormView, GrFormViewHide } from 'react-icons/gr';
 
 export default function SignInPage() {
+  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  async function handleSubmit (e: React.FormEvent<HTMLFormElement>){
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    await login(formData);
+    setLoading(false);
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
@@ -48,13 +62,16 @@ export default function SignInPage() {
           <h2 className="text-4xl font-main text-gray-900 mt-28">
             Sign in
           </h2>
-          <form action={login}>
+          <form onSubmit={handleSubmit}>
             <div className="mt-8 space-y-7">
               <div className="relative">
                 <input
                   id="email"
                   name="email"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
                   placeholder=" "
                   className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                   autoComplete="off"
@@ -71,11 +88,29 @@ export default function SignInPage() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder=" "
-                  className="border-b border-gray-600 text-black py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                  disabled={loading}
+                  className="border-b border-gray-600 text-black py-1 focus:border-b-2 transition-colors 
+                            focus:outline-none peer bg-inherit w-full"
                   autoComplete="off"
                 />
+                {password && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-1/2 -translate-y-1/2 right-3 bg-white cursor-pointer"
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <GrFormView className="text-3xl" />
+                    ) : (
+                      <GrFormViewHide className="text-3xl" />
+                    )}
+                  </button>
+                )}
                 <label
                   htmlFor="password"
                   className="absolute left-0 top-1 text-black cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
@@ -93,9 +128,10 @@ export default function SignInPage() {
               <div className="flex flex-col items-center justify-center">
                 <button
                   type="submit"
+                  disabled={loading}
                   className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
                 >
-                  Sign in
+                  {loading ? "Signing in..." : "Sign in"}
                 </button>
 
                 <div className="text-center font-body text-xs text-gray-400 my-2">
@@ -107,6 +143,7 @@ export default function SignInPage() {
                   onClick={() => {
                     signInWithGoogle();
                   }}
+                  disabled={loading}
                   className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base cursor-pointer"
                 >
                   <FcGoogle className="inline-block mr-2" />

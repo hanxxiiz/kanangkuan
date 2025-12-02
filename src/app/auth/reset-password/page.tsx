@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
-import { PiEyeBold, PiEyeClosedBold } from 'react-icons/pi';
+import { GrFormView, GrFormViewHide } from 'react-icons/gr';
 
 export default function ResetPasswordPage() {
     const supabase = createClient();
@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
                             name="password"
                             type={showPassword ? "text" : "password"}
                             placeholder=" "
-                            className="border-b text-2xl text-black border-gray-600 py-3 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                            className="border-b text-2xl text-black border-gray-600 pr-12 py-3 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                             autoComplete="off"
                             disabled={loading}
                         />
@@ -64,9 +64,9 @@ export default function ResetPasswordPage() {
                             disabled={loading}
                         >
                             {showPassword ? (
-                                <PiEyeBold className="text-2xl" />
+                                <GrFormViewHide className="text-3xl" />
                             ) : (
-                                <PiEyeClosedBold className="text-2xl" />
+                                <GrFormView className="text-3xl" />
                             )}
                         </button>
                     </div>
@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
                             name="confirm-password"
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder=" "
-                            className="border-b text-2xl text-black border-gray-600 py-3 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                            className="border-b pr-12 text-2xl text-black border-gray-600 py-3 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                             autoComplete="off"
                         />
                         <button 
@@ -88,9 +88,9 @@ export default function ResetPasswordPage() {
                             disabled={loading}
                         >
                             {showConfirmPassword ? (
-                                <PiEyeBold className="text-2xl" />
+                                <GrFormView className="text-3xl" />
                             ) : (
-                                <PiEyeClosedBold className="text-2xl" />
+                                <GrFormViewHide className="text-3xl" />
                             )}
                         </button>
                     </div>

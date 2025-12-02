@@ -44,7 +44,7 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp(data)
 
   if (error) {
-    redirect('/error')
+    throw new Error(error.message);
   }
 
   revalidatePath('/', 'layout')
@@ -94,15 +94,19 @@ export async function signout() {
 
 export async function signInWithGoogle() {
   const supabase = await createClient();
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
       queryParams: {
         access_type: "offline",
         prompt: "consent",
-      },
-    },
+      }
+    }
   });
+
+  console.log("OAuth URL: ", data.url)
 
   if (error) {
     console.log(error);
@@ -111,3 +115,4 @@ export async function signInWithGoogle() {
 
   redirect(data.url);
 }
+
