@@ -1,4 +1,4 @@
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import React from 'react';
 
 interface DeckProps{
@@ -23,9 +23,15 @@ export default function Deck({
     cardCount,
 }:DeckProps) {
     const router = useRouter();
+    const pathname = usePathname();
 
     const handleClick = () => {
-        router.push(`/dashboard/my-decks/${id}`);
+        if(pathname.startsWith("/dashboard/profile")){
+            router.push(`/dashboard/profile/${id}`)
+        }
+        else{
+            router.push(`/dashboard/my-decks/${id}`);
+        } 
     };
 
     const gradient = colorMap[color] || colorMap["pink"];

@@ -48,7 +48,7 @@ export default function MyDecksPage() {
     ];
   }, [folders, decks]);
 
-  const { viewMode, setViewMode, sortedItems } = useViewMode({
+  const { setViewMode, sortedItems } = useViewMode({
     items: allItems,
     getDate: (item) => item.date,
     getName: (item) => item.name,

@@ -1,4 +1,4 @@
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import React from "react";
 
 interface FolderProps {
@@ -23,9 +23,15 @@ export default function Folder({
   deckCount = 0,
 }: FolderProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleClick = () => {
-    router.push(`/dashboard/my-decks/folder/${id}`);
+    if(pathname.startsWith("/dashboard/profile")){
+      router.push(`/dashboard/profile/folder/${id}`);
+    }
+    else{
+      router.push(`/dashboard/my-decks/folder/${id}`);
+    }
   };
 
   const gradient = colorMap[color] || colorMap["pink"];

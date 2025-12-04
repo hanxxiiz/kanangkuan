@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { signup } from '@/lib/auth-actions';
+import Image from 'next/image';
 
 export default function SignUpPage() {
 
@@ -21,12 +22,12 @@ export default function SignUpPage() {
                     id="email"
                     type="email"
                     placeholder=" "
-                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                    className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="email"
-                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                    className="absolute text-black left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Email
                   </label>
@@ -38,12 +39,12 @@ export default function SignUpPage() {
                     id="username"
                     type="text"
                     placeholder=" "
-                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                    className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="username"
-                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                    className="absolute text-black left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Username
                   </label>
@@ -55,12 +56,12 @@ export default function SignUpPage() {
                     name="password"
                     type="password"
                     placeholder=" "
-                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                    className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="password"
-                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                    className="absolute text-black left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Password
                   </label>
@@ -71,12 +72,12 @@ export default function SignUpPage() {
                     id="confirmPassword"
                     type="password"
                     placeholder=" "
-                    className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                    className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   <label
                     htmlFor="confirmPassword"
-                    className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                    className="absolute text-black left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                   >
                     Confirm Password
                   </label>
@@ -100,12 +101,15 @@ export default function SignUpPage() {
           relative rounded-tl-[15%] rounded-bl-[15%] drop-shadow-lg overflow-hidden">
           <div className="absolute inset-0 flex flex-col justify-between p-12">
             <div className="flex items-center gap-2">
-              <img
+              <Image
                 src="/kanangkuan-logo.png"
                 alt="Kanang Kuan"
+                width={0}
+                height={0}
+                sizes='100vw'
                 className="w-[3.5rem] h-[3.5rem]"
               />
-              <h2 className="font-main text-2xl">Kanang Kuan</h2>
+              <h2 className="font-main text-2xl text-black">Kanang Kuan</h2>
             </div>
 
             <div className="mb-40">

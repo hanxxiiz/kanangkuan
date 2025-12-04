@@ -6,7 +6,6 @@ import { Card } from "@/utils/supabase/models";
 
 export function useCards(deckId?: string) {
     const [cards, setCards] = useState<Card[]>([])
-    const [card, setCard] = useState<Card| null>(null);
     const [cardLoading, setCardLoading] = useState(true);
     const [cardError, setCardError] = useState<string | null>(null);
 
@@ -63,5 +62,5 @@ export function useCards(deckId?: string) {
             setCardError (err instanceof Error ? err.message : "Failed to create card.");
         }
     }
-    return {cards, card, cardLoading, cardError, createCard}
+    return {cards, cardLoading, cardError, createCard}
 }

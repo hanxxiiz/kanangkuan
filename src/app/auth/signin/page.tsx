@@ -5,6 +5,7 @@ import { login } from '@/lib/auth-actions';
 import { signInWithGoogle } from '@/lib/auth-actions';
 import { FcGoogle } from "react-icons/fc";
 import 'animate.css';
+import Image from 'next/image';
 
 export default function SignInPage() {
 
@@ -15,12 +16,15 @@ export default function SignInPage() {
         relative rounded-tr-[15%] rounded-br-[15%] drop-shadow-lg overflow-hidden">
         <div className="absolute inset-0 flex flex-col justify-between p-12">
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src="/kanangkuan-logo.png"
               alt="Kanang Kuan"
+              width={0}
+              height={0}
+              sizes='100vw'
               className="w-[3.5rem] h-[3.5rem]"
             />
-            <h2 className="font-main text-2xl">Kanang Kuan</h2>
+            <h2 className="font-main text-black text-2xl">Kanang Kuan</h2>
           </div>
 
           <div className="mb-40">
@@ -52,12 +56,12 @@ export default function SignInPage() {
                   name="email"
                   type="email"
                   placeholder=" "
-                  className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                  className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                   autoComplete="off"
                 />
                 <label
                   htmlFor="email"
-                  className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                  className="absolute text-black left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                 >
                   Email
                 </label>
@@ -69,19 +73,19 @@ export default function SignInPage() {
                   name="password"
                   type="password"
                   placeholder=" "
-                  className="border-b border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                  className="border-b border-gray-600 text-black py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                   autoComplete="off"
                 />
                 <label
                   htmlFor="password"
-                  className="absolute left-0 top-1 cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
+                  className="absolute left-0 top-1 text-black cursor-text text-sm peer-focus:text-xs peer-focus:-top-4 transition-all peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-top-4"
                 >
                   Password
                 </label>
               </div>
 
               <div className="text-right -mt-7">
-                <button className="text-xs font-body text-gray-400 hover:text-cyan cursor-pointer">
+                <button className="text-xs font-body text-gray-400 hover:text-cyan cursor-pointer transition-colors duration-200 ease-in-out">
                   Forgot password?
                 </button>
               </div>

@@ -4,12 +4,25 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/profile/Navbar";
 import Top3Card from "../../../components/leaderboard/Top3Card";
 import RankedCard from "../../../components/leaderboard/RankedCard";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
+
+interface LeaderboardUser {
+  id: string;
+  username: string;
+  xp: number;
+  profile_url: string | null;
+}
+
 
 const LeaderboardPage = () => {
+  const { supabase } = useSupabase();
+
   // Navbar
   const tabs = ["All Time", "Top 100", "XP"];
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Detect mobile viewport
   useEffect(() => {
@@ -19,44 +32,68 @@ const LeaderboardPage = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const leaderboardData = [
-    { rank: 2, name: "username", xp: 666 },
-    { rank: 1, name: "username", xp: 999 },
-    { rank: 3, name: "username", xp: 555 },
-  ];
+  // Fetch leaderboard data
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      setLoading(true);
+      if (!supabase) return;
 
-  const sortedLeaderboard = isMobile
-    ? [...leaderboardData].sort((a, b) => {
-        if (a.rank === 1) return -1;
-        if (b.rank === 1) return 1;
-        return a.rank - b.rank;
-      })
-    : leaderboardData;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, xp, profile_url")
+        .order("xp", { ascending: false }); // Highest XP first
 
-  type User = {
-    username: string;
-    xp: number;
-    imageUrl: string;
-  };
+      if (error) {
+        console.error("Error loading leaderboard:", error);
+      } else {
+        setLeaderboard(data ?? []);
+      }
 
-  const users: User[] = [
-    { username: "Alice", xp: 500, imageUrl: "/temporary.png" },
-    { username: "Bob", xp: 300, imageUrl: "/temporary.png" },
-    { username: "Charlie", xp: 800, imageUrl: "/temporary.png" },
-  ];
+      setLoading(false);
+    };
 
-  const sortedUsers = [...users].sort((a, b) => a.xp - b.xp);
+    loadLeaderboard();
+  }, [supabase]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl font-main">
+        Loading leaderboard...
+      </div>
+    );
+  }
+
+  // Compute top 3
+  const top3 = leaderboard.slice(0, 3).map((user, i) => ({
+    rank: i + 1,
+    name: user.username,
+    xp: user.xp,
+    profileUrl: user.profile_url
+  }));
+
+  // Ranked users excluding top 3
+  const rankedUsers = leaderboard.slice(3).map((user, index) => ({
+    username: user.username,
+    xp: user.xp,
+    imageUrl: user.profile_url,
+    ranking: index + 4
+  }));
+
+  const mobileTop3 = isMobile
+    ? [...top3].sort((a, b) => a.rank === 1 ? -1 : b.rank === 1 ? 1 : a.rank - b.rank)
+    : top3;
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center">
       <section className="w-full max-w-6xl px-4 sm:px-6 lg:px-16 py-8 flex flex-col items-center">
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row items-center justify-between w-full mb-8 gap-4 text-center sm:text-left">
           <h1 className="font-main text-3xl sm:text-4xl lg:text-5xl text-gray-900">
             Leaderboard
           </h1>
 
-          {/* Hide this part on mobile */}
+          {/* Hide This On Mobile */}
           <div className="hidden sm:flex">
             <div className="border border-gray-900 px-4 py-2 rounded-full text-gray-900 font-body font-bold text-sm sm:text-base">
               Leaderboard
@@ -66,96 +103,46 @@ const LeaderboardPage = () => {
 
         {/* Navbar */}
         <div className="mb-8 w-full">
-        <Navbar items={tabs} onChange={(idx) => setActiveIndex(idx)} />
+          <Navbar items={tabs} onChange={(idx) => setActiveIndex(idx)} />
         </div>
-
 
         {/* Main Content */}
         <section className="w-full flex flex-col items-center">
-          {activeIndex === 0 &&
           <div className="w-full flex flex-col items-center">
-            {/* ALL TIME TAB */}
+            
+            {/* Top 3 */}
             <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-              {sortedLeaderboard.map((user) => (
+              {mobileTop3.map((user) => (
                 <Top3Card
                   key={user.rank}
                   rank={user.rank as 1 | 2 | 3}
                   name={user.name}
                   xp={user.xp}
-                  variant="cyanToPink"
+                  imageSrc={user.profileUrl}
+                  variant={
+                    activeIndex === 0
+                      ? "cyanToPink"
+                      : activeIndex === 1
+                      ? "blueToPink"
+                      : "limeToPink"
+                  }
                 />
               ))}
             </div>
-            {/* Ranked Cards Section */}
-            <div className="mt-10 flex flex-col gap-4 w-full max-w-3xl">
-              {sortedUsers.map((user, index) => (
-                <RankedCard
-                  key={user.username}
-                  username={user.username}
-                  xp={user.xp}
-                  ranking={index + 1}
-                  imageUrl={user.imageUrl}
-                />
-              ))}
-            </div>
-          </div>}
 
-          {/* TOP 100 TAB */}
-          {activeIndex === 1 &&
-          <div className="w-full flex flex-col items-center">
-            <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-              {sortedLeaderboard.map((user) => (
-                <Top3Card
-                  key={user.rank}
-                  rank={user.rank as 1 | 2 | 3}
-                  name={user.name}
-                  xp={user.xp}
-                  variant="blueToPink"
-                />
-              ))}
-            </div>
-            {/* Ranked Cards Section */}
+            {/* Ranked Cards */}
             <div className="mt-10 flex flex-col gap-4 w-full max-w-3xl">
-              {sortedUsers.map((user, index) => (
+              {rankedUsers.slice(0, activeIndex === 1 ? 100 : rankedUsers.length).map((user) => (
                 <RankedCard
                   key={user.username}
                   username={user.username}
                   xp={user.xp}
-                  ranking={index + 1}
-                  imageUrl={user.imageUrl}
-                />
-              ))}
-            </div>
-          </div>}
-
-          {/* XP TAB */}
-          {activeIndex === 2 &&
-          <div className="w-full flex flex-col items-center">
-            <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-              {sortedLeaderboard.map((user) => (
-                <Top3Card
-                  key={user.rank}
-                  rank={user.rank as 1 | 2 | 3}
-                  name={user.name}
-                  xp={user.xp}
-                  variant="limeToPink"
-                />
-              ))}
-            </div>
-            {/* Ranked Cards Section */}
-            <div className="mt-10 flex flex-col gap-4 w-full max-w-3xl">
-              {sortedUsers.map((user, index) => (
-                <RankedCard
-                  key={user.username}
-                  username={user.username}
-                  xp={user.xp}
-                  ranking={index + 1}
+                  ranking={user.ranking}
                   imageUrl={user.imageUrl}
                 />
               ))}
             </div>
           </div>
-          }
         </section>
       </section>
     </div>
