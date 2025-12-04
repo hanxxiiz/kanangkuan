@@ -32,7 +32,7 @@ export default function MyDeckPage({
             }));
     }, [cards, deckId]);
 
-    const { viewMode, setViewMode, sortedItems } = useViewMode({
+    const { setViewMode, sortedItems } = useViewMode({
         items: deckCards,
         getDate: (item) => item.date,
         getName: (item) => item.name,

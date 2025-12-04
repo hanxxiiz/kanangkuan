@@ -66,7 +66,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-14 text-left">
-          <h2 className="text-[30px] sm:text-[35px] font-main text-[#101220] mb-3">
+          <h2 className="text-[30px] text-black sm:text-[35px] font-main mb-3">
             Leaderboard
           </h2>
         </div>
@@ -84,7 +84,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-14 text-left">
-          <h2 className="text-[30px] sm:text-[35px] font-main text-[#101220] mb-3">
+          <h2 className="text-[30px] sm:text-[35px] font-main text-black mb-3">
             Jump back in
           </h2>
         </div>

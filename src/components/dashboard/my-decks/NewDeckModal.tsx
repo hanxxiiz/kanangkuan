@@ -50,14 +50,14 @@ export default function NewDeckModal({currentFolderId} : {currentFolderId?: stri
           setShowModal(false);
         }}
       >
-        <label className="text-xs font-body">Deck Name</label>
+        <label className="text-xs text-black font-body">Deck Name</label>
         <input
           type="text"
           value={deckName}
           onChange={(e) => setDeckName(e.target.value)}
-          className="border-b border-gray-300 p-2 w-full my-2 text-2xl focus:border-black focus:outline-none transition-all duration-200"
+          className="border-b text-black border-gray-300 p-2 w-full my-2 text-2xl focus:border-black focus:outline-none transition-all duration-200"
         />
-        <label className="text-xs font-body">Deck color</label>
+        <label className="text-xs text-black font-body">Deck color</label>
         <div className="flex justify-center items-center gap-4 p-6">
           {colors.map((color) => (
             <button

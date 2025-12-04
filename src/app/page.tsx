@@ -5,6 +5,7 @@ import Link from "next/link";
 import MascotBlink from "@/components/MascotBlink";
 import CardCarousel from "@/components/CardCarousel";
 import Navigation from "@/components/Navigation";
+import Image from "next/image";
 
 export default function Home() {
   const slides = [
@@ -83,31 +84,31 @@ export default function Home() {
     {
       title: "Active Recall", 
       description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
-      image: "active-recall.png",
+      image: "/active-recall.png",
       color: "bg-blue",
     },
     {
       title: "Basic Review", 
       description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
-      image: "basic-review.png",
+      image: "/basic-review.png",
       color: "bg-purple",
     },
     {
       title: "Audio Player", 
       description: "Tune in and listen to your notes anytime, anywhere.", 
-      image: "audio-player.png",
+      image: "/audio-player.png",
       color: "bg-cyan",
     },
     {
       title: "Challenge", 
       description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
-      image: "challenge.png",
+      image: "/challenge.png",
       color: "bg-pink",
     },
     {
       title: "Lumbaanay", 
       description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
-      image: "lumbaanay.png",
+      image: "/lumbaanay.png",
       color: "bg-lime",
     }
   ];
@@ -267,9 +268,12 @@ export default function Home() {
                   >
                     <div className="w-full p-4 flex flex-col items-center justify-center">
                       <div className="relative w-full h-full rounded-xl overflow-hidden bg-white shadow-sm">
-                        <img 
+                        <Image 
                           src={card.image} 
                           alt={card.title}
+                          width={0}
+                          height={0}
+                          sizes="100vw"
                           className="w-full h-full object-cover rounded-xl"
                         />
                       </div>
@@ -296,9 +300,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-8 py-16">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <div className="w-full">
-              <img
-                src="about.png"
+              <Image
+                src="/about.png"
                 alt="Descriptive Alt Text"
+                width={0}
+                height={0}
+                sizes="100vw"
                 className="w-full h-auto rounded-lg object-cover"
               />
             </div>
@@ -307,9 +314,11 @@ export default function Home() {
                 About
               </h1>
               <div className="w-full">
-                <img
+                <Image
                   src="kanangkuan-wordmark.svg"
                   alt="Kanang Kuan"
+                  width={50}
+                  height={50}
                   className="w-full h-auto"
                 />
               </div>

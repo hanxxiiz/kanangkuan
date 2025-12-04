@@ -46,15 +46,15 @@ export default function NewFolderModal() {
         actionButtonText="Create"
         onAction={handleCreateFolder}
       >
-        <label className="text-xs font-body">Folder Name</label>
+        <label className="text-xs text-black font-body">Folder Name</label>
         <input
           type="text"
           value={folderName}
           onChange={(e) => setFolderName(e.target.value)}
-          className="border-b border-gray-300 p-2 w-full my-2 text-2xl focus:border-black focus:outline-none transition-all duration-200"
+          className="border-b text-black border-gray-300 p-2 w-full my-2 text-2xl focus:border-black focus:outline-none transition-all duration-200"
         />
 
-        <label className="text-xs font-body">Folder Color</label>
+        <label className="text-xs text-black font-body">Folder Color</label>
         <div className="flex justify-center items-center gap-4 p-6">
           {colors.map((color) => (
             <button
