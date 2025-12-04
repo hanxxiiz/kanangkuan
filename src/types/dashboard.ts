@@ -6,6 +6,7 @@ export interface UserProfile {
 }
 
 export interface LeaderboardEntry {
+  id: string;
   rank: number;
   username: string;
   xp: number;

@@ -3,11 +3,52 @@
 import React from "react";
 import Image from "next/image";
 
+type PresetGradientSet = {
+  baseFrom: string;
+  baseTo: string;
+  hoverFrom: string;
+  hoverTo: string;
+  badgeBase: string;
+  badgeHover: string;
+  badgeMobile: string;
+};
+
+export const GradientSets = {
+  blueToPink: {
+    baseFrom: "from-blue",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-blue",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-cyan",
+  },
+  limeToPink: {
+    baseFrom: "from-lime",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-lime",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-lime",
+  },
+  cyanToPink: {
+    baseFrom: "from-cyan",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-cyan",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-blue",
+  },
+};
+
 type LeaderboardCardProps = {
   rank?: 1 | 2 | 3;
   name?: string;
   xp?: number;
   imageSrc?: string;
+  gradientSet?: PresetGradientSet;
 };
 
 const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
@@ -15,7 +56,21 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   name = "username",
   xp = 666,
   imageSrc = "/dashboard/default-picture.png",
+  gradientSet,
 }) => {
+
+  const defaultGradient: PresetGradientSet = {
+    baseFrom: "from-lime",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-lime",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-purple",
+  };
+
+  const gradient = gradientSet || defaultGradient;
+
   return (
     <>
       {/* FOR LAPTOP/IPAD */}
@@ -28,8 +83,8 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           ${rank === 3 ? "sm:-ml-12 lg:ml-0" : ""}`}
       >
         <div
-          className={`relative bg-gradient-to-b from-lime to-[#FFE566]
-          transition-colors duration-[1000ms] ease-in-out group-hover:from-pink group-hover:to-[#FFE566]
+          className={`relative bg-gradient-to-b ${gradient.baseFrom} ${gradient.baseTo}
+          transition-colors duration-[1000ms] ease-in-out group-hover:${gradient.hoverFrom} group-hover:${gradient.hoverTo}
           ${
             rank === 1
               ? "md:h-[180px] lg:h-[210px]"
@@ -52,11 +107,11 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             </div>
             <div className="absolute -bottom-2 -right-1 w-15 h-15 rounded-full flex items-center justify-center text-[#65C110] font-main text-lg border-[4px] border-white">
               <div
-                className="absolute inset-0 rounded-full bg-lime pointer-events-none"
+                className={`absolute inset-0 rounded-full ${gradient.badgeBase} pointer-events-none`}
                 aria-hidden
               />
               <div
-                className="absolute inset-0 rounded-full bg-pink opacity-0 group-hover:opacity-100 transition-opacity duration-[1000ms] ease-in-out pointer-events-none"
+                className={`absolute inset-0 rounded-full ${gradient.badgeHover} opacity-0 group-hover:opacity-100 transition-opacity duration-[1000ms] ease-in-out pointer-events-none`}
                 aria-hidden
               />
               <span className="relative z-10 text-white transition-colors duration-[1000ms] ease-in-out">
