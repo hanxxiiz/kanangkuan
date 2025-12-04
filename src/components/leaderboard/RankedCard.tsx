@@ -40,9 +40,10 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
         
         <Image
           src={resolveSrc(imageUrl)}
-          alt={username}
-          width={80}
-          height={80}
+          alt="/dashboard/default-picture.png"
+          width={0}
+          height={0}
+          sizes="100vw"
           className="h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
         />
 

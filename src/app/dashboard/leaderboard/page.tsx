@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/profile/Navbar";
-import LeaderboardCard from "../../../components/dashboard/LeaderboardCard";
+import LeaderboardCard, {GradientSets} from "../../../components/dashboard/LeaderboardCard";
 import RankedCard from "../../../components/leaderboard/RankedCard";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
@@ -26,10 +26,13 @@ const LeaderboardPage = () => {
   const [loading, setLoading] = useState(true);
 
    const gradientMap = {
-    0: "limeToPink", // All Time
-    1: "blueToPink", // Top 100
-    2: "cyanToPink", // XP
+    0: GradientSets.cyanToPink, // All Time
+    1: GradientSets.blueToPink, // Top 100
+    2: GradientSets.limeToPink, // XP
   } as const;
+
+  //Get current gradient based on active tab
+  const currentGradient = gradientMap[activeIndex as keyof typeof gradientMap];
 
   // Detect mobile viewport
   useEffect(() => {
@@ -100,7 +103,19 @@ const LeaderboardPage = () => {
         const order = { 2: 0, 1: 1, 3: 2 };
         return (order[a.rank as keyof typeof order] ?? a.rank) - (order[b.rank as keyof typeof order] ?? b.rank);
       });
+
+      const gradientBackup = (
+    <div className="hidden
+      from-blue from-lime from-cyan from-pink
+      to-[#FFE566]
+      group-hover:from-blue group-hover:from-lime group-hover:from-cyan group-hover:from-pink
+      bg-blue bg-lime bg-cyan bg-pink
+    " />
+  );
+
   return (
+    <>
+    {gradientBackup}
     <div className="min-h-screen bg-white flex flex-col items-center justify-center">
       <section className="w-full max-w-6xl px-4 sm:px-6 lg:px-16 py-8 flex flex-col items-center">
 
@@ -122,13 +137,14 @@ const LeaderboardPage = () => {
             
             {/* Top 3 */}
             <div className="flex justify-center items-center grid grid-cols-3 sm:gap-0 lg:gap-6 flex-wrap md:flex-no-wrap lg:flex-wrap">
-              {sortedLeaderboard.map((user) => (
+              {sortedLeaderboard.map((user,index) => (
                 <LeaderboardCard
-                  key={user.rank}
+                  key={user.id ?? `${user.rank}-${index}`}
                   rank={user.rank as 1 | 2 | 3}
                   name={user.username}
                   xp={user.xp}
-                  imageSrc={user.profile_url || undefined}
+                  imageSrc={user.profile_url || undefined}  
+                  gradientSet={currentGradient}
                 />
               ))}
             </div>
@@ -137,7 +153,7 @@ const LeaderboardPage = () => {
             <div className="mt-10 flex flex-col gap-4 w-full max-w-3xl">
               {rankedUsers.slice(0, activeIndex === 1 ? 100 : rankedUsers.length).map((user) => (
                 <RankedCard
-                  key={user.username}
+                  key={`${user.username}-${user.ranking}`}
                   username={user.username}
                   xp={user.xp}
                   ranking={user.ranking}
@@ -149,6 +165,7 @@ const LeaderboardPage = () => {
         </section>
       </section>
     </div>
+    </>
   );
 };
 

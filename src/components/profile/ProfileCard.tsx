@@ -4,7 +4,7 @@ import { useDashboard } from "../dashboard/DashboardContext";
 import Image from "next/image";
 
 const ProfileCard = () => {
-    const {  username} = useDashboard();
+    const { username} = useDashboard();
     return (
         <div>
             {/* Profile Card */}
