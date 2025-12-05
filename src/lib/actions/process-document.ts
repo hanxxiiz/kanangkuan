@@ -1,50 +1,4 @@
-/** DON'T REMOVE CONSOLE LOGS YET! ONLY WHEN LOADING ANIM OR LOADER IS IMPLEMENTED
- * ═══════════════════════════════════════════════════════════════════════════
- * DOCUMENT PROCESSING PIPELINE
- * ═══════════════════════════════════════════════════════════════════════════
- * 
- * This module handles AI-powered flashcard generation from uploaded documents.
- * 
- * PIPELINE FLOW:
- * ──────────────
- * 1. EXTRACT TEXT
- *    - Download document from Supabase Storage
- *    - Route to appropriate text extraction API based on file type
- *    - Supported: PDF, DOCX, PPTX, XLSX, CSV, TXT
- * 
- * 2. GENERATE FLASHCARDS
- *    - Send extracted text to AI (via /api/ai/generate-qna)
- *    - AI analyzes content and creates Q&A pairs
- *    - Maximum: 100 flashcards per document
- * 
- * 3. SAVE TO DATABASE
- *    - Insert flashcards into `cards` table
- *    - Save without wrong options for speed
- *    - Return card IDs for next step
- * 
- * 4. MARK COMPLETE & CLEANUP
- *    - Update `ai_imports` status to 'completed'
- *    - Delete source file from storage bucket
- *    - Users can now access flashcards
- * 
- * 5. BACKGROUND: GENERATE WRONG OPTIONS
- *    - Runs asynchronously after completion
- *    - Processes in parallel batches of 10
- *    - Calls /api/ai/generate-wrong-options for each card
- *    - Saves to `card_options` table
- * 
- * API ENDPOINTS USED:
- * ──────────────────
- * - /api/text-extraction/{pdf|docx|pptx|xlsx}
- * - /api/ai/generate-qna
- * - /api/ai/generate-wrong-options
- * 
- * DATABASE TABLES:
- * ───────────────
- * - ai_imports: Tracks processing status
- * - cards: Stores Q&A flashcards
- * - card_options: Stores wrong answer choices
- * 
+/** IMPROVED DOCUMENT PROCESSING WITH ENHANCED ERROR HANDLING
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -52,13 +6,16 @@
 
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { extractText } from '@/app/api/text-extraction/extract-text';
+
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════
 
 const MAX_CARDS_PER_DOCUMENT = 100;
-const MAX_TEXT_LENGTH = 100000; // characters
+const MAX_TEXT_LENGTH = 100000;
 const CARD_BATCH_SIZE = 10;
 const WRONG_OPTIONS_BATCH_SIZE = 10;
 const BLANK_WORDS_BATCH_SIZE = 10;
@@ -79,7 +36,29 @@ interface GeneratedCard {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// STEP 1: TEXT EXTRACTION
+// HELPER: GET BASE URL
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getBaseUrl(): string {
+  // For server-side API calls, prefer localhost in development
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  
+  // In production, use Vercel URL or configured URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  return 'http://localhost:3000';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP 1: TEXT EXTRACTION (IMPROVED)
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function extractTextFromDocument(
@@ -87,6 +66,9 @@ async function extractTextFromDocument(
   filePath: string,
   fileType: string
 ): Promise<string> {
+  console.log(`Extracting text from ${fileType} file: ${filePath}`);
+  
+  // Download file from storage
   const { data: fileData, error: downloadError } = await supabase.storage
     .from('documents')
     .download(filePath);
@@ -95,55 +77,22 @@ async function extractTextFromDocument(
     throw new Error(`Failed to download file: ${downloadError?.message}`);
   }
 
-  // Handle plain text directly
-  if (fileType.toLowerCase() === 'txt') {
-    const arrayBuffer = await fileData.arrayBuffer();
-    return Buffer.from(arrayBuffer).toString('utf-8');
-  }
+  console.log(`File downloaded successfully (${fileData.size} bytes)`);
 
-  // Route to appropriate extraction API
-  const extractionEndpoints: Record<string, string> = {
-    pdf: '/api/text-extraction/pdf',
-    docx: '/api/text-extraction/docx',
-    pptx: '/api/text-extraction/pptx',
-    xlsx: '/api/text-extraction/xlsx',
-    csv: '/api/text-extraction/xlsx',
-  };
-
-  const endpoint = extractionEndpoints[fileType.toLowerCase()];
-  if (!endpoint) {
-    throw new Error(`Unsupported file type: ${fileType}`);
-  }
-
-  const formData = new FormData();
-  formData.append('file', fileData);
-  formData.append('fileType', fileType);
-
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Text extraction failed: ${response.statusText}`);
-  }
-
-  const result = await response.json();
+  // Convert to Buffer
+  const arrayBuffer = await fileData.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
   
-  console.log('Extraction result:', result); // Keep this for debugging
+  // Use the new extraction utility
+  const result = await extractText(buffer, fileType);
   
-  // Updated to handle new response format
-  if (!result.success) {
-    const errorMsg = result.message || result.error || 'Text extraction failed';
-    throw new Error(errorMsg);
+  console.log(` Extracted ${result.wordCount} words from ${fileType.toUpperCase()}`);
+  
+  if (!result.text || result.text.trim().length < 5) {
+    throw new Error('Insufficient text content extracted');
   }
-
-  if (!result.text || result.text.trim().length === 0) {
-    throw new Error('No text content found in the document. The file may be empty or contain only images.');
-  }
-
-  return String(result.text).trim();
+  
+  return result.text;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -151,7 +100,7 @@ async function extractTextFromDocument(
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   const response = await fetch(`${baseUrl}/api/ai/generate-qna`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -227,7 +176,7 @@ async function saveCardsToDatabase(
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function generateWrongOptions(front: string, back: string): Promise<string[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   
   try {
     const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options`, {
@@ -288,7 +237,6 @@ async function generateAndSaveWrongOptions(cardIds: string[]): Promise<void> {
       })
     );
 
-    // Count successes and failures
     results.forEach(result => {
       if (result.status === 'fulfilled' && result.value) {
         successCount++;
@@ -299,14 +247,14 @@ async function generateAndSaveWrongOptions(cardIds: string[]): Promise<void> {
   }
 
   console.log('Background: Finished generating wrong options');
-  console.log(`Successfully saved wrong options to database: ${successCount}/${cardIds.length} cards`);
+  console.log(`Successfully saved wrong options: ${successCount}/${cardIds.length} cards`);
   if (failCount > 0) {
     console.log(`Failed to save: ${failCount} cards`);
   }
 }
 
 async function generateBlankWord(back: string): Promise<string | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   
   try {
     const response = await fetch(`${baseUrl}/api/ai/generate-blank-words`, {
@@ -328,7 +276,6 @@ async function generateBlankWord(back: string): Promise<string | null> {
   
   return null;
 }
-
 
 async function generateAndSaveBlankWords(cardIds: string[]): Promise<void> {
   const supabase = await createClient();
@@ -466,10 +413,9 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
     }
 
     // STEP 5: Background wrong options generation
-    console.log('[STEP 5/5] Starting background wrong options generation...');
+    console.log('[STEP 5/5] Starting background processing...');
     generateAndSaveWrongOptions(cardIds).catch(console.error);
-    generateAndSaveBlankWords(cardIds).catch(console.error); 
-
+    generateAndSaveBlankWords(cardIds).catch(console.error);
 
     console.log('[PIPELINE COMPLETE] Success!');
 
@@ -479,7 +425,7 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
     };
 
   } catch (error) {
-    console.error('💥 [PIPELINE FAILED]', error);
+    console.error('[PIPELINE FAILED]', error);
 
     await supabase
       .from('ai_imports')

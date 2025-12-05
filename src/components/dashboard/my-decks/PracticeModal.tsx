@@ -5,6 +5,7 @@ import { ModalContext } from '@/components/modals/providers';
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { triggerGenerationInBackground } from '@/lib/actions/generate-qna-and-blank-words';
 
 interface PracticeModalProps {
   currentDeckId: string;
@@ -22,10 +23,14 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
     setShowModal(true);
     hasCalledOnClose.current = false;
     
+    if (currentDeckId) {
+      triggerGenerationInBackground(currentDeckId);
+    }
+    
     return () => {
       setShowModal(false);
     };
-  }, [setShowModal]); 
+  }, [setShowModal, currentDeckId]); 
 
   useEffect(() => {
     if (showModal) {
@@ -130,4 +135,4 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
       </div>
     </Modal>
   );
-}
+}  

@@ -1,5 +1,4 @@
 import React from "react";
-import { FaTrophy, FaFire, FaStar } from "react-icons/fa";
 
 interface SummaryReportProps {
   totalXpEarned: number;
@@ -29,10 +28,12 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   onClose,
   onRetry,
 }) => {
-  // Calculate mastery rating
-  const masteryRating = ((firstAttempts + 0.5 * reattempts) / itemsCompleted * 100).toFixed(1);
+  // Calculate mastery rating: Only first attempts count towards mastery
+  // If you got it right on first try = full mastery for that card
+  const masteryRating = itemsCompleted > 0 
+    ? ((firstAttempts / itemsCompleted) * 100).toFixed(1)
+    : "0.0";
 
-  // Helper function to get Tailwind color classes
   const getColorClasses = () => {
     const colorMap: { [key: string]: ColorClasses } = {
       cyan: {
@@ -80,19 +81,7 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   };
 
   const colors = getColorClasses();
-
-  // Determine grade based on mastery rating
-  const getGrade = () => {
-    const rating = parseFloat(masteryRating);
-    if (rating >= 90) return { letter: 'S', label: 'Perfect!' };
-    if (rating >= 80) return { letter: 'A', label: 'Excellent!' };
-    if (rating >= 70) return { letter: 'B', label: 'Great!' };
-    if (rating >= 60) return { letter: 'C', label: 'Good!' };
-    return { letter: 'D', label: 'Keep Practicing!' };
-  };
-
-  const grade = getGrade();
-
+  
   return (
     <div className="max-w-2xl mx-auto mt-8">
       <style>{`
@@ -117,8 +106,8 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
             {/* Left: Mastery Rating */}
             <div className={`${colors.bg} rounded-2xl p-8 border-3 border-black flex-shrink-0`} style={{width: '280px'}}>
               <div className="text-center">
-                <p className="text-black font-main text-sm mb-4">MASTERY RATING</p>
-                <div className="text-7xl font-main text-black mb-2">{masteryRating}%</div>
+                <p className="text-black font-main text-md mb-4">MASTERY RATING</p>
+                <div className="text-6xl font-main text-black mb-2">{masteryRating}%</div>
               </div>
             </div>
 

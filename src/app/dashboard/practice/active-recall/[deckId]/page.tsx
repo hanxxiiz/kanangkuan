@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext, useEffect, useRef } from 'react';
+import { useState, useContext, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PracticeDataContext } from '@/components/dashboard/practice/PracticeLayout';
 import { ActiveRecallCard } from '@/lib/queries/active-recall-queries';
@@ -20,6 +20,7 @@ import {
 
 interface CardWithState extends ActiveRecallCard {
   failCount: number;
+  hasBeenAnswered: boolean; 
 }
 
 interface DelayedCard {
@@ -36,11 +37,6 @@ function getRetryDelay(failCount: number): number {
   return 1;
 }
 
-/**
- * Processes delayed queue after showing a card:
- * - Decrements all countdowns
- * - Moves cards with countdown=0 back to main queue
- */
 function processDelayedQueue(
   delayedQueue: DelayedCard[],
   mainQueue: CardWithState[]
@@ -56,6 +52,16 @@ function processDelayedQueue(
       stillDelayed.push({ ...item, countdown: newCountdown });
     }
   });
+
+  // CRITICAL: If main queue will be empty after this, force ALL delayed cards back
+  // This prevents getting stuck with no cards to show
+  if (mainQueue.length === 0 && stillDelayed.length > 0) {
+    const allCards = [...readyCards, ...stillDelayed.map(d => d.card)];
+    return {
+      newDelayed: [],
+      newMain: allCards
+    };
+  }
 
   // Add ready cards to front of main queue
   return {
@@ -115,7 +121,8 @@ export default function ActiveRecallPage({
 
       const cardsWithState: CardWithState[] = (initialData.cards as ActiveRecallCard[]).map(card => ({
         ...card,
-        failCount: 0
+        failCount: 0,
+        hasBeenAnswered: false
       }));
       setMainQueue(cardsWithState);
     }
@@ -186,17 +193,22 @@ export default function ActiveRecallPage({
     setXpEarned(xp);
     setTotalXpEarned(prev => prev + xp);
 
-    // Track first attempt vs reattempt
+    // Only count stats when marking card as completed (failCount === 0)
+    // This ensures each card is only counted once in the stats
     if (currentCard.failCount === 0) {
-      setFirstAttemptsCount(prev => prev + 1);
+      // Track first attempt vs reattempt based on hasBeenAnswered flag
+      if (!currentCard.hasBeenAnswered) {
+        // Never been answered before = first attempt success
+        setFirstAttemptsCount(prev => prev + 1);
+      } else {
+        // Has been answered before (had wrong attempts) = reattempt success
+        setReattemptsCount(prev => prev + 1);
+      }
       
-      // Only mark as completed if answered correctly on first try (no reattempts)
+      // Mark card as completed
       const newCompleted = new Set(completedCards);
       newCompleted.add(currentCard.id);
       setCompletedCards(newCompleted);
-    } else {
-      setReattemptsCount(prev => prev + 1);
-      // Don't mark as completed - it will cycle back
     }
 
     setShowSuccessModal(true);
@@ -221,9 +233,13 @@ export default function ActiveRecallPage({
 
     setShouldAnimate(false);
 
-    // Increment fail count on the current card
+    /// Increment fail count and mark as answered
     const updatedQueue = [...mainQueue];
-    updatedQueue[0] = { ...updatedQueue[0], failCount: updatedQueue[0].failCount + 1 };
+    updatedQueue[0] = { 
+      ...updatedQueue[0], 
+      failCount: updatedQueue[0].failCount + 1,
+      hasBeenAnswered: true 
+    };
     setMainQueue(updatedQueue);
 
     // Trigger shake animation
@@ -273,9 +289,13 @@ export default function ActiveRecallPage({
     // Track as reattempt
     setReattemptsCount(prev => prev + 1);
 
-    // Increment fail count
+   // Set fail count to 3 and mark as answered
     const updatedQueue = [...mainQueue];
-    updatedQueue[0] = { ...updatedQueue[0], failCount: 3 };
+    updatedQueue[0] = { 
+      ...updatedQueue[0], 
+      failCount: 3,
+      hasBeenAnswered: true 
+    };
     setMainQueue(updatedQueue);
   };
 
@@ -315,7 +335,7 @@ export default function ActiveRecallPage({
     return false;
   };
 
-  const handleSuccessClose = () => {
+  const handleSuccessClose = useCallback(() => {
     const hadPreviousFails = currentCard.failCount > 0;
     const wasRevealed = isRevealed;
     const wasCorrect = isCorrect;
@@ -325,30 +345,89 @@ export default function ActiveRecallPage({
     // Remove current card from main queue
     const newMainQueue = mainQueue.slice(1);
 
-    // Process delayed queue first
-    const { newDelayed, newMain } = processDelayedQueue(delayedQueue, newMainQueue);
+    // First, process the existing delayed queue to decrement countdowns
+    // (because we're showing a new card now)
+    const { newDelayed: processedDelayed, newMain: processedMain } = processDelayedQueue(delayedQueue, newMainQueue);
 
     if (wasRevealed) {
-      // Revealed cards always go back to delayed queue with countdown of 1
-      const updatedDelayed = [...newDelayed, { card: currentCard, countdown: 1 }];
-      setDelayedQueue(updatedDelayed);
-      setMainQueue(newMain);
+      // Revealed cards go back with countdown of 1 and RESET failCount
+      const cardWithResetFailCount = { ...currentCard, failCount: 0 };
+      
+      // Add to the already-processed delayed queue
+      const updatedDelayed = [...processedDelayed, { card: cardWithResetFailCount, countdown: 1 }];
+      
+      // Check if main queue is empty after processing
+      if (processedMain.length === 0 && updatedDelayed.length > 0) {
+        // Force all delayed cards back immediately
+        setDelayedQueue([]);
+        setMainQueue(updatedDelayed.map(d => d.card));
+      } else {
+        setDelayedQueue(updatedDelayed);
+        setMainQueue(processedMain);
+      }
     } else if (wasCorrect && hadPreviousFails) {
       // Correct answer but had reattempts - send back with RESET failCount
       const retryDelay = getRetryDelay(currentCard.failCount);
-      const cardWithResetFailCount = { ...currentCard, failCount: 0 }; // RESET to 0!
-      const updatedDelayed = [...newDelayed, { card: cardWithResetFailCount, countdown: retryDelay }];
-      setDelayedQueue(updatedDelayed);
-      setMainQueue(newMain);
+      const cardWithResetFailCount = { ...currentCard, failCount: 0 };
+      
+      // Add to the already-processed delayed queue
+      const updatedDelayed = [...processedDelayed, { card: cardWithResetFailCount, countdown: retryDelay }];
+      
+      // Check if main queue is empty after processing
+      if (processedMain.length === 0 && updatedDelayed.length > 0) {
+        // Force all delayed cards back immediately
+        setDelayedQueue([]);
+        setMainQueue(updatedDelayed.map(d => d.card));
+      } else {
+        setDelayedQueue(updatedDelayed);
+        setMainQueue(processedMain);
+      }
     } else {
-      // Perfect first-try correct answer - card is done
-      setDelayedQueue(newDelayed);
-      setMainQueue(newMain);
+      // first-try correct answer - just use processed queues
+      setDelayedQueue(processedDelayed);
+      setMainQueue(processedMain);
     }
 
     // Reset states
     setIsCorrect(false);
     setIsRevealed(false);
+  }, [currentCard, isRevealed, isCorrect, mainQueue, delayedQueue]);
+  
+  const handleRetry = () => {
+    // Reset all state to restart the practice session
+    setCompletedCards(new Set());
+    setShowSummaryReport(false);
+    setTotalXpEarned(0);
+    setFirstAttemptsCount(0);
+    setReattemptsCount(0);
+    setIsRevealed(false);
+    setIsCorrect(false);
+    setCanContinue(false);
+    setShouldShake(false);
+    setShouldAnimate(false);
+    setShowSuccessModal(false);
+    
+    // Reinitialize the queues with fresh cards AND shuffle them
+    if (initialData?.cards && initialData.cards.length > 0) {
+      const cardsWithState: CardWithState[] = (initialData.cards as ActiveRecallCard[]).map(card => ({
+        ...card,
+        failCount: 0,
+        hasBeenAnswered: false
+      }));
+      
+      // Shuffle the cards using Fisher-Yates algorithm
+      const shuffled = [...cardsWithState];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      
+      setMainQueue(shuffled);
+      setDelayedQueue([]);
+    }
+    
+    // Reset the previous card ref
+    previousCardIdRef.current = null;
   };
 
 
@@ -379,7 +458,7 @@ export default function ActiveRecallPage({
         window.removeEventListener('touchstart', handleClick);
       };
     }
-  }, [isCorrect, isRevealed, showSuccessModal, canContinue]);
+  }, [isCorrect, isRevealed, showSuccessModal, canContinue, handleSuccessClose]);
 
   // EARLY RETURNS
   if (!initialData) {
@@ -405,6 +484,7 @@ export default function ActiveRecallPage({
           reattempts={reattemptsCount}
           deckColor={deckColor}
           onClose={handleReturnToDeck}
+          onRetry={handleRetry}  
         />
       </div>
     );
@@ -479,7 +559,6 @@ export default function ActiveRecallPage({
       </div>
 
       {/* Continue prompt displayed after correct answer and before SuccessModal closes */}
-      {/* Continue prompt displayed ONLY after reveal, not after correct answer */}
       {isRevealed && !showSuccessModal && canContinue && (
         <div className="fixed bottom-0 left-0 right-0 bg-black border-t-1 border-gray-200 py-8">
           <div className="flex items-center justify-center gap-3">
