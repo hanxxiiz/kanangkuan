@@ -2,17 +2,21 @@
 
 import React from 'react'
 import PlayerStatus from './PlayerStatus';
-import { PlayerStatus as PlayerStatusType } from '@/types/challenge-gameplay';
+import { PlayerGameState, PlayerStatus as PlayerStatusType } from '@/types/challenge-gameplay';
 
 export default function ChallengePlayersBar({
     profiles,
-    playerStates,
-    statusOverrides,
-} : {
-    profiles: { id: string; username: string; profile_url?: string }[];
-    playerStates: Record<string, { status: PlayerStatusType }>;
-    statusOverrides?: Record<string, PlayerStatusType>;
-}) {
+    players,
+    showResults,
+ } : { 
+    profiles: { 
+        id: string;
+        username: string;
+        avatar_url?: string;
+    }[];
+    players: Record<string, PlayerGameState>;
+    showResults: boolean;
+ }) {
     if (profiles.length === 0) {
         return (
             <div className="flex flex-row justify-start gap-4 p-4 bg-gray-100 rounded-lg overflow-x-auto">
@@ -24,14 +28,23 @@ export default function ChallengePlayersBar({
     return (
         <div className="flex flex-row justify-start gap-4 p-4 rounded-lg overflow-x-auto">
         {profiles.map((profile) => {
-            const state = playerStates[profile.id];
-            const status = statusOverrides?.[profile.id] || state?.status || "answering";
+            const state = players[profile.id];
+            
+            let status: PlayerStatusType = "answering";
+
+            if (showResults) {
+                if (state?.status === "done" && state.correct === true) status = "correct";
+                else if (state?.status === "done" && state.correct === false) status = "wrong";
+                else if (state?.status === "done") status = "done";
+            } else {
+                if (state?.status === "done") status = "done"; 
+            }
 
             return (
             <PlayerStatus
                 key={profile.id}
                 playerUsername={profile.username}
-                playerProfile={profile.profile_url}
+                playerProfile={profile.avatar_url}
                 status={status}
             />
             );

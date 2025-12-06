@@ -20,6 +20,22 @@ export interface PlayerScore {
   xpChange: number;
 }
 
+export interface PlayerGameState {
+  user_id: string;
+  status: "answering" | "done";
+  answer?: string;
+  correct?: boolean;
+}
+
+export interface GameResults {
+  results: {
+    user_id: string;
+    correctCount: number;
+    wrongCount: number;
+    score: number;
+  }[];
+}
+
 export interface GameState {
   phase: "answering" | "bet-and-bait" | "showing-results";
   players: Record<string, PlayerInfo>;
