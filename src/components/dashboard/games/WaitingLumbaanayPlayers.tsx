@@ -5,7 +5,7 @@ import { useUser } from "@/lib/hooks/useUser";
 import { useProfiles } from "@/lib/hooks/useProfile";
 import { Button } from "@/components/buttons/PrimaryButton";
 import { useLumbaanays } from "@/lib/hooks/useLumbaanays";
-import { useRealtime } from "@/lib/hooks/useRealtime";
+import { useRealtime } from "@/lib/hooks/useRealtimeWaiting";
 import { PresencePayload } from "@/types/realtime";
 
 export default function WaitingLumbaanayPlayers({ lumbaanayId }: { lumbaanayId: string }) {

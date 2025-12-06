@@ -8,7 +8,7 @@ import { useUser } from '@/lib/hooks/useUser';
 import { useRouter } from 'next/navigation';
 import { useChallenges } from '@/lib/hooks/useChallenges';
 
-export default function ChallengeSettings() {
+export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: string | null}) {
   const { Modal, setShowModal } = useContext(ModalContext);
   const { user } = useUser();
   const router = useRouter();
@@ -48,6 +48,11 @@ export default function ChallengeSettings() {
     console.log("Active tab:", activeTab);
 
     if (activeTab === "host") {
+      if (!practiceDeckId) {
+        alert("Cannot play: No deck chosen!");
+        return;
+      }
+
       if (!joinCode) {
         alert("Cannot play: Please generate a code first!");
         return;
@@ -56,6 +61,7 @@ export default function ChallengeSettings() {
       const newChallenge = await createChallenge({
         hostId: hostUser,
         joinCode: joinCode,
+        deckId: practiceDeckId,
         status: "waiting",
       });
 

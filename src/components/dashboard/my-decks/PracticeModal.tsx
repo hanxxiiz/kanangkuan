@@ -80,11 +80,14 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
     const activeSlide = practiceSlides[activeIndex];
     if (activeSlide?.path) {
       setShowModal(false);
+
+      const url = new URL(activeSlide.path, window.location.origin);
+      url.searchParams.set("deckId", currentDeckId);
       
       if (activeSlide.title === "Active Recall") {
         router.push(`${activeSlide.path}?prepare=true`);
       } else {
-        router.push(activeSlide.path);
+        router.push(url.pathname + url.search);
       }
     }
   };

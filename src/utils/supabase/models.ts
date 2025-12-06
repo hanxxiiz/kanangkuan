@@ -37,6 +37,7 @@ export interface Card {
 export interface Challenge {
     id: string;
     host_id: string;
+    deck_id: string;
     join_code: string;
     max_players: number;
     status: string | "waiting" | "playing" | "finished";

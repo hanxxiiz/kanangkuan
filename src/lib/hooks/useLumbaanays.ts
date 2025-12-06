@@ -1,7 +1,7 @@
 "use client";
 
 import { Lumbaanay } from '@/utils/supabase/models';
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { lumbaanayService } from '../services';
 
 export function useLumbaanays(lumbaanayId?: string) {

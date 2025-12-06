@@ -5,14 +5,14 @@ import { useUser } from "@/lib/hooks/useUser";
 import { useProfiles } from "@/lib/hooks/useProfile";
 import { Button } from "@/components/buttons/PrimaryButton";
 import { useChallenges } from "@/lib/hooks/useChallenges";
-import { useRealtime } from "@/lib/hooks/useRealtime";
+import { useRealtimeWaiting } from "@/lib/hooks/useRealtimeWaiting";
 import { PresencePayload } from "@/types/realtime";
 
 export default function WaitingChallengePlayers({ challengeId }: { challengeId: string }) {
     const { user } = useUser();
     const { challenge, challengeLoading } = useChallenges(challengeId);
 
-    const { presence, markReady, startGame } = useRealtime({
+    const { presence, markReady, startGame } = useRealtimeWaiting({
         gameId: challengeId,
         userId: user?.id,
         game: challenge,

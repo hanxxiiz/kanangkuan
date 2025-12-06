@@ -8,7 +8,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { PresencePayload } from "@/types/realtime";
 import { gameService } from "../services";
 
-export function useRealtime({
+export function useRealtimeWaiting({
     gameId,
     userId,
     game,
@@ -23,8 +23,7 @@ export function useRealtime({
     const supabase = createClient();
     const routerRef = useRef(router);
 
-    const [presence, setPresence] =
-        useState<Record<string, PresencePayload>>({});
+    const [presence, setPresence] = useState<Record<string, PresencePayload>>({});
     const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
     useEffect(() => {

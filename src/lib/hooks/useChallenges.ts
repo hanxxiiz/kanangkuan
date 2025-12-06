@@ -1,7 +1,7 @@
 "use client";
 
 import { Challenge } from '@/utils/supabase/models';
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { challengeService } from '../services';
 
 export function useChallenges(challengeId?: string) {
@@ -33,12 +33,14 @@ export function useChallenges(challengeId?: string) {
   async function createChallenge(challengeData: {
     hostId: string,
     joinCode: string,
+    deckId: string,
     status: string,
   }) {
     try{
         const newChallenge = await challengeService.createChallenge({
             host_id: challengeData.hostId,
             join_code: challengeData.joinCode,
+            deck_id: challengeData.deckId,
             status: challengeData.status
         });
         setChallenge(newChallenge);
