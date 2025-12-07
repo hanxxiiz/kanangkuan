@@ -55,7 +55,10 @@ export default function PracticeLayout({
   const [initialData, setInitialData] = useState<PracticeInitialData | null>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
-  const showSettings = isBasicReview || pathname.includes("/dashboard/practice/audio-player");
+  const isAudioPlayer = pathname.includes("/dashboard/practice/audio-player");
+  const isActiveRecall = pathname.includes("/dashboard/practice/active-recall");
+  const showSettings = isBasicReview || isAudioPlayer;
+  const showDeckInfo = isBasicReview || isAudioPlayer;
 
   useEffect(() => {
     setMounted(true);
@@ -117,29 +120,64 @@ export default function PracticeLayout({
     }
   };
 
+  // Define icon colors based on page type
+  const iconBaseColor = (isActiveRecall || isAudioPlayer) ? "text-white" : "text-[#101220] xl:text-gray-200";
+  const iconHoverColor = ((isActiveRecall || isAudioPlayer) && deckInfo) 
+    ? `hover:scale-105 transition-all duration-250`
+    : "hover:text-[#101220] hover:scale-105 transition-all duration-250";
+  
+  // Define background color based on page type
+  const bgColor = isAudioPlayer ? "bg-black" : "bg-white";
+
   return (
     <SortOrderContext.Provider value={{ sortOrder, updateSortOrder: setSortOrder }}>
       <PracticeDataContext.Provider value={initialData}>
-        <div className="fixed inset-0 flex flex-col overflow-hidden">
+        <div className={`fixed inset-0 flex flex-col overflow-hidden ${bgColor}`}>
           {/* Header */}
           <div className="flex-shrink-0 w-full flex items-center px-3 sm:px-6 py-4">
             <div className="flex items-center gap-3 sm:gap-5">
               <FaArrowLeft
                 onClick={handleBack}
-                className="cursor-pointer text-2xl text-[#101220] xl:text-gray-200 hover:text-[#101220] hover:scale-105 transition-all duration-250"
+                className={`cursor-pointer text-2xl ${iconBaseColor} ${iconHoverColor}`}
+                style={((isActiveRecall || isAudioPlayer) && deckInfo) ? { 
+                  transition: 'color 0.25s'
+                } : {}}
+                onMouseEnter={(e) => {
+                  if ((isActiveRecall || isAudioPlayer) && deckInfo) {
+                    e.currentTarget.style.color = deckInfo.deck_color;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if ((isActiveRecall || isAudioPlayer) && deckInfo) {
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
               />
               {showSettings && (
                 <IoSettingsSharp
                   onClick={() => setShowModal(true)}
-                  className="cursor-pointer text-2xl text-[#101220] xl:text-gray-200 hover:text-[#101220] hover:scale-105 transition-all duration-250"
+                  className={`cursor-pointer text-2xl ${iconBaseColor} ${iconHoverColor}`}
+                  style={((isActiveRecall || isAudioPlayer) && deckInfo) ? { 
+                    transition: 'color 0.25s'
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if ((isActiveRecall || isAudioPlayer) && deckInfo) {
+                      e.currentTarget.style.color = deckInfo.deck_color;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if ((isActiveRecall || isAudioPlayer) && deckInfo) {
+                      e.currentTarget.style.color = 'white';
+                    }
+                  }}
                 />
               )}
             </div>
 
-            {isBasicReview && deckInfo && (
+            {showDeckInfo && deckInfo && (
               <div className="flex items-center gap-3 ml-5 sm:ml-6">
                 <FaClone className="text-2xl" style={{ color: deckInfo.deck_color }} />
-                <span className="text-black text-md sm:text-lg font-body truncate max-w-[185px] sm:max-w-none">
+                <span className="text-white text-md sm:text-lg font-regular truncate max-w-[185px] sm:max-w-none">
                   {deckInfo.deck_name}
                 </span>
               </div>
