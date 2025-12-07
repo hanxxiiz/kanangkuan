@@ -6,7 +6,12 @@ import { useProfiles } from "@/lib/hooks/useProfile";
 import { Button } from "@/components/buttons/PrimaryButton";
 import { useChallenges } from "@/lib/hooks/useChallenges";
 import { useRealtimeWaiting } from "@/lib/hooks/useRealtimeWaiting";
-import { PresencePayload } from "@/types/realtime";
+
+export interface PresencePayload {
+  user_id: string;
+  ready: boolean;
+  online_at: string;
+}
 
 export default function WaitingChallengePlayers({ challengeId }: { challengeId: string }) {
     const { user } = useUser();

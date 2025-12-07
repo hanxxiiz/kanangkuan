@@ -12,7 +12,7 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
   const { Modal, setShowModal } = useContext(ModalContext);
   const { user } = useUser();
   const router = useRouter();
-  const { createChallenge, incrementMaxPlayers, validateJoinCode } = useChallenges();
+  const { createChallenge, insertParticipant, validateJoinCode } = useChallenges();
 
   const [activeTab, setActiveTab] = useState<"host" | "join">("host");
   const [joinCode, setJoinCode] = useState("");
@@ -60,7 +60,7 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
 
       const newChallenge = await createChallenge({
         hostId: hostUser,
-        joinCode: joinCode,
+        sessionCode: joinCode,
         deckId: practiceDeckId,
         status: "waiting",
       });
@@ -69,6 +69,8 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
         alert("Failed to create challenge.");
         return;
       }
+
+      const newHost = await insertParticipant(newChallenge!.id, hostUser);
 
       router.push(`/dashboard/games/challenge/${newChallenge.id}/waiting`);
     }
@@ -88,8 +90,9 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
         return;
       }
 
+      console.log("Join code valid, navigating to challenge:", validation.challengeId);
       if (validation.challengeId) {
-        await incrementMaxPlayers(validation.challengeId);
+        const newParticipant = await insertParticipant(validation.challengeId, user!.id);
         router.push(`/dashboard/games/challenge/${validation.challengeId}/waiting`);
       }
     }

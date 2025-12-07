@@ -3,10 +3,16 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { Challenge, Lumbaanay } from "@/utils/supabase/models";
+import { Lumbaanay } from "@/utils/supabase/models";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { PresencePayload } from "@/types/realtime";
-import { gameService } from "../services";
+import { challengeService } from "../services/challenge";
+import { Session } from "@/types/challenge";
+
+export interface PresencePayload {
+  user_id: string;
+  ready: boolean;
+  online_at: string;
+}
 
 export function useRealtimeWaiting({
     gameId,
@@ -16,7 +22,7 @@ export function useRealtimeWaiting({
 }: {
     gameId: string;
     userId?: string;
-    game: Challenge | Lumbaanay | null;
+    game: Session | Lumbaanay | null;
     gameType: string;
 }) {
     const router = useRouter();
@@ -52,16 +58,6 @@ export function useRealtimeWaiting({
                 setPresence(players);
             });
 
-            channel.on("presence", { event: "leave" }, async (payload) => {
-                console.log(`User ${payload.key} disconnected from game ${gameId}`);
-
-                try {
-                    await gameService.decrementMaxPlayers(gameType, gameId);
-                } catch (error) {
-                    console.error("Failed to decrement max players:", error);
-                }
-            });
-
             channel.on("broadcast", { event: "game-start" }, () => {
                 routerRef.current.push(
                     `/dashboard/games/${gameType}/${game.id}/playing`
@@ -77,6 +73,8 @@ export function useRealtimeWaiting({
                 ready: isHost,
                 online_at: new Date().toISOString(),
             });
+
+            await challengeService.markPlayerReady(gameId, userId!);
         };
 
         setup();
@@ -94,6 +92,8 @@ export function useRealtimeWaiting({
             ready: true,
             online_at: new Date().toISOString(),
         });
+
+        await challengeService.markPlayerReady(gameId, userId!);
     }, [channel, userId]);
 
     const startGame = useCallback(async () => {
@@ -105,7 +105,7 @@ export function useRealtimeWaiting({
             payload: { started: true },
         });
 
-        await gameService.updateGameStatus(gameType, "playing", game!.id)
+        await challengeService.updateGameStatus(gameId, "active");
 
         router.push(
             `/dashboard/games/${gameType}/${game!.id}/playing`
