@@ -211,8 +211,19 @@ export async function GetMonthlyXPData(year: number, month: number): Promise<Rec
 
   const xpByDate: Record<string, number> = {};
   data?.forEach(transaction => {
-    const date = new Date(transaction.created_at);
-    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    // Convert UTC timestamp to Manila timezone
+    const utcDate = new Date(transaction.created_at);
+    const manilaDateString = utcDate.toLocaleString('en-US', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    
+    // Convert from "MM/DD/YYYY" to "YYYY-MM-DD"
+    const [m, d, y] = manilaDateString.split('/');
+    const dateKey = `${y}-${m}-${d}`;
+    
     xpByDate[dateKey] = (xpByDate[dateKey] || 0) + transaction.amount;
   });
 
