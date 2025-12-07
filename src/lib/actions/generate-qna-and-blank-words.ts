@@ -2,9 +2,6 @@
 
 import { createClient } from '@/utils/supabase/server';
 
-const BATCH_SIZE = 5; 
-const DELAY_BETWEEN_CARDS = 3000; 
-
 interface GenerateResult {
   success: boolean;
   message?: string;
@@ -33,97 +30,112 @@ interface CardWithOptions extends Card {
   card_options: CardOption[];
 }
 
-interface GeneratedData {
-  card_options: string[];
-  blank_word: string;
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITY: GET BASE URL
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getBaseUrl(): string {
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  return 'http://localhost:3000';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// UTILITY: DELAY FUNCTION
+// BATCHED AI API CALLS (2 REQUESTS TOTAL!)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// ═══════════════════════════════════════════════════════════════════════════
-// AI API CALLS
-// ═══════════════════════════════════════════════════════════════════════════
-
-async function generateWrongOptionsAndBlankWord(
-  front: string, 
-  back: string,
-  cardId: string
-): Promise<GeneratedData | null> {
-  const getBaseUrl = () => {
-    if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3000';
-    }
-    
-    if (process.env.VERCEL_URL) {
-      return `https://${process.env.VERCEL_URL}`;
-    }
-    
-    if (process.env.NEXT_PUBLIC_APP_URL) {
-      return process.env.NEXT_PUBLIC_APP_URL;
-    }
-    
-    return 'http://localhost:3000';
-  };
-
+async function generateAllWrongOptions(
+  cards: CardWithOptions[]
+): Promise<string[][] | null> {
   const baseUrl = getBaseUrl();
   
-  console.log(`Generating for card ${cardId}...`);
-  console.log(`   Front: ${front.substring(0, 50)}...`);
-  console.log(`   Back: ${back.substring(0, 50)}...`);
-
+  console.log(`🚀 Generating wrong options for ${cards.length} cards in ONE batch request...`);
+  
   try {
-    const [wrongOptionsResponse, blankWordResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/ai/generate-wrong-options`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ front, back }),
-        cache: 'no-store',
+    const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        cards: cards.map(c => ({ front: c.front, back: c.back }))
       }),
-      fetch(`${baseUrl}/api/ai/generate-blank-words`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ back }),
-        cache: 'no-store',
-      })
-    ]);
+      cache: 'no-store',
+    });
 
-    console.log(`Response status - Wrong Options: ${wrongOptionsResponse.status}, Blank Words: ${blankWordResponse.status}`);
-
-    if (!wrongOptionsResponse.ok || !blankWordResponse.ok) {
-      console.error(`Failed for card ${cardId}`);
+    if (!response.ok) {
+      console.error(`Wrong options batch failed: ${response.status}`);
       return null;
     }
 
-    const [wrongOptionsResult, blankWordResult] = await Promise.all([
-      wrongOptionsResponse.json(),
-      blankWordResponse.json()
-    ]);
-
-    if (
-      wrongOptionsResult.success && 
-      wrongOptionsResult.wrong_options &&
-      blankWordResult.success && 
-      blankWordResult.blank_word
-    ) {
-      console.log(`Successfully generated for card ${cardId}`);
-      return {
-        card_options: wrongOptionsResult.wrong_options,
-        blank_word: blankWordResult.blank_word,
-      };
+    const result = await response.json();
+    
+    if (!result.success || !result.options || !Array.isArray(result.options)) {
+      console.error('Invalid response format from wrong options batch');
+      return null;
     }
 
-    console.error(`Invalid response structure for card ${cardId}`);
-    return null;
+    if (result.options.length !== cards.length) {
+      console.error(`Expected ${cards.length} results, got ${result.options.length}`);
+      return null;
+    }
+
+    console.log(`Successfully generated wrong options for ${cards.length} cards`);
+    return result.options;
+    
   } catch (error) {
-    console.error(`Exception for card ${cardId}:`, error);
+    console.error('Exception in wrong options batch:', error);
+    return null;
+  }
+}
+
+async function generateAllBlankWords(
+  cards: CardWithOptions[]
+): Promise<string[] | null> {
+  const baseUrl = getBaseUrl();
+  
+  console.log(`Generating blank words for ${cards.length} cards in ONE batch request...`);
+  
+  try {
+    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        cards: cards.map(c => ({ back: c.back }))
+      }),
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      console.error(`Blank words batch failed: ${response.status}`);
+      return null;
+    }
+
+    const result = await response.json();
+    
+    if (!result.success || !result.blank_words || !Array.isArray(result.blank_words)) {
+      console.error('Invalid response format from blank words batch');
+      return null;
+    }
+
+    if (result.blank_words.length !== cards.length) {
+      console.error(`Expected ${cards.length} results, got ${result.blank_words.length}`);
+      return null;
+    }
+
+    console.log(`Successfully generated blank words for ${cards.length} cards`);
+    return result.blank_words;
+    
+  } catch (error) {
+    console.error('Exception in blank words batch:', error);
     return null;
   }
 }
@@ -144,17 +156,17 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
 
   try {
     // ─────────────────────────────────────────────────────────────────────────
-    console.log(' [STAGE 1/6] Authenticating user...');
+    console.log('[STAGE 1/6] Authenticating user...');
     // ─────────────────────────────────────────────────────────────────────────
     
     const { data: { user } } = await supabase.auth.getUser();
     const effectiveUserId = userId || user?.id;
     
     if (!effectiveUserId) {
-      console.error(' [STAGE 1/6] Authentication failed');
+      console.error('❌ [STAGE 1/6] Authentication failed');
       return { success: false, error: 'User not authenticated' };
     }
-    console.log(` [STAGE 1/6] User authenticated: ${effectiveUserId}`);
+    console.log(`[STAGE 1/6] User authenticated: ${effectiveUserId}`);
 
     // ─────────────────────────────────────────────────────────────────────────
     console.log('\n[STAGE 2/6] Verifying deck access...');
@@ -168,7 +180,7 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
       .single();
 
     if (deckError || !deck) {
-      console.error(' [STAGE 2/6] Deck access denied or not found:', deckError);
+      console.error('[STAGE 2/6] Deck access denied or not found:', deckError);
       return { success: false, error: 'Deck not found or access denied' };
     }
     console.log(`[STAGE 2/6] Deck found: "${deck.deck_name}"`);
@@ -225,16 +237,15 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
       
       const hasBlankWord = card.blank_word && card.blank_word.trim() !== '';
       
-      // ONLY return cards that need BOTH blank_words AND card_options
       const needsOptions = !optionsComplete;
       const needsBlankWord = !hasBlankWord;
       
-      return needsOptions && needsBlankWord; // CHANGED: Must need BOTH
+      return needsOptions && needsBlankWord;
     });
 
-    console.log(` Total cards: ${cards.length}`);
-    console.log(` Need generation: ${cardsNeedingGeneration.length}`);
-    console.log(` Already complete: ${cards.length - cardsNeedingGeneration.length}`);
+    console.log(`Total cards: ${cards.length}`);
+    console.log(`Need generation: ${cardsNeedingGeneration.length}`);
+    console.log(`Already complete: ${cards.length - cardsNeedingGeneration.length}`);
 
     if (cardsNeedingGeneration.length === 0) {
       console.log('[STAGE 4/6] All cards already complete!');
@@ -248,98 +259,96 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    console.log(`\n[STAGE 5/6] Processing ${cardsNeedingGeneration.length} cards SEQUENTIALLY...`);
-    console.log(`Rate limit: ${DELAY_BETWEEN_CARDS / 1000}s delay between cards`);
-    console.log(`Batch size: ${BATCH_SIZE} cards per batch`);
+    console.log(`\n[STAGE 5/6] Generating AI data in BATCH (2 API requests total)...`);
+    console.log(`   Processing ${cardsNeedingGeneration.length} cards at once!`);
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    // MAKE BOTH BATCH REQUESTS IN PARALLEL (2 requests for all cards!)
+    const [wrongOptionsResults, blankWordsResults] = await Promise.all([
+      generateAllWrongOptions(cardsNeedingGeneration as CardWithOptions[]),
+      generateAllBlankWords(cardsNeedingGeneration as CardWithOptions[])
+    ]);
+
+    if (!wrongOptionsResults || !blankWordsResults) {
+      console.error('[STAGE 5/6] Batch generation failed');
+      return {
+        success: false,
+        error: 'Failed to generate AI data in batch',
+        cardsProcessed: cards.length,
+        cardsUpdated: 0,
+        cardsSkipped: cards.length - cardsNeedingGeneration.length,
+      };
+    }
+
+    console.log('[STAGE 5/6] Batch generation complete!');
+
+    // ─────────────────────────────────────────────────────────────────────────
+    console.log(`\n[STAGE 6/6] Saving results to database...`);
     // ─────────────────────────────────────────────────────────────────────────
     
     let successCount = 0;
-    const totalBatches = Math.ceil(cardsNeedingGeneration.length / BATCH_SIZE);
 
-    for (let i = 0; i < cardsNeedingGeneration.length; i += BATCH_SIZE) {
-      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
-      const batch = cardsNeedingGeneration.slice(i, i + BATCH_SIZE);
-      
-      console.log(`\n[BATCH ${batchNumber}/${totalBatches}] Processing ${batch.length} cards...`);
-      
-      // CHANGED: Process cards SEQUENTIALLY instead of Promise.allSettled
-      for (let j = 0; j < batch.length; j++) {
-        const card = batch[j] as CardWithOptions;
-        const cardNumber = i + j + 1;
-        
-        console.log(`\n[${cardNumber}/${cardsNeedingGeneration.length}] Processing card ${card.id}...`);
-        
-        try {
-          const generatedData = await generateWrongOptionsAndBlankWord(
-            card.front, 
-            card.back,
-            card.id
-          );
+    for (let i = 0; i < cardsNeedingGeneration.length; i++) {
+      const card = cardsNeedingGeneration[i] as CardWithOptions;
+      const wrongOptions = wrongOptionsResults[i];
+      const blankWord = blankWordsResults[i];
 
-          if (!generatedData) {
-            console.error(`Card ${card.id}: Generation failed`);
-            continue; // Skip to next card
-          }
+      console.log(`   [${i + 1}/${cardsNeedingGeneration.length}] Saving card ${card.id}...`);
 
-          let updateSuccess = true;
-
-          // Insert card_options
-          console.log(`Creating card_options for card ${card.id}...`);
-          
-          const { error: optionsError } = await supabase
-            .from('card_options')
-            .upsert({
-              card_id: card.id,
-              wrong_option_1: generatedData.card_options[0] || null,
-              wrong_option_2: generatedData.card_options[1] || null,
-              wrong_option_3: generatedData.card_options[2] || null,
-            }, {
-              onConflict: 'card_id' // Specify which column has the unique constraint
-            });
-
-          if (optionsError) {
-            console.error(`Card ${card.id}: Failed to insert card_options`, optionsError);
-            updateSuccess = false;
-          }
-
-          // Update blank_word
-          console.log(`Updating blank_word for card ${card.id}...`);
-          
-          const { error: blankWordError } = await supabase
-            .from('cards')
-            .update({ blank_word: generatedData.blank_word })
-            .eq('id', card.id);
-
-          if (blankWordError) {
-            console.error(`Card ${card.id}: Failed to update blank_word`, blankWordError);
-            updateSuccess = false;
-          }
-
-          if (updateSuccess) {
-            successCount++;
-            console.log(`Card ${card.id}: Successfully updated`);
-          }
-
-        } catch (error) {
-          console.error(`Card ${card.id}: Exception`, error);
+      try {
+        // Validate data before saving
+        if (!wrongOptions || wrongOptions.length !== 3) {
+          console.error(`Invalid wrong options for card ${card.id}`);
+          continue;
         }
-        
-        // CRITICAL: Wait before processing next card (except for last card in last batch)
-        if (!(i + j === cardsNeedingGeneration.length - 1)) {
-          console.log(`Waiting ${DELAY_BETWEEN_CARDS / 1000}s before next card...`);
-          await delay(DELAY_BETWEEN_CARDS);
+
+        if (!blankWord || !blankWord.trim()) {
+          console.error(`Invalid blank word for card ${card.id}`);
+          continue;
         }
+
+        // Insert/update card_options
+        const { error: optionsError } = await supabase
+          .from('card_options')
+          .upsert({
+            card_id: card.id,
+            wrong_option_1: wrongOptions[0],
+            wrong_option_2: wrongOptions[1],
+            wrong_option_3: wrongOptions[2],
+          }, {
+            onConflict: 'card_id'
+          });
+
+        if (optionsError) {
+          console.error(`Failed to save card_options for ${card.id}:`, optionsError);
+          continue;
+        }
+
+        // Update blank_word
+        const { error: blankWordError } = await supabase
+          .from('cards')
+          .update({ blank_word: blankWord })
+          .eq('id', card.id);
+
+        if (blankWordError) {
+          console.error(`Failed to save blank_word for ${card.id}:`, blankWordError);
+          continue;
+        }
+
+        successCount++;
+        console.log(`Card ${card.id} saved successfully`);
+
+      } catch (error) {
+        console.error(`Exception saving card ${card.id}:`, error);
       }
-      
-      console.log(`[BATCH ${batchNumber}/${totalBatches}] Completed: ${successCount} total successful so far`);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     console.log(`\n[STAGE 6/6] Generation complete!`);
     // ─────────────────────────────────────────────────────────────────────────
-    console.log(`   Successfully updated: ${successCount}`);
-    console.log(`   Failed: ${cardsNeedingGeneration.length - successCount}`);
-    console.log(`   Already complete: ${cards.length - cardsNeedingGeneration.length}`);
+    console.log(`Successfully updated: ${successCount}`);
+    console.log(`Failed: ${cardsNeedingGeneration.length - successCount}`);
+    console.log(`Already complete: ${cards.length - cardsNeedingGeneration.length}`);
 
     console.log(`\n${'═'.repeat(80)}`);
     console.log(`[PIPELINE END] Total cards processed: ${cards.length}`);
@@ -354,7 +363,7 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
     };
 
   } catch (error) {
-    console.error('\n [PIPELINE FAILED] Unexpected error:', error);
+    console.error('\n[PIPELINE FAILED] Unexpected error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -375,14 +384,13 @@ export async function checkWrongOptionsAndBlankWordsStatus(deckId: string) {
   try {
     const supabase = await createClient();
     
-    // Fetch cards
     const { data: cards, error: cardsError } = await supabase
       .from('cards')
       .select('id, blank_word')
       .eq('deck_id', deckId);
 
     if (cardsError) {
-      console.error(' [STATUS CHECK] Failed to fetch cards:', cardsError.message);
+      console.error('[STATUS CHECK] Failed to fetch cards:', cardsError.message);
       return { success: false, error: cardsError.message };
     }
 
@@ -400,7 +408,6 @@ export async function checkWrongOptionsAndBlankWordsStatus(deckId: string) {
       };
     }
 
-    // Fetch all card_options for this deck's cards
     const cardIds = cards.map(c => c.id);
     const { data: cardOptions, error: optionsError } = await supabase
       .from('card_options')
@@ -411,13 +418,7 @@ export async function checkWrongOptionsAndBlankWordsStatus(deckId: string) {
       console.error('[STATUS CHECK] Failed to fetch card_options:', optionsError.message);
     }
 
-    console.log('DEBUG:', {
-      cardsCount: cards.length,
-      cardOptionsCount: cardOptions?.length || 0
-    });
-
-    // Merge the data
-     const cardsWithOptions = cards.map(card => ({
+    const cardsWithOptions = cards.map(card => ({
       ...card,
       card_options: cardOptions?.filter(opt => opt.card_id === card.id) || []
     })) as CardWithOptions[];
@@ -441,10 +442,10 @@ export async function checkWrongOptionsAndBlankWordsStatus(deckId: string) {
     const cardsNeedingGeneration = cards.length - cardsComplete;
     const percentage = Math.round((cardsComplete / cards.length) * 100);
 
-    console.log(`   [STATUS CHECK] Results:`);
-    console.log(`   Total cards: ${cards.length}`);
-    console.log(`   Complete: ${cardsComplete} (${percentage}%)`);
-    console.log(`   Need generation: ${cardsNeedingGeneration}`);
+    console.log(`[STATUS CHECK] Results:`);
+    console.log(`Total cards: ${cards.length}`);
+    console.log(`Complete: ${cardsComplete} (${percentage}%)`);
+    console.log(`Need generation: ${cardsNeedingGeneration}`);
 
     return {
       success: true,

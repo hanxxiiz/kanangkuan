@@ -1,28 +1,14 @@
-/** IMPROVED DOCUMENT PROCESSING WITH ENHANCED ERROR HANDLING
- * ═══════════════════════════════════════════════════════════════════════════
- */
-
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { extractText } from '@/app/api/text-extraction/extract-text';
 
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION
-// ═══════════════════════════════════════════════════════════════════════════
-
 const MAX_CARDS_PER_DOCUMENT = 100;
 const MAX_TEXT_LENGTH = 100000;
 const CARD_BATCH_SIZE = 10;
-const WRONG_OPTIONS_BATCH_SIZE = 10;
-const BLANK_WORDS_BATCH_SIZE = 10;
 
-// ═══════════════════════════════════════════════════════════════════════════
 // TYPES
-// ═══════════════════════════════════════════════════════════════════════════
 
 interface ProcessResult {
   success: boolean;
@@ -35,17 +21,19 @@ interface GeneratedCard {
   back: string;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+interface CardWithId {
+  id: string;
+  front: string;
+  back: string;
+}
+
 // HELPER: GET BASE URL
-// ═══════════════════════════════════════════════════════════════════════════
 
 function getBaseUrl(): string {
-  // For server-side API calls, prefer localhost in development
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:3000';
   }
   
-  // In production, use Vercel URL or configured URL
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
@@ -57,9 +45,7 @@ function getBaseUrl(): string {
   return 'http://localhost:3000';
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STEP 1: TEXT EXTRACTION (IMPROVED)
-// ═══════════════════════════════════════════════════════════════════════════
+// STEP 1: TEXT EXTRACTION
 
 async function extractTextFromDocument(
   supabase: SupabaseClient,
@@ -68,7 +54,6 @@ async function extractTextFromDocument(
 ): Promise<string> {
   console.log(`Extracting text from ${fileType} file: ${filePath}`);
   
-  // Download file from storage
   const { data: fileData, error: downloadError } = await supabase.storage
     .from('documents')
     .download(filePath);
@@ -79,11 +64,9 @@ async function extractTextFromDocument(
 
   console.log(`File downloaded successfully (${fileData.size} bytes)`);
 
-  // Convert to Buffer
   const arrayBuffer = await fileData.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   
-  // Use the new extraction utility
   const result = await extractText(buffer, fileType);
   
   console.log(` Extracted ${result.wordCount} words from ${fileType.toUpperCase()}`);
@@ -95,9 +78,7 @@ async function extractTextFromDocument(
   return result.text;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // STEP 2: FLASHCARD GENERATION
-// ═══════════════════════════════════════════════════════════════════════════
 
 async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
   const baseUrl = getBaseUrl();
@@ -133,9 +114,7 @@ async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
   return validCards.slice(0, MAX_CARDS_PER_DOCUMENT);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // STEP 3: DATABASE OPERATIONS
-// ═══════════════════════════════════════════════════════════════════════════
 
 async function saveCardsToDatabase(
   supabase: SupabaseClient,
@@ -171,167 +150,125 @@ async function saveCardsToDatabase(
   return cardIds;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STEP 5: BACKGROUND WRONG OPTIONS GENERATION
-// ═══════════════════════════════════════════════════════════════════════════
+// STEP 4: BATCHED WRONG OPTIONS GENERATION (1 REQUEST FOR ALL CARDS!)
 
-async function generateWrongOptions(front: string, back: string): Promise<string[]> {
+async function generateAllWrongOptions(cards: CardWithId[]): Promise<void> {
+  const supabase = await createClient();
   const baseUrl = getBaseUrl();
   
+  console.log(`Generating wrong options for ${cards.length} cards in ONE request...`);
+  
   try {
-    const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options`, {
+    // ONE API REQUEST FOR ALL CARDS
+    const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options-batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ front, back }),
+      body: JSON.stringify({ 
+        cards: cards.map(c => ({ front: c.front, back: c.back }))
+      }),
     });
 
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
     const result = await response.json();
     
-    if (result.success && result.wrong_options) {
-      return result.wrong_options;
+    if (!result.success || !result.options) {
+      throw new Error('Invalid response format');
     }
-  } catch (_error) {
-    console.error('Wrong options generation error:', _error);
-  }
-  
-  return ['Option A', 'Option B', 'Option C'];
-}
 
-async function generateAndSaveWrongOptions(cardIds: string[]): Promise<void> {
-  const supabase = await createClient();
-  
-  console.log('Background: Generating wrong options for', cardIds.length, 'cards');
-
-  let successCount = 0;
-  let failCount = 0;
-
-  for (let i = 0; i < cardIds.length; i += WRONG_OPTIONS_BATCH_SIZE) {
-    const batch = cardIds.slice(i, i + WRONG_OPTIONS_BATCH_SIZE);
+    // Save all wrong options to database
+    console.log(`Saving wrong options for ${cards.length} cards...`);
     
-    console.log(`Batch ${Math.floor(i / WRONG_OPTIONS_BATCH_SIZE) + 1}/${Math.ceil(cardIds.length / WRONG_OPTIONS_BATCH_SIZE)}`);
-    
-    const results = await Promise.allSettled(
-      batch.map(async (cardId) => {
-        const { data: card } = await supabase
-          .from('cards')
-          .select('front, back')
-          .eq('id', cardId)
-          .single();
-
-        if (!card) return false;
-
-        const wrongOptions = await generateWrongOptions(card.front, card.back);
-
-        const { error } = await supabase
-          .from('card_options')
-          .insert({
-            card_id: cardId,
-            wrong_option_1: wrongOptions[0],
-            wrong_option_2: wrongOptions[1],
-            wrong_option_3: wrongOptions[2],
-          });
-
-        return !error;
-      })
-    );
-
-    results.forEach(result => {
-      if (result.status === 'fulfilled' && result.value) {
-        successCount++;
-      } else {
-        failCount++;
+    for (let i = 0; i < cards.length; i++) {
+      const cardId = cards[i].id;
+      const wrongOptions = result.options[i];
+      
+      if (!wrongOptions || wrongOptions.length < 3) {
+        console.warn(`Skipping card ${cardId} - insufficient wrong options`);
+        continue;
       }
-    });
-  }
 
-  console.log('Background: Finished generating wrong options');
-  console.log(`Successfully saved wrong options: ${successCount}/${cardIds.length} cards`);
-  if (failCount > 0) {
-    console.log(`Failed to save: ${failCount} cards`);
+      const { error } = await supabase
+        .from('card_options')
+        .insert({
+          card_id: cardId,
+          wrong_option_1: wrongOptions[0],
+          wrong_option_2: wrongOptions[1],
+          wrong_option_3: wrongOptions[2],
+        });
+
+      if (error) {
+        console.error(`Failed to save wrong options for card ${cardId}:`, error);
+      }
+    }
+
+    console.log('Wrong options generation complete!');
+  } catch (error) {
+    console.error('Batched wrong options generation failed:', error);
+    throw error;
   }
 }
 
-async function generateBlankWord(back: string): Promise<string | null> {
+// STEP 5: BATCHED BLANK WORDS GENERATION (1 REQUEST FOR ALL CARDS!)
+
+async function generateAllBlankWords(cards: CardWithId[]): Promise<void> {
+  const supabase = await createClient();
   const baseUrl = getBaseUrl();
   
+  console.log(`Generating blank words for ${cards.length} cards in ONE request...`);
+  
   try {
-    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words`, {
+    // ONE API REQUEST FOR ALL CARDS
+    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words-batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ back }),
+      body: JSON.stringify({ 
+        cards: cards.map(c => ({ back: c.back }))
+      }),
     });
 
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
     const result = await response.json();
     
-    if (result.success && result.blank_word) {
-      return result.blank_word;
+    if (!result.success || !result.blank_words) {
+      throw new Error('Invalid response format');
     }
-  } catch (_error) {
-    console.error('Blank word generation error:', _error);
-  }
-  
-  return null;
-}
 
-async function generateAndSaveBlankWords(cardIds: string[]): Promise<void> {
-  const supabase = await createClient();
-  
-  console.log('Background: Generating blank words for', cardIds.length, 'cards');
-
-  let successCount = 0;
-  let failCount = 0;
-
-  for (let i = 0; i < cardIds.length; i += BLANK_WORDS_BATCH_SIZE) {
-    const batch = cardIds.slice(i, i + BLANK_WORDS_BATCH_SIZE);
+    // Update all cards with blank words
+    console.log(`Updating ${cards.length} cards with blank words...`);
     
-    console.log(`Batch ${Math.floor(i / BLANK_WORDS_BATCH_SIZE) + 1}/${Math.ceil(cardIds.length / BLANK_WORDS_BATCH_SIZE)}`);
-    
-    const results = await Promise.allSettled(
-      batch.map(async (cardId) => {
-        const { data: card } = await supabase
-          .from('cards')
-          .select('back')
-          .eq('id', cardId)
-          .single();
-
-        if (!card) return false;
-
-        const blankWord = await generateBlankWord(card.back);
-
-        if (!blankWord) return false;
-
-        const { error } = await supabase
-          .from('cards')
-          .update({ blank_word: blankWord })
-          .eq('id', cardId);
-
-        return !error;
-      })
-    );
-
-    results.forEach(result => {
-      if (result.status === 'fulfilled' && result.value) {
-        successCount++;
-      } else {
-        failCount++;
+    for (let i = 0; i < cards.length; i++) {
+      const cardId = cards[i].id;
+      const blankWord = result.blank_words[i];
+      
+      if (!blankWord || !blankWord.trim()) {
+        console.warn(`Skipping card ${cardId} - no blank word generated`);
+        continue;
       }
-    });
-  }
 
-  console.log('Background: Finished generating blank words');
-  console.log(`Successfully saved blank words: ${successCount}/${cardIds.length} cards`);
-  if (failCount > 0) {
-    console.log(`Failed to save: ${failCount} cards`);
+      const { error } = await supabase
+        .from('cards')
+        .update({ blank_word: blankWord })
+        .eq('id', cardId);
+
+      if (error) {
+        console.error(`Failed to update blank word for card ${cardId}:`, error);
+      }
+    }
+
+    console.log('Blank words generation complete!');
+  } catch (error) {
+    console.error('Batched blank words generation failed:', error);
+    throw error;
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // MAIN PIPELINE ORCHESTRATOR
-// ═══════════════════════════════════════════════════════════════════════════
 
 export async function processDocument(importId: string): Promise<ProcessResult> {
   const supabase = await createClient();
@@ -339,7 +276,6 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
   try {
     console.log('[PIPELINE START] Document:', importId);
     
-    // Fetch import record
     const { data: importRecord, error: importError } = await supabase
       .from('ai_imports')
       .select('*')
@@ -352,7 +288,6 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
 
     console.log('File:', importRecord.file_name);
 
-    // Update status
     await supabase
       .from('ai_imports')
       .update({ status: 'processing' })
@@ -401,7 +336,6 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
       })
       .eq('id', importId);
 
-    // Delete file from storage
     const { error: deleteError } = await supabase.storage
       .from('documents')
       .remove([importRecord.file_path]);
@@ -412,10 +346,33 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
       console.log('File deleted from storage');
     }
 
-    // STEP 5: Background wrong options generation
-    console.log('[STEP 5/5] Starting background processing...');
-    generateAndSaveWrongOptions(cardIds).catch(console.error);
-    generateAndSaveBlankWords(cardIds).catch(console.error);
+    // STEP 5: Fetch all cards for batch processing
+    console.log('[STEP 5/5] Fetching cards for batch AI processing...');
+    const { data: savedCards } = await supabase
+      .from('cards')
+      .select('id, front, back')
+      .in('id', cardIds);
+
+    if (!savedCards || savedCards.length === 0) {
+      throw new Error('Failed to fetch saved cards');
+    }
+
+    // BACKGROUND: Process all cards with just 2 AI requests!
+    (async () => {
+      try {
+        console.log('Starting batched background processing (2 AI requests total)...');
+        
+        // Request 1: Generate all wrong options
+        await generateAllWrongOptions(savedCards);
+        
+        // Request 2: Generate all blank words
+        await generateAllBlankWords(savedCards);
+        
+        console.log('All background processing complete!');
+      } catch (error) {
+        console.error('Background processing failed:', error);
+      }
+    })();
 
     console.log('[PIPELINE COMPLETE] Success!');
 
@@ -442,9 +399,7 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // STATUS CHECK
-// ═══════════════════════════════════════════════════════════════════════════
 
 export async function getProcessingStatus(importId: string) {
   try {
