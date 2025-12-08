@@ -19,14 +19,19 @@ type TTSSettings = {
   voice: number;
 };
 
+type AudioSettings = {
+  delay: number;
+  repetition: number;
+  voice: number;
+} | undefined;
+
 const AudioPlayer = () => {
   const practiceData = useContext(PracticeDataContext);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   
-  const contextSettings = (practiceData as any)?.audioSettings;
+  const contextSettings = (practiceData as { audioSettings?: AudioSettings })?.audioSettings;
   const [settings, setSettings] = useState<TTSSettings>({
     delay: contextSettings?.delay ?? 3,
     repetition: contextSettings?.repetition ?? 1,
@@ -42,7 +47,7 @@ const AudioPlayer = () => {
         voice: contextSettings.voice
       });
     }
-  }, [contextSettings?.delay, contextSettings?.repetition, contextSettings?.voice]);
+  }, [contextSettings]);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const shouldContinueRef = useRef(false);
@@ -70,7 +75,6 @@ const AudioPlayer = () => {
   useEffect(() => {
     return () => {
       shouldContinueRef.current = false;
-      currentSequenceRef.current++;
       window.speechSynthesis.cancel();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -99,7 +103,6 @@ const AudioPlayer = () => {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    setIsSpeaking(false);
   };
 
   const getVoiceByType = (voiceType: number): SpeechSynthesisVoice | null => {
@@ -139,7 +142,7 @@ const AudioPlayer = () => {
         return voice;
       }
       
-      console.warn('No male voice found! Using first available voice.');
+      console.warn('⚠ No male voice found! Using first available voice.');
       return englishVoices[0] || availableVoices[0];
     }
     
@@ -171,7 +174,7 @@ const AudioPlayer = () => {
       return voice;
     }
     
-    console.warn('No female voice found! Using first available voice.');
+    console.warn('⚠ No female voice found! Using first available voice.');
     return englishVoices[0] || availableVoices[0];
   };
 
@@ -191,15 +194,12 @@ const AudioPlayer = () => {
 
     return new Promise((resolve) => {
       try {
-        setIsSpeaking(true);
-        
         // Cancel any ongoing speech first
         window.speechSynthesis.cancel();
         
         // Small delay to ensure cancellation completes
         setTimeout(() => {
           if (sequenceId !== currentSequenceRef.current) {
-            setIsSpeaking(false);
             resolve(false);
             return;
           }
@@ -218,19 +218,12 @@ const AudioPlayer = () => {
           
           utterance.onend = () => {
             console.log("Speech ended successfully");
-            setIsSpeaking(false);
             resolve(true);
           };
           
           utterance.onerror = (event) => {
             console.log("Speech error:", event.error);
-            setIsSpeaking(false);
-            
-            if (event.error === 'interrupted' || event.error === 'canceled') {
-              resolve(false);
-            } else {
-              resolve(false);
-            }
+            resolve(false);
           };
           
           window.speechSynthesis.speak(utterance);
@@ -239,7 +232,6 @@ const AudioPlayer = () => {
         
       } catch (error) {
         console.error('Speech error:', error);
-        setIsSpeaking(false);
         resolve(false);
       }
     });

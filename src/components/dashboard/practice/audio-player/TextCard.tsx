@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 interface TextCardProps {
   question: string;
@@ -11,38 +11,16 @@ interface TextCardProps {
 const TextCard: React.FC<TextCardProps> = ({ question, answer, deckColor, isAlternate = false, cardIndex }) => {
   const [fadeState, setFadeState] = useState<'visible' | 'fading-out' | 'fading-in'>('visible');
   const [displayContent, setDisplayContent] = useState({ question, answer });
-  const [displayColor, setDisplayColor] = useState(getCardColor());
+  const [displayColor, setDisplayColor] = useState(() => getCardColorFromProps(deckColor, isAlternate));
   const [textSize, setTextSize] = useState<'large' | 'medium'>('large');
   const [needsScroll, setNeedsScroll] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
 
-  // Determine the color based on whether it's alternate or not
-  function getCardColor() {
-    if (!isAlternate) {
-      return deckColor;
-    }
-
-    // Extract color name from CSS variable format
-    const colorName = deckColor.includes('--color-') 
-      ? deckColor.match(/--color-(\w+)/)?.[1] 
-      : deckColor;
-
-    switch(colorName) {
-      case 'pink':
-        return 'var(--color-cyan)';
-      case 'blue':
-        return 'var(--color-pink)';
-      case 'purple':
-        return 'var(--color-lime)';
-      case 'cyan':
-        return 'var(--color-purple)';
-      case 'lime':
-        return 'var(--color-blue)';
-      default:
-        return deckColor;
-    }
-  }
+  // Move function outside component or use useCallback
+  const getCardColor = useCallback(() => {
+    return getCardColorFromProps(deckColor, isAlternate);
+  }, [deckColor, isAlternate]);
 
   // Check if content fits and adjust text size accordingly
   useEffect(() => {
@@ -103,7 +81,7 @@ const TextCard: React.FC<TextCardProps> = ({ question, answer, deckColor, isAlte
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [cardIndex]);
+  }, [cardIndex, question, answer, getCardColor]);
 
   const getAnimationClass = () => {
     switch(fadeState) {
@@ -211,5 +189,32 @@ const TextCard: React.FC<TextCardProps> = ({ question, answer, deckColor, isAlte
     </div>
   );
 };
+
+// Helper function moved outside component
+function getCardColorFromProps(deckColor: string, isAlternate: boolean) {
+  if (!isAlternate) {
+    return deckColor;
+  }
+
+  // Extract color name from CSS variable format
+  const colorName = deckColor.includes('--color-') 
+    ? deckColor.match(/--color-(\w+)/)?.[1] 
+    : deckColor;
+
+  switch(colorName) {
+    case 'pink':
+      return 'var(--color-cyan)';
+    case 'blue':
+      return 'var(--color-pink)';
+    case 'purple':
+      return 'var(--color-lime)';
+    case 'cyan':
+      return 'var(--color-purple)';
+    case 'lime':
+      return 'var(--color-blue)';
+    default:
+      return deckColor;
+  }
+}
 
 export default TextCard;

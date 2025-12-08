@@ -12,6 +12,7 @@
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
+import officeParser from 'officeparser';
 import { extractText as unpdfExtract } from 'unpdf';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -93,37 +94,17 @@ async function extractFromDOCX(buffer: Buffer): Promise<ExtractionResult> {
 
 async function extractFromPPTX(buffer: Buffer): Promise<ExtractionResult> {
   try {
-    // Read PowerPoint file as workbook (XLSX can parse PPTX structure)
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const text = await officeParser.parseOfficeAsync(buffer);
     
-    const textContent: string[] = [];
-    
-    // Extract text from all sheets/slides
-    workbook.SheetNames.forEach(sheetName => {
-      const sheet = workbook.Sheets[sheetName];
-      const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as unknown[][];
-      
-      sheetData.forEach(row => {
-        if (Array.isArray(row)) {
-          row.forEach(cell => {
-            if (cell && typeof cell === 'string' && cell.trim()) {
-              textContent.push(cell.trim());
-            }
-          });
-        }
-      });
-    });
-
-    if (textContent.length === 0) {
+    if (!text || text.trim().length === 0) {
       throw new Error('No text content found in PPTX');
     }
 
-    const text = textContent.join('\n');
+    const cleanText = text.trim();
     
     return {
-      text,
-      pageCount: workbook.SheetNames.length,
-      wordCount: text.split(/\s+/).length,
+      text: cleanText,
+      wordCount: cleanText.split(/\s+/).length,
     };
   } catch (error) {
     console.error('PPTX extraction error:', error);
