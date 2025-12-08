@@ -6,6 +6,7 @@ interface CardProps{
     color?: string;
     front?: string;
     back?: string;
+    readonly?: boolean;
 }
 
 const colorMap = {
@@ -20,6 +21,7 @@ export default function Card({
     color = "pink",
     front,
     back,
+    readonly = false,
 }:CardProps) {
     const bgColor = colorMap[color as keyof typeof colorMap] || colorMap.pink;
   return (

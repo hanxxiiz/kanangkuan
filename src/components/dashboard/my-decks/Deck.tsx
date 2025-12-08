@@ -6,6 +6,8 @@ interface DeckProps{
     color?: string;
     deckName?: string;
     cardCount?: number;
+    userId?: string;
+    readonly?: boolean;
 }
 
 const colorMap: Record<string, string> = {
@@ -21,12 +23,17 @@ export default function Deck({
     color = "pink",
     deckName = "My Deck",
     cardCount,
+    userId,
+    readonly = false,
 }:DeckProps) {
     const router = useRouter();
     const pathname = usePathname();
 
     const handleClick = () => {
-        if(pathname.startsWith("/dashboard/profile")){
+        if(userId){
+            router.push(`/dashboard/profile/${userId}/deck/${id}`);
+        }
+        else if(pathname.startsWith("/dashboard/profile")){
             router.push(`/dashboard/profile/${id}`)
         }
         else{

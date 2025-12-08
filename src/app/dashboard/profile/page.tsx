@@ -1,19 +1,78 @@
 "use client";
-
-import React, { useState } from "react";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
+import React, { useState, useEffect } from "react";
 import FeedPanel from "@/components/profile/FeedPanel";
 import StatsPanel from "@/components/profile/StatsPanel";
 import DecksPanel from "@/components/profile/DecksPanel";
 import Navbar from "@/components/profile/Navbar";
 import ProfileCard from "@/components/profile/ProfileCard";
+import { useRouter } from "next/navigation";
 
 
 const ProfilePage = () => {
+    const { supabase, session, isLoaded } = useSupabase();
+    const router = useRouter();
     const [activeIndex, setActiveIndex] = useState(0);
+    const [profileData, setProfileData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-     const handleNavChange = (index: number) => {
-    setActiveIndex(index);
-  };
+    
+
+    //fetch current user profile
+     
+    useEffect(() => {
+      const loadProfile = async () => {
+        if (!isLoaded || !supabase) return;
+        
+        if (!session?.user) {
+          router.push('/login');
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (error) {
+            console.error("Error loading profile:", error);
+            setProfileData(null);
+          } else {
+            setProfileData(profile);
+          }
+        } catch (error) {
+          console.error("Error in loadProfile:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadProfile();
+    }, [supabase, session, isLoaded, router]);
+
+    const handleNavChange = (index: number) => {
+      setActiveIndex(index);
+    };
+
+    if (!isLoaded || loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center text-xl font-main">
+          Loading profile...
+        </div>
+      );
+    }
+
+    if (!profileData) {
+      return (
+        <div className="min-h-screen flex items-center justify-center text-xl font-main">
+          Profile not found
+        </div>
+      );
+    }
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Main Section */}
@@ -25,7 +84,10 @@ const ProfilePage = () => {
           </h1>
         </div>
 
-        <ProfileCard />
+        <ProfileCard 
+        profileData={profileData}
+        isOwnProfile={true}
+        />
 
         {/* Navbar */}
         <Navbar
@@ -39,13 +101,19 @@ const ProfilePage = () => {
         <section className="mt-6">
           {activeIndex === 0 && (
             <FeedPanel
+              userId={profileData.id}
+              isOwnProfile={true}
               switchToDecks={() => {
-                setActiveIndex(2);
+              setActiveIndex(2);
               }}
             />
           )}
-          {activeIndex === 1 && <StatsPanel />}
-          {activeIndex === 2 && <DecksPanel />}
+          {activeIndex === 1 && <StatsPanel 
+            userId={profileData.id}
+            isOwnProfile={true} />}
+          {activeIndex === 2 && <DecksPanel
+            userId={profileData.id}
+            isOwnProfile={true} />}
         </section>
       </section>
     </div>

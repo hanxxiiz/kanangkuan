@@ -78,7 +78,8 @@ const LeaderboardPage = () => {
     rank: i + 1,
     name: user.username,
     xp: user.xp,
-    profileUrl: user.profile_url
+    profileUrl: user.profile_url,
+    userId: user.id,
   }));
 
   // Ranked users excluding top 3
@@ -86,7 +87,8 @@ const LeaderboardPage = () => {
     username: user.username,
     xp: user.xp,
     imageUrl: user.profile_url,
-    ranking: index + 4
+    ranking: index + 4,
+    userId: user.id,
   }));
 
   const mobileTop3 = isMobile
@@ -144,6 +146,7 @@ const LeaderboardPage = () => {
                   name={user.username}
                   xp={user.xp}
                   imageSrc={user.profile_url || undefined}  
+                  userId={user.id}
                   gradientSet={currentGradient}
                 />
               ))}
@@ -158,6 +161,7 @@ const LeaderboardPage = () => {
                   xp={user.xp}
                   ranking={user.ranking}
                   imageUrl={user.imageUrl}
+                  userId={user.userId}
                 />
               ))}
             </div>

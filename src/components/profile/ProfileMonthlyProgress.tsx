@@ -4,9 +4,7 @@ import Image from "next/image";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-export default function ProfileMonthlyProgress() {
-  const { monthlyXPData } = useDashboard();
-
+export default function ProfileMonthlyProgress({monthlyXPData}: {monthlyXPData: Record<string, number>}) {
   const date = null; // Uncomment to use real date
   
   const rows = 5;

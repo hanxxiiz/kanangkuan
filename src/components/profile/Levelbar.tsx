@@ -2,9 +2,7 @@ import React from "react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import Image from "next/image";
 
-const ProfileLevelBar = () => {
-  const { xp } = useDashboard();
-
+const ProfileLevelBar = ({xp}: {xp: number}) => {
   // Quadratic growth: XP needed for level n = 100 * n^2
   // Level 1→2: 100 XP, Level 2→3: 400 XP, Level 3→4: 900 XP, etc.
   const calculateLevel = (totalXp: number) => {

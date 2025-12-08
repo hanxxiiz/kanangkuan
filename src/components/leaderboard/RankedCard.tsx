@@ -1,30 +1,40 @@
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 type RankedCardProps = {
   username: string;
   xp: number;
   ranking: number;
   imageUrl: string | null;
+  userId?: string;
 };
 
 const FALLBACK = "/dashboard/default-picture.png"; //para sa dili ma kita ang picture
 
-const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl }) => {
+const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl, userId }) => {
   
   const resolveSrc = (src: string | null): string => {
     if (!src || typeof src !== "string") return FALLBACK;
     const trimmed = src.trim();
     return trimmed === "" ? FALLBACK : trimmed;
   };
+
+  const router = useRouter();
+  const handleClick = () => {
+    if(userId){
+      router.push(`/dashboard/profile/${userId}`);
+    }
+  };
   
   return (
     <div
+    onClick={handleClick}
       className="flex flex-col gap-4 rounded-3xl border border-[#CFCECE]
       bg-gradient-to-l from-white to-white
       transition-all duration-500 ease-out
       hover:from-[#FEEF69] hover:to-white
-      hover:scale-105 transform
+      hover:scale-105 transform hover:cursor-pointer
       drop-shadow-[0_12px_12px_rgba(0,0,0,0.25)]
       p-4 sm:flex-row sm:items-center sm:justify-between"
     >

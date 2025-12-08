@@ -10,11 +10,11 @@ import { use, useMemo } from "react";
 export default function MyDeckPage({
     params,
 }: {
-    params: Promise<{ deckId: string }>
+    params: Promise<{ userId: string; deckId: string }>
 }) {
-    const { deckId } = use(params);
-    const { deck, deckLoading, deckError } = useDecks(deckId); 
-    const { cards, cardLoading, cardError } = useCards(deckId);
+    const { userId, deckId } = use(params);
+    const { deck, deckLoading, deckError } = useDecks(deckId, userId); 
+    const { cards, cardLoading, cardError } = useCards(deckId, userId);
 
     const deckName = deckLoading
         ? "Loading..."

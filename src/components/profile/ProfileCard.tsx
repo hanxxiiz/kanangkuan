@@ -3,8 +3,15 @@
 import { useDashboard } from "../dashboard/DashboardContext";
 import Image from "next/image";
 
-const ProfileCard = () => {
-    const { username} = useDashboard();
+type ProfileCardProps = {
+  profileData?: any;
+  isOwnProfile?: boolean;
+};
+
+const ProfileCard = ({profileData, isOwnProfile}: ProfileCardProps) => {
+    const { username: currentUsername } = useDashboard();
+    const displayUsername = profileData?.username || currentUsername || "username";
+    const displayProfileUrl = profileData?.profile_url || "/dashboard/default-picture.png";
     return (
         <div>
             {/* Profile Card */}
@@ -23,8 +30,8 @@ const ProfileCard = () => {
             <div className="hidden sm:flex relative items-start h-70 w-full">
               {/* Profile Image */}
               <Image
-                alt={username}
-                src="/dashboard/default-picture.png"
+                alt={displayUsername}
+                src={displayProfileUrl}
                   width={0}
                   height={0}
                   sizes="100vw"
@@ -33,7 +40,7 @@ const ProfileCard = () => {
               {/* User Info */}
               <div className="relative flex flex-col left-70 top-15">
                 <p className="text-gray-900 text-4xl font-bold font-main">
-                  {username}
+                  {displayUsername}
                 </p>
                 {/*<p className="text-gray-900 text-2xl font-body my-2">[Name]</p> */}
                 <div className="flex items-center">
@@ -47,7 +54,7 @@ const ProfileCard = () => {
             {/* Mobile Layout */}
             <div className="flex flex-col sm:hidden relative items-center pt-8 pb-4 text-center">
               <p className="text-gray-900 text-3xl font-bold font-main">
-                [Username]
+                {displayUsername}
               </p>
               <p className="text-gray-900 text-xl font-body my-1">[Name]</p>
               <div className="flex items-center justify-center mt-2">
@@ -57,8 +64,8 @@ const ProfileCard = () => {
               </div>
               {/* Image below the info */}
               <Image
-                alt={`${username}`}
-                src="/dashboard/default-picture.png"
+                alt={displayUsername}
+                src={displayProfileUrl}
                 className="mt-6 w-32 h-32 rounded-full bg-gray-900 z-10"
                 width={0}
                 height={0}

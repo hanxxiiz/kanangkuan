@@ -6,6 +6,8 @@ interface FolderProps {
   color?: string;
   folderName?: string;
   deckCount?: number;
+  userId?: string;
+  readonly?: boolean;
 }
 
 const colorMap: Record<string, string> = {
@@ -21,12 +23,17 @@ export default function Folder({
   color = "pink",
   folderName = "My Folder",
   deckCount = 0,
+  userId,
+  readonly = false,
 }: FolderProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const handleClick = () => {
-    if(pathname.startsWith("/dashboard/profile")){
+    if(userId){
+      router.push(`/dashboard/profile/${userId}/folder/${id}`);
+    }
+    else if(pathname.startsWith("/dashboard/profile")){
       router.push(`/dashboard/profile/folder/${id}`);
     }
     else{

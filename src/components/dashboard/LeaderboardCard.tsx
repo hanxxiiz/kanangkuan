@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 type PresetGradientSet = {
   baseFrom: string;
@@ -49,6 +50,7 @@ type LeaderboardCardProps = {
   xp?: number;
   imageSrc?: string;
   gradientSet?: PresetGradientSet;
+  userId?: string;
 };
 
 const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
@@ -57,6 +59,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   xp = 666,
   imageSrc = "/dashboard/default-picture.png",
   gradientSet,
+  userId,
 }) => {
 
   const defaultGradient: PresetGradientSet = {
@@ -70,14 +73,21 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   };
 
   const gradient = gradientSet || defaultGradient;
+  const router = useRouter();
+  const handleClick = () => {
+    if(userId){
+      router.push(`/dashboard/profile/${userId}`);
+    }
+  };
 
   return (
     <>
       {/* FOR LAPTOP/IPAD */}
       <div
+      onClick={handleClick}
         className={`hidden sm:block group relative w-full max-w-[260px] lg:max-w-[360px] rounded-[2rem] overflow-hidden 
           cursor-pointer hover:scale-105 transform transition-transform duration-300 ease-in-out 
-          shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)]
+          shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)] hover:cursor-pointer
           ${rank === 1 ? "z-10" : ""}
           ${rank === 2 ? "sm:-mr-12 lg:mr-0" : ""}
           ${rank === 3 ? "sm:-ml-12 lg:ml-0" : ""}`}
@@ -139,6 +149,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
 
       {/* FOR MOBILE — stays the same height */}
       <div
+      onClick={handleClick}
         className="block sm:hidden relative w-full max-w-[500px] rounded-[1.5rem] overflow-hidden mb-5"
         style={{
           boxShadow:
