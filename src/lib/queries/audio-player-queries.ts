@@ -15,7 +15,7 @@ export type UserSettings = {
   audio_voice: number;
 };
 
-export async function GetUserSettings(): Promise<UserSettings> {
+export async function GetAudioPlayerUserSettings(): Promise<UserSettings> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

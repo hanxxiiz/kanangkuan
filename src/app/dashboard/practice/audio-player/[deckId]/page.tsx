@@ -2,21 +2,34 @@
 
 import HeroCard from "@/components/dashboard/practice/audio-player/HeroCard";
 import TextCard from "@/components/dashboard/practice/audio-player/TextCard";
-import { useState } from "react";
+import { PracticeDataContext } from "@/components/dashboard/practice/PracticeLayout";
+import { useState, useContext } from "react";
 import { CgPlayButtonO, CgPlayPauseO, CgPlayTrackPrev, CgPlayTrackNext } from "react-icons/cg";
 
+type Card = {
+  id: string;
+  deck_id: string;
+  front: string;
+  back: string;
+};
+
 const AudioPlayer = () => {
+  const practiceData = useContext(PracticeDataContext);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
-  // Sample data - replace with actual data
-  const deckColor = "#FF69B4"; // Hot pink color from the image
-  const cards = [
-    {
-      question: "What is an apple?",
-      answer: "the round fruit of a tree of the rose family, which typically has thin red or green skin and crisp flesh. Many varieties have been developed as dessert or cooking fruit or for making cider."
-    }
-  ];
+  // Get cards and deck color from context
+  const cards = (practiceData?.cards || []) as Card[];
+  const deckColor = practiceData?.deckColor || "lime";
+
+  // Handle empty cards case
+  if (cards.length === 0) {
+    return (
+      <div className="bg-black w-full h-full flex items-center justify-center">
+        <p className="text-white text-xl">No cards available</p>
+      </div>
+    );
+  }
 
   const currentCard = cards[currentCardIndex];
 
@@ -37,37 +50,56 @@ const AudioPlayer = () => {
   };
 
   return (
-    <div className="bg-black w-full h-full flex flex-col items-center justify-center overflow-hidden px-4 gap-8">
+    <div className="bg-black w-full h-full flex flex-col items-center overflow-hidden pt-15 lg:pt-2 px-4 gap-3">
       {/* Hero Card */}
-      <HeroCard deckColor={deckColor} />
+      <HeroCard deckColor={`var(--color-${deckColor})`} />
 
       {/* Text Card */}
       <TextCard 
-        question={currentCard.question}
-        answer={currentCard.answer}
-        deckColor={deckColor}
+        question={currentCard.front}
+        answer={currentCard.back}
+        deckColor={`var(--color-${deckColor})`}
+        isAlternate={currentCardIndex % 2 === 1}
+        cardIndex={currentCardIndex}
       />
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-8 mt-4">
+      <div className="flex items-center justify-center gap-8">
         {/* Previous Button */}
         <button
           onClick={handlePrev}
           disabled={currentCardIndex === 0}
-          className="text-white hover:text-gray-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="cursor-pointer text-white transition-colors duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{
+            ['--hover-color' as any]: `var(--color-${deckColor})`
+          }}
+          onMouseEnter={(e) => {
+            if (currentCardIndex > 0) {
+              e.currentTarget.style.color = `var(--color-${deckColor})`;
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'white';
+          }}
         >
-          <CgPlayTrackPrev size={48} />
+          <CgPlayTrackPrev size={60} />
         </button>
 
         {/* Play/Pause Button */}
         <button
           onClick={handlePlayPause}
-          className="text-white hover:text-gray-300 transition-colors"
+          className="cursor-pointer text-white transition-colors duration-300"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = `var(--color-${deckColor})`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'white';
+          }}
         >
           {isPlaying ? (
-            <CgPlayPauseO size={64} />
+            <CgPlayPauseO size={65} />
           ) : (
-            <CgPlayButtonO size={64} />
+            <CgPlayButtonO size={65} />
           )}
         </button>
 
@@ -75,9 +107,17 @@ const AudioPlayer = () => {
         <button
           onClick={handleNext}
           disabled={currentCardIndex === cards.length - 1}
-          className="text-white hover:text-gray-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="cursor-pointer text-white transition-colors duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          onMouseEnter={(e) => {
+            if (currentCardIndex < cards.length - 1) {
+              e.currentTarget.style.color = `var(--color-${deckColor})`;
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'white';
+          }}
         >
-          <CgPlayTrackNext size={48} />
+          <CgPlayTrackNext size={60} />
         </button>
       </div>
     </div>
