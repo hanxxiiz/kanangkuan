@@ -7,7 +7,7 @@ import { useChallenges } from '@/lib/hooks/useChallenges';
 import { useProfiles } from '@/lib/hooks/useProfile';
 import { useRealtimeChallenge } from '@/lib/hooks/useRealtimeChallenge';
 import { useUser } from '@/lib/hooks/useUser';
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 
 export interface PresencePayload {
   user_id: string;
@@ -33,6 +33,7 @@ export default function ChallengePlay({ params }: {
         startTimer,
         getTimerStatus,
         syncQuestionByIndex,
+        submitResponse
     } = useChallenges(challengeId);
 
     const { presence, timerState, sessionState, updatePlayerStatus } = useRealtimeChallenge({
@@ -45,6 +46,8 @@ export default function ChallengePlay({ params }: {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [timer, setTimer] = useState(15);
     const [isTimerEnded, setIsTimerEnded] = useState(false);
+    const [answerTime, setAnswerTime] = useState<number | null>(null);
+    const hasSubmittedRef = useRef(false);
 
     const isHost = user?.id === challenge?.host_id;
 
@@ -119,6 +122,8 @@ export default function ChallengePlay({ params }: {
     useEffect(() => {
         setSelectedAnswer(null);
         setIsTimerEnded(false);
+        setAnswerTime(null);
+        hasSubmittedRef.current = false;
         
         updatePlayerStatus("answering");
     }, [currentQuestion?.id]);
@@ -127,17 +132,56 @@ export default function ChallengePlay({ params }: {
         if (isTimerEnded) return;
         
         setSelectedAnswer(answer);
-        await updatePlayerStatus("answering");
+        if (!answerTime && timerState?.timer_start_at) {
+            const startTime = new Date(timerState.timer_start_at).getTime();
+            const currentTime = Date.now();
+            const responseTimeMs = currentTime - startTime;
+            setAnswerTime(responseTimeMs);
+        }
+
+        await updatePlayerStatus("done");
     };
 
     useEffect(() => {
-        if (isTimerEnded && selectedAnswer) {
-            const isCorrect = selectedAnswer === currentQuestion?.question_data?.back;
-            updatePlayerStatus(isCorrect ? "correct" : "wrong");
-        } else if (isTimerEnded && !selectedAnswer) {
-            updatePlayerStatus("wrong");
-        }
-    }, [isTimerEnded, selectedAnswer]);
+        if (!isTimerEnded || !user?.id || !currentQuestion) return;
+        if (hasSubmittedRef.current) return;
+
+        hasSubmittedRef.current = true;
+
+        const submitAnswer = async () => {
+
+            if (selectedAnswer) {
+                const isCorrect = selectedAnswer === currentQuestion?.question_data?.back;
+                const responseTime = answerTime || 15000;
+                
+                await updatePlayerStatus(isCorrect ? "correct" : "wrong");
+                
+                await submitResponse(
+                    user.id,
+                    currentQuestion.question_id,
+                    selectedAnswer,
+                    isCorrect,
+                    responseTime
+                );
+                
+                console.log("📝 Response submitted:", { answer: selectedAnswer, isCorrect, responseTime });
+            } else {
+                await updatePlayerStatus("wrong");
+                
+                await submitResponse(
+                    user.id,
+                    currentQuestion.question_id,
+                    "",
+                    false,
+                    15000
+                );
+                
+                console.log("📝 No answer submitted (marked wrong)");
+            }
+        };
+
+        submitAnswer();
+    }, [isTimerEnded, selectedAnswer, user?.id, currentQuestion?.id]);
 
     const handleNextQuestion = async () => {
         await updatePlayerStatus("answering");

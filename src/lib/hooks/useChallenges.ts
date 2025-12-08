@@ -134,6 +134,39 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
+  async function submitResponse(
+    userId: string,
+    questionId: string,
+    answer: string,
+    isCorrect: boolean,
+    responseTime: number
+  ) {
+    if (!challengeId) return false;
+
+    try {
+      const participantId = await challengeService.getParticipantId(challengeId, userId);
+      if (!participantId) {
+        console.error("Participant ID not found");
+        return false;
+      }
+
+      await challengeService.recordResponse({
+        sessionId: challengeId,
+        participantId,
+        questionIndex: currentQuestionIndex,
+        questionId,
+        answer,
+        isCorrect,
+        responseTime,
+      });
+
+      return true;
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : "Failed to submit response.");
+      return false;
+    }
+  }
+
   async function insertParticipant(sessionId: string, userId: string) {
     try {
         const newHost = await challengeService.insertParticipant(sessionId, userId);
@@ -187,6 +220,7 @@ export function useChallenges(challengeId?: string) {
     startTimer,
     stopTimer,
     getTimerStatus,
+    submitResponse,
     insertParticipant,
     generateUniqueJoinCode,
     validateJoinCode,

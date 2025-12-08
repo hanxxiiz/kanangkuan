@@ -21,8 +21,8 @@ export default function PlayerStatus({ profile, presence, showResult = false } :
 
   const statusLabel = (() => {
     switch(displayStatus) {
-      case 'answering': return 'Done';
-      case 'done': return 'Kanang...';
+      case 'answering': return 'Kanang...';
+      case 'done': return 'Done';
       case 'correct': return 'Correct!';
       case 'wrong': return 'Wrong!';
       default: return '';
@@ -31,8 +31,8 @@ export default function PlayerStatus({ profile, presence, showResult = false } :
 
   const statusColor = (() => {
     switch(displayStatus) {
-      case 'answering': return 'bg-cyan';
-      case 'done': return 'bg-purple';
+      case 'answering': return 'bg-purple';
+      case 'done': return 'bg-cyan';
       case 'correct': return 'bg-lime';
       case 'wrong': return 'bg-pink';
       default: return 'bg-black';

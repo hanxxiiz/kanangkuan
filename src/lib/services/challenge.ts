@@ -161,6 +161,101 @@ export const challengeService = {
         return data;
     },
 
+    async getParticipantId(sessionId: string, userId: string): Promise<string | null> {
+        const { data, error } = await supabase
+            .schema("challenge")
+            .from("participants")
+            .select("id")
+            .match({ session_id: sessionId, user_id: userId })
+            .single();  
+        
+        if (error) throw error;
+
+        return data.id || null;
+    },
+
+    async recordResponse(response: {
+        sessionId: string;
+        participantId: string;
+        questionIndex: number;
+        questionId: string;
+        answer: string;
+        isCorrect: boolean;
+        responseTime: number;
+    }): Promise<void> {
+        console.log("🔧 Recording response:", response);
+
+        const { data: pointsData, error: pointsError } = await supabase
+            .schema("challenge")
+            .rpc("calculate_points", {
+                is_correct: response.isCorrect,
+                response_time: response.responseTime,
+                time_limit: 15
+            });
+            
+            if (pointsError) {
+                console.error("❌ Error calculating points:", pointsError);
+                throw pointsError;
+            }
+
+            console.log("✅ Points calculated:", pointsData);
+
+            const points = pointsData || 0;
+
+            const { data: insertData, error: insertError } = await supabase
+                .schema("challenge")
+                .from("responses")
+                .insert({
+                    session_id: response.sessionId,
+                    participant_id: response.participantId,
+                    question_index: response.questionIndex,
+                    question_id: response.questionId,
+                    answer: response.answer,
+                    is_correct: response.isCorrect,
+                    response_time: response.responseTime,
+                    points_earned: points,
+                })
+                .select();
+
+            if (insertError) {
+                console.error("❌ Error inserting response:", insertError);
+                throw insertError;
+            }
+
+            console.log("✅ Response inserted:", insertData);
+
+            // Update participant stats
+            const { data: updateData, error: updateError } = await supabase
+                .schema("challenge")
+                .rpc('update_participant_stats', {
+                    p_participant_id: response.participantId,
+                    p_is_correct: response.isCorrect,
+                    p_response_time: response.responseTime,
+                    p_points: points,
+                });
+
+            if (updateError) {
+                console.error("❌ Error updating participant stats:", updateError);
+                throw updateError;
+            }
+
+            console.log("✅ Participant stats updated");
+
+            // Update session rankings
+            const { data: rankData, error: rankError } = await supabase
+                .schema("challenge")
+                .rpc('update_session_rankings', {
+                    p_session_id: response.sessionId,
+                });
+
+            if (rankError) {
+                console.error("⚠️ Error updating rankings:", rankError);
+                // Don't throw - rankings update is not critical
+            } else {
+                console.log("✅ Rankings updated");
+            }
+    },
+
     async checkSessionCodeExists(sessionCode: string): Promise<boolean> {
         const { data, error } = await supabase
             .schema("challenge")
