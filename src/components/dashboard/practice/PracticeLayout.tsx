@@ -32,6 +32,11 @@ interface PracticeInitialData {
   dailyLimits?: UserDailyLimits | null;
   deckColor?: string;
   isActiveRecall?: boolean;
+  audioSettings?: {  
+    delay: number;
+    repetition: number;
+    voice: number;
+  };
 }
 
 export const SortOrderContext = createContext<{
@@ -93,13 +98,21 @@ export default function PracticeLayout({
         const settings = await GetBasicReviewUserSettings();
         setSortOrder(settings.review_sort_order);
 
+        let fetchedAudioSettings = {
+          delay: 3,
+          repetition: 1,
+          voice: 1,
+        };
+
         if (isAudioPlayer) {
           const audioSettingsData = await GetAudioPlayerUserSettings();
-          setAudioSettings({
+          fetchedAudioSettings = {
             delay: audioSettingsData.audio_delay,
             repetition: audioSettingsData.audio_repetition,
             voice: audioSettingsData.audio_voice,
-          });
+          };
+          setAudioSettings(fetchedAudioSettings);
+          console.log("🔊 Loaded audio settings from DB:", fetchedAudioSettings);
         }
 
         if (!deckId) return;
@@ -129,7 +142,8 @@ export default function PracticeLayout({
             keys: keysData, 
             profilePic: profilePicData,
             deckColor: info?.deck_color || "lime",
-            isActiveRecall: false 
+            isActiveRecall: false,
+            audioSettings: fetchedAudioSettings  
           });
         } 
       } finally {
@@ -181,9 +195,13 @@ export default function PracticeLayout({
   };*/}
 
   const handleSaveAudioSettings = async () => {
+    setInitialData(prev => prev ? {
+      ...prev,
+      audioSettings: audioSettings
+    } : null);
+    
     setShowModal(false);
     
-    // Update database in the background
     UpdateAudioSettings({
       audio_delay: audioSettings.delay,
       audio_repetition: audioSettings.repetition,
