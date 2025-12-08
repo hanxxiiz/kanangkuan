@@ -1,12 +1,14 @@
 "use client";
 
 import { ModalContext } from "@/components/modals/providers";
-import React, { useContext, useState, useRef } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
 import { FiUploadCloud } from "react-icons/fi";
 import { FaFileCsv, FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
 import { BiSolidFileTxt } from "react-icons/bi";
 import { RiFilePpt2Fill } from "react-icons/ri";
 import { uploadDocument } from '@/lib/actions/document-actions';
+import { getProcessingStatus } from '@/lib/actions/process-document';
+import ImportProgressModal from './ImportProgressModal';
 
 const fileTypeIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
   pdf: { icon: <FaFilePdf />, bg: "from-pink to-dark-pink" },
@@ -24,6 +26,14 @@ interface AIImportModalProps {
   currentDeckId: string;
 }
 
+const STEP_TEXTS = [
+  "Analyzing document content...",
+  "Drafting flashcards...",
+  "Saving to your decks...",
+  "Finalizing the import...",
+  "Preparing study modes...",
+];
+
 export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
   const { Modal, setShowModal } = useContext(ModalContext);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -31,6 +41,13 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Progress tracking
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState(STEP_TEXTS[0]);
+  const [importId, setImportId] = useState<string | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const acceptedTypes = [
     "application/pdf",
@@ -46,19 +63,25 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
 
   const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
 
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
     
-    // Validate file type
     if (!acceptedTypes.includes(file.type)) {
       setError("Unsupported file type. Please upload PDF, DOCX, TXT, PPTX, XLSX, or CSV.");
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       setError('File size exceeds 8MB limit. Please choose a smaller file.');
       if (inputRef.current) {
@@ -90,13 +113,11 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
 
     const file = files[0];
     
-    // Validate file type
     if (!acceptedTypes.includes(file.type)) {
       setError("Unsupported file type. Please upload PDF, DOCX, TXT, PPTX, XLSX, or CSV.");
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       setError('File size exceeds 8MB limit. Please choose a smaller file.');
       return;
@@ -104,6 +125,113 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
 
     setError(null);
     setSelectedFile(file);
+  };
+
+  const pollProcessingStatus = async (id: string) => {
+    let currentProgress = 0;
+    
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const status = await getProcessingStatus(id);
+        console.log('Processing status:', status); // Debug log
+        
+        if (status.status === 'pending' || status.status === 'processing') {
+          // Increment progress gradually
+          currentProgress = Math.min(currentProgress + 2, 95);
+          setProgress(currentProgress);
+          
+          // Update status text based on progress
+          if (currentProgress < 20) {
+            setStatusText(STEP_TEXTS[0]);
+          } else if (currentProgress < 40) {
+            setStatusText(STEP_TEXTS[1]);
+          } else if (currentProgress < 60) {
+            setStatusText(STEP_TEXTS[2]);
+          } else if (currentProgress < 80) {
+            setStatusText(STEP_TEXTS[3]);
+          } else {
+            setStatusText(STEP_TEXTS[4]);
+          }
+        } else if (status.status === 'completed') {
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          
+          setProgress(100);
+          setStatusText('Import complete!');
+          
+          setTimeout(() => {
+            setShowProgressModal(false);
+            // Reset state
+            setSelectedFile(null);
+            setProgress(0);
+            setStatusText(STEP_TEXTS[0]);
+            setImportId(null);
+            if (inputRef.current) {
+              inputRef.current.value = '';
+            }
+            // Optionally trigger a refresh of the cards list here
+            //window.location.reload(); comment for now.. idek unsay pamaagi ani ug nanay bag o cards if murefresh ba gyud ang whole website or ang decks page ra 
+          }, 2000);
+        } else if (status.status === 'failed') {
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          
+          setStatusText('An error has occurred.');
+          setProgress(0);
+          
+          // Close after showing error for 3 seconds
+          setTimeout(() => {
+            setShowProgressModal(false);
+            setError('Processing failed');
+          }, 3000);
+        } else if (status.status === 'error') {
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          
+          setStatusText('An error has occurred.');
+          setProgress(0);
+          
+          // Close after showing error for 3 seconds
+          setTimeout(() => {
+            setShowProgressModal(false);
+            const errorMsg = 'error' in status ? status.error : 'Processing failed';
+            setError(errorMsg || 'Processing failed');
+          }, 3000);
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+        setStatusText('An error has occurred.');
+        setTimeout(() => {
+          setShowProgressModal(false);
+          setError('Failed to check processing status');
+        }, 3000);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Safety timeout after 5 minutes
+    setTimeout(() => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (progress < 100) {
+        setStatusText('An error has occurred.');
+        setTimeout(() => {
+          setShowProgressModal(false);
+          setError('Processing timeout - please try again');
+        }, 3000);
+      }
+    }, 300000);
   };
 
   const handleUpload = async () => {
@@ -121,32 +249,25 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
     setError(null);
 
     try {
-      console.log('Starting upload...', {
-        fileName: selectedFile.name,
-        fileSize: selectedFile.size,
-        fileType: selectedFile.type,
-        deckId: currentDeckId
-      });
-
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('deckId', currentDeckId);
 
-      console.log('Calling uploadDocument...');
       const result = await uploadDocument(formData);
-      console.log('Upload result:', result);
 
-      if (result.success) {
-        console.log('Upload successful!');
-        // Success! Close modal and reset
+      if (result.success && result.importId) {
+        // Close the file selection modal first
         setShowModal(false);
-        setSelectedFile(null);
-        if (inputRef.current) {
-          inputRef.current.value = '';
-        }
-        // Optionally show a success toast/notification here
+        
+        // Show progress modal and start tracking
+        setShowProgressModal(true);
+        setProgress(0); 
+        setStatusText(STEP_TEXTS[0]);
+        setImportId(result.importId);
+        
+        // Start polling for status
+        pollProcessingStatus(result.importId);
       } else {
-        console.error('Upload failed:', result.error);
         setError(result.error || 'Upload failed');
       }
     } catch (err) {
@@ -174,7 +295,7 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
   };
 
   return (
-    <div>
+    <>
       <Modal 
         heading="AI Import" 
         actionButtonText={uploading ? "Uploading..." : "Import"}
@@ -247,6 +368,16 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
           </div>
         )}
       </Modal>
-    </div>
+
+      {/* Progress modal rendered outside of main Modal */}
+      {showProgressModal && (
+        <ImportProgressModal
+          showModal={showProgressModal}
+          setShowModal={setShowProgressModal}
+          progress={progress}
+          statusText={statusText}
+        />
+      )}
+    </>
   );
 }

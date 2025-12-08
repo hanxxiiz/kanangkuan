@@ -388,7 +388,6 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
       .from('ai_imports')
       .update({ 
         status: 'failed',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
       })
       .eq('id', importId);
 
@@ -407,7 +406,7 @@ export async function getProcessingStatus(importId: string) {
     
     const { data, error } = await supabase
       .from('ai_imports')
-      .select('status, cards_generated, error_message, file_name')
+      .select('status, cards_generated, file_name')
       .eq('id', importId)
       .single();
 
