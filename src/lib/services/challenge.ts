@@ -235,6 +235,28 @@ async getBetBaitTimerStatus(sessionId: string, questionIndex: number): Promise<{
   
   console.log("🎲 Submitting fake answer to DB:", { sessionId, userId, questionIndex, fakeAnswer });
 
+  // ✅ IMPORTANT: First check if this question already has wrong_options filled
+  const { data: currentQuestion, error: checkError } = await supabase
+    .schema("challenge")
+    .from('questions')
+    .select('question_data')
+    .eq('session_id', sessionId)
+    .eq('question_index', questionIndex)
+    .single();
+
+  if (checkError) {
+    console.error("❌ Error checking question:", checkError);
+    throw checkError;
+  }
+
+  // ✅ If wrong_options already filled, this round is over - don't accept new submissions
+  const wrongOptions = currentQuestion?.question_data?.wrong_options;
+  if (wrongOptions && Array.isArray(wrongOptions) && 
+      !wrongOptions.some(opt => opt === null || opt === undefined)) {
+    console.log("⚠️ Bet & Bait phase already completed for this question, ignoring submission");
+    return;
+  }
+
   // Insert fake answer with author tracking
   const { error: insertError } = await supabase
     .schema("challenge")
@@ -246,11 +268,11 @@ async getBetBaitTimerStatus(sessionId: string, questionIndex: number): Promise<{
       fake_answer: fakeAnswer,
     });
 
-  // Handle duplicate submission error gracefully (error code 23505)
+  // Handle duplicate submission error gracefully
   if (insertError) {
     if (insertError.code === '23505') {
       console.log("⚠️ User already submitted for this question, skipping duplicate");
-      return; // Silently ignore duplicate submissions
+      return;
     }
     console.error("❌ Error inserting fake answer:", insertError);
     throw insertError;
@@ -264,7 +286,7 @@ async getBetBaitTimerStatus(sessionId: string, questionIndex: number): Promise<{
     .from('bet_and_bait_answers')
     .select('fake_answer, user_id')
     .eq('session_id', sessionId)
-    .eq('question_index', questionIndex); // ✅ THIS IS THE KEY FIX
+    .eq('question_index', questionIndex);
 
   if (fetchError) {
     console.error("❌ Error fetching fake answers:", fetchError);
@@ -279,7 +301,7 @@ async getBetBaitTimerStatus(sessionId: string, questionIndex: number): Promise<{
     .from('participants')
     .select('id')
     .eq('session_id', sessionId)
-    .eq('is_ready', true); // ✅ Only count ready participants
+    .eq('is_ready', true);
 
   if (participantError) {
     console.error("❌ Error fetching participants:", participantError);
@@ -311,22 +333,6 @@ async getBetBaitTimerStatus(sessionId: string, questionIndex: number): Promise<{
     
     console.log("📋 Final wrong_options:", wrongOptions);
     
-    // First, get the current question data
-    const { data: currentQuestion, error: fetchQuestionError } = await supabase
-      .schema("challenge")
-      .from('questions')
-      .select('question_data')
-      .eq('session_id', sessionId)
-      .eq('question_index', questionIndex)
-      .single();
-
-    if (fetchQuestionError) {
-      console.error("❌ Error fetching question:", fetchQuestionError);
-      throw fetchQuestionError;
-    }
-
-    console.log("📋 Current question data:", currentQuestion.question_data);
-
     // Update the question_data with new wrong_options
     const updatedQuestionData = {
       ...currentQuestion.question_data,
@@ -353,6 +359,25 @@ async getBetBaitTimerStatus(sessionId: string, questionIndex: number): Promise<{
   } else {
     console.log(`⏳ Waiting for more participants to submit (${fakeAnswers.length}/${participants.length})...`);
   }
+},
+
+async clearBetBaitAnswersForQuestion(
+  sessionId: string, 
+  questionIndex: number
+): Promise<void> {
+  const { error } = await supabase
+    .schema("challenge")
+    .from('bet_and_bait_answers')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('question_index', questionIndex);
+
+  if (error) {
+    console.error("Error clearing bet & bait answers:", error);
+    throw error;
+  }
+  
+  console.log("✅ Cleared bet & bait answers for question", questionIndex);
 },
 
 // Get question by index (for refreshing after Bet & Bait)
@@ -382,7 +407,7 @@ async getFakeAnswerAuthor(
     .eq('session_id', sessionId)
     .eq('question_index', questionIndex)
     .eq('fake_answer', fakeAnswer)
-    .single();
+    .maybeSingle(); // Use maybeSingle to avoid error when no row found
 
   if (error) return null;
   return data?.user_id || null;
@@ -530,7 +555,7 @@ async getUserFakeAnswer(
     .eq('session_id', sessionId)
     .eq('user_id', userId)
     .eq('question_index', questionIndex)
-    .single();
+    .maybeSingle(); // Use maybeSingle to avoid error when no row found
 
   if (error) {
     console.error("Error fetching user's fake answer:", error);
@@ -538,6 +563,117 @@ async getUserFakeAnswer(
   }
   
   return data?.fake_answer || null;
+},
+
+// NEW: Count how many players fell for a user's fake answer
+async countBaitedPlayers(
+  sessionId: string,
+  questionIndex: number,
+  fakeAnswer: string
+): Promise<{ count: number; baitedUserIds: string[] }> {
+  // Get all responses for this question where the answer matches the fake answer
+  const { data: responses, error } = await supabase
+    .schema("challenge")
+    .from('responses')
+    .select('participant_id')
+    .eq('session_id', sessionId)
+    .eq('question_index', questionIndex)
+    .eq('answer', fakeAnswer)
+    .eq('is_correct', false);
+
+  if (error) {
+    console.error("Error counting baited players:", error);
+    return { count: 0, baitedUserIds: [] };
+  }
+
+  // Get user IDs from participant IDs
+  const participantIds = responses?.map(r => r.participant_id) || [];
+  
+  if (participantIds.length === 0) {
+    return { count: 0, baitedUserIds: [] };
+  }
+
+  const { data: participants, error: pError } = await supabase
+    .schema("challenge")
+    .from('participants')
+    .select('user_id')
+    .in('id', participantIds);
+
+  if (pError) {
+    console.error("Error fetching participants:", pError);
+    return { count: responses?.length || 0, baitedUserIds: [] };
+  }
+
+  const baitedUserIds = participants?.map(p => p.user_id) || [];
+  
+  return { 
+    count: baitedUserIds.length, 
+    baitedUserIds 
+  };
+},
+
+// NEW: Get bet & bait results for a player after a round
+async getBetAndBaitResults(
+  sessionId: string,
+  questionIndex: number,
+  userId: string,
+  userFakeAnswer: string | null
+): Promise<{
+  wasBaited: boolean;
+  baiterUserId: string | null;
+  baitedOthers: boolean;
+  baitedCount: number;
+  xpChange: number;
+}> {
+  // Check if user was baited (their response matches someone else's fake answer)
+  const { data: userResponse, error: responseError } = await supabase
+    .schema("challenge")
+    .from('responses')
+    .select('answer, is_correct')
+    .eq('session_id', sessionId)
+    .eq('question_index', questionIndex)
+    .eq('participant_id', (await this.getParticipantId(sessionId, userId)))
+    .single();
+
+  if (responseError) {
+    console.error("Error fetching user response:", responseError);
+  }
+
+  let wasBaited = false;
+  let baiterUserId: string | null = null;
+  let baitedOthers = false;
+  let baitedCount = 0;
+  let xpChange = 0;
+
+  // Check if user got baited (wrong answer that's not their own fake answer)
+  if (userResponse && !userResponse.is_correct && userResponse.answer !== userFakeAnswer) {
+    // Check if their answer was someone's fake answer
+    baiterUserId = await this.getFakeAnswerAuthor(sessionId, questionIndex, userResponse.answer);
+    if (baiterUserId && baiterUserId !== userId) {
+      wasBaited = true;
+      xpChange -= 20;
+    }
+  }
+
+  // Check if user's fake answer baited others
+  if (userFakeAnswer) {
+    const baitResult = await this.countBaitedPlayers(sessionId, questionIndex, userFakeAnswer);
+    // Exclude if the user baited themselves
+    const actualBaited = baitResult.baitedUserIds.filter(id => id !== userId);
+    if (actualBaited.length > 0) {
+      baitedOthers = true;
+      baitedCount = actualBaited.length;
+      xpChange += baitedCount * 20;
+    }
+  }
+
+  return {
+    wasBaited,
+    baiterUserId,
+    baitedOthers,
+    baitedCount,
+    xpChange
+  };
 },
 
     async checkSessionCodeExists(sessionCode: string): Promise<boolean> {

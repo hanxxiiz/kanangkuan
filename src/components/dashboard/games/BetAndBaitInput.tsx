@@ -20,6 +20,8 @@ export default function BetAndBaitInput({
   const [fakeAnswer, setFakeAnswer] = useState("");
   const hasSubmittedRef = useRef(false);
   const isSubmittingRef = useRef(false);
+  const hasMountedRef = useRef(false);
+  const initialTimerEndedRef = useRef(isTimerEnded);
 
   useEffect(() => {
     // Reset when modal opens
@@ -27,10 +29,27 @@ export default function BetAndBaitInput({
       setFakeAnswer("");
       hasSubmittedRef.current = false;
       isSubmittingRef.current = false;
+      hasMountedRef.current = false;
+      initialTimerEndedRef.current = isTimerEnded;
+      
+      // Mark as mounted after a short delay to allow proper initialization
+      const timeout = setTimeout(() => {
+        hasMountedRef.current = true;
+        console.log("🎲 BetAndBaitInput ready for submissions");
+      }, 100);
+      
+      return () => clearTimeout(timeout);
     }
   }, [show]);
 
   useEffect(() => {
+    // ✅ CRITICAL: Don't auto-submit on mount if timer was already ended
+    // Only submit when timer TRANSITIONS to ended state AFTER mount
+    if (!hasMountedRef.current) {
+      console.log("⏸️ Ignoring timer state - component not ready yet");
+      return;
+    }
+    
     // Only submit once when timer ends
     if (isTimerEnded && !hasSubmittedRef.current && !isSubmittingRef.current) {
       hasSubmittedRef.current = true;

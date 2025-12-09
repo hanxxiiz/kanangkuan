@@ -4,12 +4,108 @@ import AnswerOption from '@/components/dashboard/games/AnswerOption';
 import PlayerStatus from '@/components/dashboard/games/PlayerStatus';
 import Question from '@/components/dashboard/games/Question';
 import BetAndBaitInput from '@/components/dashboard/games/BetAndBaitInput';
-import BetAndBaitResults from '@/components/dashboard/games/BetAndBaitResults';
 import { useChallenges } from '@/lib/hooks/useChallenges';
 import { useProfiles } from '@/lib/hooks/useProfile';
 import { useRealtimeChallenge } from '@/lib/hooks/useRealtimeChallenge';
 import { useUser } from '@/lib/hooks/useUser';
 import React, { useMemo, useState, useEffect, useRef } from 'react'
+import { createClient } from '@/utils/supabase/client';
+import { challengeService } from '@/lib/services/challenge';
+
+// Temporary inline modal for Bet & Bait results
+interface BetAndBaitResultInfo {
+    type: 'baited' | 'baiter' | 'both';
+    baiterName?: string;
+    xpLost?: number;
+    xpGained?: number;
+    baitedCount?: number;
+}
+
+function TempBaitedModal({ 
+    show, 
+    resultInfo
+}: { 
+    show: boolean; 
+    resultInfo: BetAndBaitResultInfo | null;
+}) {
+    if (!show || !resultInfo) return null;
+    
+    const { type, baiterName, xpLost, xpGained, baitedCount } = resultInfo;
+    
+    // Show "both" scenario - baited AND baited others
+    if (type === 'both') {
+        const netXp = (xpGained || 0) - (xpLost || 0);
+        return (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md mx-4 border-2 border-black">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <h2 className="text-gray-500 font-main text-2xl">Bet and Bait</h2>
+                        <h1 className="text-black font-main text-5xl font-bold">Mixed Results!</h1>
+                        
+                        <div className="w-full border-2 border-black rounded-2xl p-6 space-y-3">
+                            <p className="text-black font-main text-lg">
+                                You got baited by <span className="font-bold">{baiterName}</span> (-{xpLost} XP)
+                            </p>
+                            <p className="text-black font-main text-lg">
+                                But you baited <span className="font-bold">{baitedCount}</span> player{baitedCount !== 1 ? 's' : ''}! (+{xpGained} XP)
+                            </p>
+                            <p className="text-black font-main text-xl mt-4">Net:</p>
+                            <p className={`font-main text-6xl font-bold ${netXp >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {netXp >= 0 ? '+' : ''}{netXp} XP
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    // Show "baited" scenario - you got baited
+    if (type === 'baited') {
+        return (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md mx-4 border-2 border-black">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <h2 className="text-gray-500 font-main text-2xl">Bet and Bait</h2>
+                        <h1 className="text-black font-main text-6xl font-bold">Oops...</h1>
+                        
+                        <div className="w-full border-2 border-black rounded-2xl p-6 space-y-3">
+                            <p className="text-black font-main text-2xl">
+                                You got baited by <span className="font-bold">{baiterName}</span>!
+                            </p>
+                            <p className="text-black font-main text-xl">You lost</p>
+                            <p className="text-black font-main text-7xl font-bold">{xpLost} XP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    // Show "baiter" scenario - you successfully baited others
+    if (type === 'baiter') {
+        return (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md mx-4 border-2 border-black">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <h2 className="text-gray-500 font-main text-2xl">Bet and Bait</h2>
+                        <h1 className="text-green-600 font-main text-6xl font-bold">Nice!</h1>
+                        
+                        <div className="w-full border-2 border-black rounded-2xl p-6 space-y-3">
+                            <p className="text-black font-main text-2xl">
+                                You baited <span className="font-bold">{baitedCount}</span> player{baitedCount !== 1 ? 's' : ''}!
+                            </p>
+                            <p className="text-black font-main text-xl">You gained</p>
+                            <p className="text-green-600 font-main text-7xl font-bold">+{xpGained} XP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    return null;
+}
 
 export interface PresencePayload {
   user_id: string;
@@ -22,6 +118,7 @@ export default function ChallengePlay({ params }: {
 }) {
     const { challengeId } = React.use(params);
     const { user } = useUser();
+    const supabase = createClient();
     
     const { 
         challenge,
@@ -59,11 +156,13 @@ export default function ChallengePlay({ params }: {
     const [showBetAndBaitInput, setShowBetAndBaitInput] = useState(false);
     const [betAndBaitSubmitted, setBetAndBaitSubmitted] = useState(false);
     const [showBaitedModal, setShowBaitedModal] = useState(false);
-    const [baitedInfo, setBaitedInfo] = useState<{ baiterName: string; xpLost: number } | null>(null);
+    const [betAndBaitResultInfo, setBetAndBaitResultInfo] = useState<BetAndBaitResultInfo | null>(null);
     const [wasOriginallyBetAndBait, setWasOriginallyBetAndBait] = useState(false);
     const [isLoadingFakeAnswers, setIsLoadingFakeAnswers] = useState(false);
-    const [userFakeAnswer, setUserFakeAnswer] = useState<string | null>(null); // NEW: Store user's fake answer
+    const [userFakeAnswer, setUserFakeAnswer] = useState<string | null>(null);
     const fakeAnswerSubmittedRef = useRef(false);
+    const betAndBaitResultsCheckedRef = useRef(false);
+    const lastProcessedQuestionIdRef = useRef<string | null>(null);
 
     const isHost = user?.id === challenge?.host_id;
 
@@ -121,6 +220,15 @@ export default function ChallengePlay({ params }: {
         });
     }, [timerState, isTimerEnded, timer]);
 
+    // DEBUG: Baited Modal State
+    useEffect(() => {
+        console.log("🎭 Baited Modal State:", {
+            showBaitedModal,
+            betAndBaitResultInfo,
+            wasOriginallyBetAndBait
+        });
+    }, [showBaitedModal, betAndBaitResultInfo, wasOriginallyBetAndBait]);
+
     const shuffledOptions = useMemo(() => {
         if (!currentQuestion?.question_data) return [];
         
@@ -141,33 +249,45 @@ export default function ChallengePlay({ params }: {
     }, [sessionState, isHost, currentQuestionIndex]);
 
     useEffect(() => {
-        if (!timerState?.timer_end_at || !timerState?.is_timer_running) {
-            if (timerState?.timer_end_at && !timerState?.is_timer_running) {
-                setIsTimerEnded(true);
-            }
-            return;
+    // ✅ CRITICAL: Check question index FIRST before any processing
+    // This prevents stale timer state from previous questions from affecting current question
+    if (timerState?.question_index !== undefined && 
+        timerState.question_index !== currentQuestionIndex) {
+        console.log("⏭️ Ignoring timer update for question", timerState.question_index, 
+                    "(current:", currentQuestionIndex, ")");
+        return;
+    }
+
+    // No timer state or timer not properly configured
+    if (!timerState?.timer_end_at || !timerState?.is_timer_running) {
+        // Only set timer ended if we have valid timer data for THIS question
+        if (timerState?.timer_end_at && !timerState?.is_timer_running && 
+            timerState.question_index === currentQuestionIndex) {
+            setIsTimerEnded(true);
         }
+        return;
+    }
 
-        setIsTimerEnded(false);
+    setIsTimerEnded(false);
 
-        const endTime = new Date(timerState.timer_end_at).getTime();
+    const endTime = new Date(timerState.timer_end_at).getTime();
+    
+    const updateTimer = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
         
-        const updateTimer = () => {
-            const now = Date.now();
-            const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-            
-            setTimer(remaining);
-            
-            if (remaining === 0) {
-                setIsTimerEnded(true);
-            }
-        };
+        setTimer(remaining);
+        
+        if (remaining === 0) {
+            setIsTimerEnded(true);
+        }
+    };
 
-        updateTimer();
-        const interval = setInterval(updateTimer, 100);
+    updateTimer();
+    const interval = setInterval(updateTimer, 100);
 
-        return () => clearInterval(interval);
-    }, [timerState]);
+    return () => clearInterval(interval);
+}, [timerState, currentQuestionIndex]); 
 
     // Initialize question (Bet & Bait or regular) - FOR HOST ONLY
     useEffect(() => {
@@ -215,20 +335,34 @@ export default function ChallengePlay({ params }: {
         return () => clearTimeout(timeout);
     }, [currentQuestion?.id, isHost, questionsLoading, isBetAndBaitQuestion]);
 
-    // Reset state on question change
+    // Reset state on question change - ONLY when question ID actually changes
     useEffect(() => {
-    console.log("🔄 Question changed, resetting state...", {
+    if (!currentQuestion?.id) return;
+    
+    // Check if this is actually a NEW question (not just a refresh of the same question)
+    const isNewQuestion = lastProcessedQuestionIdRef.current !== currentQuestion.id;
+    
+    if (!isNewQuestion) {
+        console.log("🔄 Same question refreshed, skipping full reset");
+        return;
+    }
+    
+    console.log("🔄 NEW Question detected, resetting state...", {
         questionId: currentQuestion?.id,
+        previousQuestionId: lastProcessedQuestionIdRef.current,
         isBetAndBaitQuestion
     });
+    
+    lastProcessedQuestionIdRef.current = currentQuestion.id;
 
     setSelectedAnswer(null);
     setIsTimerEnded(false);
     setAnswerTime(null);
     hasSubmittedRef.current = false;
-    fakeAnswerSubmittedRef.current = false; // ✅ ADD THIS LINE
+    fakeAnswerSubmittedRef.current = false;
+    betAndBaitResultsCheckedRef.current = false;
     setShowBaitedModal(false);
-    setBaitedInfo(null);
+    setBetAndBaitResultInfo(null);
     setUserFakeAnswer(null);
     
     if (isBetAndBaitQuestion) {
@@ -247,17 +381,28 @@ export default function ChallengePlay({ params }: {
     }
 }, [currentQuestion?.id, isBetAndBaitQuestion]);
 
-    // NEW: Fetch user's fake answer when Bet & Bait mode ends
+    // NEW: Fetch user's fake answer and detect if this was a Bet & Bait question
     useEffect(() => {
-        if (wasOriginallyBetAndBait && !isBetAndBaitMode && user?.id) {
-            const fetchFakeAnswer = async () => {
-                const fakeAnswer = await getUserFakeAnswer(user.id);
-                setUserFakeAnswer(fakeAnswer);
-                console.log("💾 User's fake answer retrieved:", fakeAnswer);
-            };
+        if (!user?.id || !currentQuestion?.id) return;
+        
+        const fetchFakeAnswer = async () => {
+            const fakeAnswer = await getUserFakeAnswer(user.id);
+            setUserFakeAnswer(fakeAnswer);
+            console.log("💾 User's fake answer retrieved:", fakeAnswer);
+            
+            // If user has a fake answer for this question, it was originally a Bet & Bait question
+            // This handles the case where a player joins after the Bet & Bait phase
+            if (fakeAnswer && !wasOriginallyBetAndBait) {
+                console.log("🎲 Detected late join to Bet & Bait question, setting wasOriginallyBetAndBait to true");
+                setWasOriginallyBetAndBait(true);
+            }
+        };
+        
+        // Fetch on question load, and also when Bet & Bait mode ends
+        if (!isBetAndBaitMode) {
             fetchFakeAnswer();
         }
-    }, [wasOriginallyBetAndBait, isBetAndBaitMode, user?.id]);
+    }, [currentQuestion?.id, isBetAndBaitMode, user?.id]);
 
     // Handle Bet & Bait fake answer submission
     const handleFakeAnswerSubmit = async (fakeAnswer: string) => {
@@ -303,6 +448,10 @@ export default function ChallengePlay({ params }: {
                 
                 console.log("📋 Question refreshed, checking wrong_options...");
                 
+                // ✅ CRITICAL: Reset timer state BEFORE exiting Bet & Bait mode
+                // This prevents the answer submission effect from triggering immediately
+                setIsTimerEnded(false);
+                
                 // Exit Bet & Bait mode
                 setIsBetAndBaitMode(false);
                 setIsLoadingFakeAnswers(false);
@@ -313,7 +462,6 @@ export default function ChallengePlay({ params }: {
                     console.log("🎬 Host restarting timer for main question...");
                     await new Promise(resolve => setTimeout(resolve, 500));
                     await startTimer(15);
-                    setIsTimerEnded(false);
                 }
             };
             
@@ -337,110 +485,212 @@ export default function ChallengePlay({ params }: {
     };
 
     useEffect(() => {
-        if (!isTimerEnded || !user?.id || !currentQuestion || isBetAndBaitMode) return;
-        if (hasSubmittedRef.current) return;
+    if (!isTimerEnded || !user?.id || !currentQuestion || isBetAndBaitMode) return;
+    if (hasSubmittedRef.current) return;
 
-        // Safety check: Don't submit if wrong_options still has nulls (Bet & Bait not complete)
-        if (wasOriginallyBetAndBait) {
-            const wrongOptions = currentQuestion?.question_data?.wrong_options;
-            if (Array.isArray(wrongOptions) && wrongOptions.some(opt => opt === null || opt === undefined)) {
-                console.log("⏸️ Bet & Bait answers not ready yet, skipping submission");
+    // Safety check: Don't submit if wrong_options still has nulls
+    if (wasOriginallyBetAndBait) {
+        const wrongOptions = currentQuestion?.question_data?.wrong_options;
+        if (Array.isArray(wrongOptions) && wrongOptions.some(opt => opt === null || opt === undefined)) {
+            console.log("⏸️ Bet & Bait answers not ready yet, skipping submission");
+            return;
+        }
+        
+        if (Array.isArray(wrongOptions) && wrongOptions.every(opt => opt === null || opt === undefined)) {
+            console.log("⏸️ All wrong options are null, skipping submission");
+            return;
+        }
+    }
+
+    hasSubmittedRef.current = true;
+    console.log("🔒 hasSubmittedRef set to true to prevent duplicate submissions");
+
+    const submitAnswer = async () => {
+        if (selectedAnswer) {
+            const isCorrect = selectedAnswer === currentQuestion?.question_data?.back;
+            const responseTime = answerTime || 15000;
+            
+            const isOwnFakeAnswer = userFakeAnswer && selectedAnswer === userFakeAnswer;
+            
+            console.log("📤 Submitting answer:", { 
+                selectedAnswer, 
+                isCorrect,
+                isOwnFakeAnswer,
+                userFakeAnswer,
+                wasOriginallyBetAndBait,
+                hasSubmitted: hasSubmittedRef.current
+            });
+
+            if (isOwnFakeAnswer) {
+                await updatePlayerStatus("done");
+                console.log("⚠️ User selected their own fake answer - neutral result");
+            } else {
+                await updatePlayerStatus(isCorrect ? "correct" : "wrong");
+            }
+            
+            try {
+                await submitResponse(
+                    user.id,
+                    currentQuestion.question_id,
+                    selectedAnswer,
+                    isCorrect,
+                    responseTime
+                );
+                console.log("✅ Response successfully submitted");
+            } catch (error) {
+                console.error("❌ Error submitting response:", error);
+                hasSubmittedRef.current = false;
                 return;
             }
             
-            if (Array.isArray(wrongOptions) && wrongOptions.every(opt => opt === null || opt === undefined)) {
-                console.log("⏸️ All wrong options are null, skipping submission");
+            console.log("🎯 Response submitted:", { answer: selectedAnswer, isCorrect, responseTime });
+        } else {
+            await updatePlayerStatus("wrong");
+            
+            try {
+                await submitResponse(
+                    user.id,
+                    currentQuestion.question_id,
+                    "",
+                    false,
+                    15000
+                );
+                console.log("✅ No answer response submitted");
+            } catch (error) {
+                console.error("❌ Error submitting no-answer response:", error);
+                hasSubmittedRef.current = false;
                 return;
             }
+            
+            console.log("🎯 No answer submitted (marked wrong)");
+        }
+    };
+
+    submitAnswer();
+}, [isTimerEnded, selectedAnswer, user?.id, currentQuestion?.id, currentQuestion?.question_data?.wrong_options, isBetAndBaitMode, wasOriginallyBetAndBait, userFakeAnswer]);
+
+    // ✅ NEW: Check bet & bait results after answers are submitted
+    useEffect(() => {
+        console.log("🎲 Bet & Bait Results Effect - Checking conditions:", {
+            isTimerEnded,
+            hasUserId: !!user?.id,
+            hasChallengeId: !!challengeId,
+            wasOriginallyBetAndBait,
+            isBetAndBaitMode,
+            betAndBaitResultsChecked: betAndBaitResultsCheckedRef.current,
+            hasSubmitted: hasSubmittedRef.current
+        });
+        
+        if (!isTimerEnded || !user?.id || !challengeId || !wasOriginallyBetAndBait || isBetAndBaitMode) {
+            console.log("🎲 Skipping bet & bait results check - conditions not met");
+            return;
+        }
+        if (betAndBaitResultsCheckedRef.current) {
+            console.log("🎲 Skipping - already checked");
+            return;
+        }
+        if (!hasSubmittedRef.current) {
+            console.log("🎲 Skipping - answer not submitted yet");
+            return;
         }
 
-        hasSubmittedRef.current = true;
-        console.log("🔒 hasSubmittedRef set to true to prevent duplicate submissions");
+        betAndBaitResultsCheckedRef.current = true;
+        console.log("🎲 ✅ All conditions met! Checking bet & bait results...");
 
-        const submitAnswer = async () => {
-            if (selectedAnswer) {
-                const isCorrect = selectedAnswer === currentQuestion?.question_data?.back;
-                const responseTime = answerTime || 15000;
-                
-                // NEW: Check if user selected their own fake answer
-                const isOwnFakeAnswer = userFakeAnswer && selectedAnswer === userFakeAnswer;
-                
-                console.log("📤 Submitting answer:", { 
-                    selectedAnswer, 
-                    isCorrect,
-                    isOwnFakeAnswer,
-                    userFakeAnswer,
-                    wasOriginallyBetAndBait,
-                    hasSubmitted: hasSubmittedRef.current
-                });
+        const checkResults = async () => {
+            // Wait a bit for all responses to be recorded
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // Don't show any result if user selected their own fake answer
-                if (isOwnFakeAnswer) {
-                    await updatePlayerStatus("done");
-                    console.log("⚠️ User selected their own fake answer - neutral result");
-                } else {
-                    await updatePlayerStatus(isCorrect ? "correct" : "wrong");
-                }
-                
-                try {
-                    await submitResponse(
-                        user.id,
-                        currentQuestion.question_id,
-                        selectedAnswer,
-                        isCorrect,
-                        responseTime
-                    );
-                    console.log("✅ Response successfully submitted");
-                } catch (error) {
-                    console.error("❌ Error submitting response:", error);
-                    hasSubmittedRef.current = false;
-                    return;
-                }
-                
-                // ONLY show baited modal if:
-                // 1. This was originally a Bet & Bait question
-                // 2. The player selected a wrong answer
-                // 3. The player did NOT select their own fake answer
-                if (!isCorrect && selectedAnswer && wasOriginallyBetAndBait && !isOwnFakeAnswer) {
-                    console.log("😱 Player was baited!");
-                    // TODO: Get the baiter's info from backend
-                    setBaitedInfo({
-                        baiterName: "Someone",
+            try {
+                const results = await challengeService.getBetAndBaitResults(
+                    challengeId,
+                    currentQuestionIndex,
+                    user.id,
+                    userFakeAnswer
+                );
+
+                console.log("🎲 Bet & Bait results:", results);
+
+                // Determine result type and update scores
+                if (results.wasBaited && results.baitedOthers) {
+                    // Both baited AND baited others
+                    let baiterName = "Someone";
+                    if (results.baiterUserId) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('username, display_name')
+                            .eq('id', results.baiterUserId)
+                            .single();
+                        baiterName = profile?.display_name || profile?.username || "Someone";
+                        
+                        // Update score for being baited
+                        await challengeService.updateBaitScores({
+                            sessionId: challengeId,
+                            baitedUserId: user.id,
+                            baiterUserId: results.baiterUserId,
+                            xpAmount: 20
+                        });
+                    }
+
+                    setBetAndBaitResultInfo({
+                        type: 'both',
+                        baiterName,
+                        xpLost: 20,
+                        xpGained: results.baitedCount * 20,
+                        baitedCount: results.baitedCount
+                    });
+                    setShowBaitedModal(true);
+                } else if (results.wasBaited) {
+                    // Only got baited
+                    let baiterName = "Someone";
+                    if (results.baiterUserId) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('username, display_name')
+                            .eq('id', results.baiterUserId)
+                            .single();
+                        baiterName = profile?.display_name || profile?.username || "Someone";
+                        
+                        // Update score for being baited
+                        await challengeService.updateBaitScores({
+                            sessionId: challengeId,
+                            baitedUserId: user.id,
+                            baiterUserId: results.baiterUserId,
+                            xpAmount: 20
+                        });
+                    }
+
+                    setBetAndBaitResultInfo({
+                        type: 'baited',
+                        baiterName,
                         xpLost: 20
                     });
                     setShowBaitedModal(true);
-                    
-                    // Hide modal after 3 seconds
+                } else if (results.baitedOthers) {
+                    // Successfully baited others (XP already added by those who got baited)
+                    setBetAndBaitResultInfo({
+                        type: 'baiter',
+                        xpGained: results.baitedCount * 20,
+                        baitedCount: results.baitedCount
+                    });
+                    setShowBaitedModal(true);
+                }
+                // If neither baited nor baited others, don't show modal
+
+                // Hide modal after 4 seconds
+                if (results.wasBaited || results.baitedOthers) {
                     setTimeout(() => {
+                        console.log("🔕 Hiding bet & bait results modal");
                         setShowBaitedModal(false);
-                    }, 3000);
+                    }, 4000);
                 }
-                
-                console.log("🎯 Response submitted:", { answer: selectedAnswer, isCorrect, responseTime });
-            } else {
-                await updatePlayerStatus("wrong");
-                
-                try {
-                    await submitResponse(
-                        user.id,
-                        currentQuestion.question_id,
-                        "",
-                        false,
-                        15000
-                    );
-                    console.log("✅ No answer response submitted");
-                } catch (error) {
-                    console.error("❌ Error submitting no-answer response:", error);
-                    hasSubmittedRef.current = false;
-                    return;
-                }
-                
-                console.log("🎯 No answer submitted (marked wrong)");
+            } catch (error) {
+                console.error("❌ Error checking bet & bait results:", error);
             }
         };
 
-        submitAnswer();
-    }, [isTimerEnded, selectedAnswer, user?.id, currentQuestion?.id, currentQuestion?.question_data?.wrong_options, isBetAndBaitMode, wasOriginallyBetAndBait, userFakeAnswer]);
+        checkResults();
+    }, [isTimerEnded, user?.id, challengeId, wasOriginallyBetAndBait, isBetAndBaitMode, currentQuestionIndex, userFakeAnswer]);
 
     const handleNextQuestion = async () => {
         console.log("➡️ Moving to next question...");
@@ -487,23 +737,21 @@ export default function ChallengePlay({ params }: {
 
             {/* Bet & Bait Input Modal */}
             {showBetAndBaitInput && (
-                <BetAndBaitInput
-                    show={showBetAndBaitInput}
-                    timer={timer}
-                    question={currentQuestion?.question_data?.front || ""}
-                    onSubmit={handleFakeAnswerSubmit}
-                    isTimerEnded={isTimerEnded}
-                />
-            )}
+    <BetAndBaitInput
+        key={currentQuestion?.id} // ✅ ADD THIS - Forces component remount on new question
+        show={showBetAndBaitInput}
+        timer={timer}
+        question={currentQuestion?.question_data?.front || ""}
+        onSubmit={handleFakeAnswerSubmit}
+        isTimerEnded={isTimerEnded}
+    />
+)}
 
-            {/* Baited Modal - Only show for Bet & Bait questions when user got baited */}
-            {baitedInfo && wasOriginallyBetAndBait && (
-                <BetAndBaitResults
-                    show={showBaitedModal}
-                    baiterName={baitedInfo.baiterName}
-                    xpLost={baitedInfo.xpLost}
-                />
-            )}
+            {/* Bet & Bait Results Modal - Shows for baited players OR successful baiters */}
+            <TempBaitedModal
+                show={showBaitedModal}
+                resultInfo={betAndBaitResultInfo}
+            />
 
             <div className="flex flex-col items-center space-y-5 w-full flex-1">
                 <div className="flex flex-row items-center justify-center gap-5 mt-10">
