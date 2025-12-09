@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export interface PresencePayload {
   user_id: string;
-  status: "answering" | "done" | "correct" | "wrong";
+  status: "answering" | "done" | "correct" | "wrong" | "submitting_fake";
   updated_at: string;
 }
 
@@ -14,6 +14,9 @@ export interface TimerState {
   timer_start_at: string | null;
   timer_end_at: string | null;
   is_timer_running: boolean;
+  bet_baittimer_start_at: string | null;
+  bet_bait_timer_end_at: string | null;
+  is_bet_bait_timer_running: boolean;
 }
 
 export interface SessionState {
@@ -74,6 +77,9 @@ export function useRealtimeChallenge({
               timer_start_at: newData.timer_start_at,
               timer_end_at: newData.timer_end_at,
               is_timer_running: newData.is_timer_running,
+              bet_baittimer_start_at: newData.bet_bait_timer_start_at,
+              bet_bait_timer_end_at: newData.bet_bait_timer_end_at,
+              is_bet_bait_timer_running: newData.is_bet_bait_timer_running
             });
           }
         );

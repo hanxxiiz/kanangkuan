@@ -167,6 +167,39 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
+  async function submitFakeAnswer(userId: string, fakeAnswer: string) {
+    if (!challengeId) return false;
+
+    try {
+      await challengeService.submitFakeAnswer({
+        sessionId: challengeId,
+        userId,
+        questionIndex: currentQuestionIndex,
+        fakeAnswer: fakeAnswer || "kanang kuan"
+      });
+      return true;
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : "Failed to submit fake answer.");
+      return false;
+    }
+  }
+
+  async function refreshCurrentQuestion() {
+    if (!challengeId) return;
+
+    try {
+      const updatedQuestion = await challengeService.getQuestionByIndex(challengeId, currentQuestionIndex);
+      setCurrentQuestion(updatedQuestion);
+      setQuestions(prev => {
+        const newQuestions = [...prev];
+        newQuestions[currentQuestionIndex] = updatedQuestion;
+        return newQuestions;
+      });
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : "Failed to refresh question.");
+    }
+  }
+
   async function insertParticipant(sessionId: string, userId: string) {
     try {
         const newHost = await challengeService.insertParticipant(sessionId, userId);
@@ -206,6 +239,53 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
+  async function getUserFakeAnswer(userId: string): Promise<string | null> {
+    if (!challengeId) return null;
+    
+    try {
+      return await challengeService.getUserFakeAnswer(challengeId, userId, currentQuestionIndex);
+    } catch (err) {
+      console.error("Failed to get user's fake answer:", err);
+      return null;
+    }
+  }
+
+  async function startBetBaitTimer(durationSeconds: number = 15) {
+    if (!challengeId) return false;
+
+    try {
+        await challengeService.startBetBaitTimer(challengeId, currentQuestionIndex, durationSeconds);
+        return true;
+    } catch (err) {
+        setChallengeError(err instanceof Error ? err.message : "Failed to start Bet & Bait timer.");
+        return false;
+    }
+}
+
+async function stopBetBaitTimer() {
+    if (!challengeId) return false;
+
+    try {
+        await challengeService.stopBetBaitTimer(challengeId, currentQuestionIndex);
+        return true;
+    } catch (err) {
+        setChallengeError(err instanceof Error ? err.message : "Failed to stop Bet & Bait timer.");
+        return false;
+    }
+}
+
+async function getBetBaitTimerStatus() {
+    if (!challengeId) return null;
+
+    try {
+        const status = await challengeService.getBetBaitTimerStatus(challengeId, currentQuestionIndex);
+        return status;
+    } catch (err) {
+        setChallengeError(err instanceof Error ? err.message : "Failed to get Bet & Bait timer status.");
+        return null;
+    }
+}
+
   return { 
     challenge, 
     challengeLoading, 
@@ -220,12 +300,18 @@ export function useChallenges(challengeId?: string) {
     startTimer,
     stopTimer,
     getTimerStatus,
+    startBetBaitTimer,      // ✅ NEW
+    stopBetBaitTimer,       // ✅ NEW
+    getBetBaitTimerStatus,  // ✅ NEW
     submitResponse,
+    submitFakeAnswer,
+    refreshCurrentQuestion,
     insertParticipant,
     generateUniqueJoinCode,
     validateJoinCode,
     setCurrentQuestion,
     setCurrentQuestionIndex,
-    syncQuestionByIndex
-  }
+    syncQuestionByIndex,
+    getUserFakeAnswer
+}
 }
