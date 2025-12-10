@@ -47,7 +47,7 @@ export default function MyDeckPage({
     }
 
     return (
-      <div className="w-full bg-white p-10">
+      <div className="w-full bg-white lg:p-10">
         <CardsPageLayout
             currentDeckId={deckId}
             title={deckName}
@@ -68,6 +68,7 @@ export default function MyDeckPage({
                             front={item.data.front}
                             back={item.data.back}
                             color={deck?.deck_color}
+                            deckId={deckId}
                         />
                     ))}
                 </>

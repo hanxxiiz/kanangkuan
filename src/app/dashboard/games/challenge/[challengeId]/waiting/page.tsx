@@ -15,7 +15,7 @@ export default async function ChallengeWaitingScreen({ params }: {
                 width={100}
                 height={100}
                 sizes="100vw"
-                className="absolute w-full -top-10 lg:w-5/6 pointer-events-none z-20"
+                className="absolute w-[125%] top-10 lg:-top-10 lg:w-5/6 pointer-events-none z-20"
             />
 
             <Image

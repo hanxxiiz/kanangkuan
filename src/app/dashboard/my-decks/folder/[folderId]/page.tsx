@@ -52,7 +52,7 @@ export default function MyFolderPage({
     }
 
     return (
-        <div className="w-full bg-white p-10">
+        <div className="w-full bg-white lg:p-10">
             <DecksPageLayout
                 title={folderName}
                 onAddClick={() => {

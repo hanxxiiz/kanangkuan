@@ -7,8 +7,10 @@ export default function GameLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ModalProvider>
-        {children}
-    </ModalProvider>
+    <div className="min-h-screen w-full">
+      <ModalProvider>
+          {children}
+      </ModalProvider>
+    </div>
   );
 }

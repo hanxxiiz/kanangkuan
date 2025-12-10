@@ -158,6 +158,7 @@ export default function ChallengePlay({ params }: {
     const [wasOriginallyBetAndBait, setWasOriginallyBetAndBait] = useState(false);
     const [isLoadingFakeAnswers, setIsLoadingFakeAnswers] = useState(false);
     const [userFakeAnswer, setUserFakeAnswer] = useState<string | null>(null);
+    const [betAndBaitModalCompleted, setBetAndBaitModalCompleted] = useState(false);
     const fakeAnswerSubmittedRef = useRef(false);
     const betAndBaitResultsCheckedRef = useRef(false);
     const lastProcessedQuestionIdRef = useRef<string | null>(null);
@@ -362,6 +363,7 @@ export default function ChallengePlay({ params }: {
     setShowBaitedModal(false);
     setBetAndBaitResultInfo(null);
     setUserFakeAnswer(null);
+    setBetAndBaitModalCompleted(false);
     
     if (isBetAndBaitQuestion) {
         console.log("🎲 Setting Bet & Bait mode for ALL players");
@@ -674,16 +676,23 @@ export default function ChallengePlay({ params }: {
                     setShowBaitedModal(true);
                 }
                 // If neither baited nor baited others, don't show modal
+                // But still mark as completed so next question button can show
+                if (!results.wasBaited && !results.baitedOthers) {
+                    setBetAndBaitModalCompleted(true);
+                }
 
-                // Hide modal after 4 seconds
+                // Hide modal after 4 seconds, then mark as completed
                 if (results.wasBaited || results.baitedOthers) {
                     setTimeout(() => {
                         console.log("🔕 Hiding bet & bait results modal");
                         setShowBaitedModal(false);
+                        setBetAndBaitModalCompleted(true);
                     }, 4000);
                 }
             } catch (error) {
                 console.error("❌ Error checking bet & bait results:", error);
+                // Mark as completed even on error so next question button can show
+                setBetAndBaitModalCompleted(true);
             }
         };
 
@@ -751,84 +760,92 @@ export default function ChallengePlay({ params }: {
                 resultInfo={betAndBaitResultInfo}
             />
 
-            <div className="flex flex-col items-center space-y-5 w-full flex-1">
-                <div className="flex flex-row items-center justify-center gap-5 mt-10">
-                    <div className="flex flex-row justify-start gap-4 p-4 rounded-lg overflow-x-auto">
-                        {profiles.map((profile) => (
-                            <PlayerStatus
-                                key={profile.id}
-                                profile={profile}
-                                presence={presence[profile.id]}
-                                showResult={isTimerEnded && !isBetAndBaitMode}
-                            />
-                        ))}
-                    </div>
+            <div className="flex flex-col items-center w-full flex-1 p-3 sm:p-5">
+    {/* Player Status Bar */}
+    <div className="w-full overflow-x-auto mb-4 sm:mb-6">
+        <div className="flex flex-row justify-start sm:justify-center gap-2 sm:gap-4 p-2 sm:p-4 min-w-max">
+            {profiles.map((profile) => (
+                <PlayerStatus
+                    key={profile.id}
+                    profile={profile}
+                    presence={presence[profile.id]}
+                    showResult={isTimerEnded && !isBetAndBaitMode}
+                />
+            ))}
+        </div>
+    </div>
+
+    {/* Timer */}
+    <div className="w-full flex justify-center mb-3 sm:mb-4">
+        <div className={`text-3xl sm:text-4xl lg:text-5xl font-main font-bold ${timer <= 5 ? 'text-red-500' : 'text-black'}`}>
+            {timer}s
+        </div>
+    </div>
+
+    {/* Main Content Area */}
+    <div className="flex flex-col w-full max-w-7xl mx-auto gap-4 sm:gap-6 lg:gap-8 flex-1">
+        {/* Question Card */}
+        <div
+            className="flex-1 flex items-center justify-center rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 border-2 border-black bg-white min-h-[200px] sm:min-h-[250px]"
+            style={{ opacity: isBetAndBaitMode ? 0.3 : 1, pointerEvents: isBetAndBaitMode ? 'none' : 'auto' }}
+        >
+            <Question text={currentQuestion?.question_data?.front || "Loading..."} />
+        </div>
+
+        {/* Answer Options */}
+        <div 
+            className="flex flex-col flex-1 justify-start gap-2 sm:gap-3 lg:gap-4"
+            style={{ opacity: isBetAndBaitMode ? 0.3 : 1, pointerEvents: isBetAndBaitMode ? 'none' : 'auto' }}
+        >
+            {!isBetAndBaitMode && shuffledOptions.map((option, index) => {
+                const isSelected = selectedAnswer === option;
+                const isCorrectAnswer = option === currentQuestion?.question_data?.back;
+                const isUserFakeAnswer = userFakeAnswer && option === userFakeAnswer;
+                
+                let buttonClass = "";
+                
+                if (isTimerEnded && isSelected) {
+                    if (isUserFakeAnswer) {
+                        buttonClass = "bg-gray-400 text-black border-gray-400";
+                    } else {
+                        buttonClass = isCorrectAnswer 
+                            ? "bg-lime text-black border-lime" 
+                            : "bg-pink text-black border-pink";
+                    }
+                } else if (isSelected) {
+                    buttonClass = "bg-cyan text-black border-cyan";
+                }
+                
+                return (
+                    <AnswerOption 
+                        key={index}
+                        text={option}
+                        onSelect={() => handleAnswerSelect(option)}
+                        disabled={isTimerEnded || isBetAndBaitMode}
+                        className={buttonClass}
+                    />
+                );
+            })}
+            
+            {/* Host Next Question Button */}
+            {isHost && isTimerEnded && !isBetAndBaitMode && (!wasOriginallyBetAndBait ||  betAndBaitModalCompleted) && (
+                <button
+                    onClick={handleNextQuestion}
+                    className="mt-3 sm:mt-4 p-3 sm:p-4 bg-black text-white font-main rounded-xl sm:rounded-2xl hover:scale-105 active:scale-95 transition-transform text-sm sm:text-base"
+                >
+                    Next Question
+                </button>
+            )}
+            
+            {/* Non-Host Waiting Message */}
+            {!isHost && isTimerEnded && !isBetAndBaitMode && (!wasOriginallyBetAndBait || betAndBaitModalCompleted) && (
+                <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-300 text-gray-600 font-main rounded-xl sm:rounded-2xl text-center text-sm sm:text-base">
+                    Waiting for host...
                 </div>
-
-                <div className="flex flex-col lg:flex-row w-full h-full lg:px-20 p-5 mb-5 lg:mb-25 flex-1 lg:gap-10 gap-3">
-                    <div className="w-full flex justify-center mb-3">
-                        <div className={`text-xl lg:text-2xl font-main ${timer <= 5 ? 'text-red-500' : 'text-black'}`}>
-                            {timer}s
-                        </div>
-                    </div>
-
-                    <div
-                        className="flex-1 h-auto flex items-center justify-center rounded-3xl p-10 border border-black"
-                        style={{ opacity: isBetAndBaitMode ? 0.3 : 1, pointerEvents: isBetAndBaitMode ? 'none' : 'auto' }}
-                    >
-                        <Question text={currentQuestion?.question_data?.front || "Loading..."} />
-                    </div>
-
-                    <div className="flex flex-col flex-1 justify-between gap-3 lg:gap-5"
-                         style={{ opacity: isBetAndBaitMode ? 0.3 : 1, pointerEvents: isBetAndBaitMode ? 'none' : 'auto' }}>
-                        {!isBetAndBaitMode && shuffledOptions.map((option, index) => {
-                            const isSelected = selectedAnswer === option;
-                            const isCorrectAnswer = option === currentQuestion?.question_data?.back;
-                            const isUserFakeAnswer = userFakeAnswer && option === userFakeAnswer; // NEW
-                            
-                            let buttonClass = "";
-                            
-                            if (isTimerEnded && isSelected) {
-                                // NEW: Show neutral color for own fake answer
-                                if (isUserFakeAnswer) {
-                                    buttonClass = "bg-gray-400 text-black border-gray-400";
-                                } else {
-                                    buttonClass = isCorrectAnswer 
-                                        ? "bg-lime text-black border-lime" 
-                                        : "bg-pink text-black border-pink";
-                                }
-                            } else if (isSelected) {
-                                buttonClass = "bg-cyan text-black border-cyan";
-                            }
-                            
-                            return (
-                                <AnswerOption 
-                                    key={index}
-                                    text={option}
-                                    onSelect={() => handleAnswerSelect(option)}
-                                    disabled={isTimerEnded || isBetAndBaitMode}
-                                    className={buttonClass}
-                                />
-                            );
-                        })}
-                        
-                        {isHost && isTimerEnded && !isBetAndBaitMode && (
-                            <button
-                                onClick={handleNextQuestion}
-                                className="mt-5 p-4 bg-black text-white font-main rounded-2xl hover:scale-105 transition-transform"
-                            >
-                                Next Question
-                            </button>
-                        )}
-                        
-                        {!isHost && isTimerEnded && !isBetAndBaitMode && (
-                            <div className="mt-5 p-4 bg-gray-300 text-gray-600 font-main rounded-2xl text-center">
-                                Waiting for host...
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+            )}
+        </div>
+    </div>
+</div>
         </div>
     )
 }

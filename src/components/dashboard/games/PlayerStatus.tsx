@@ -41,20 +41,20 @@ export default function PlayerStatus({ profile, presence, showResult = false } :
 
   return (
     <div 
-        className={`flex flex-row justify-start items-center gap-3 ${statusColor} p-3 w-75 border-1 border-black rounded-full`}
-    >
-        <Image
-            src={profile.profile_url || "/dashboard/default-picture.png"}
-            alt={""}
-            width={100}
-            height={100}
-            sizes='100vw'
-            className="w-10 h-10 rounded-full"
-        />
-        <div className="flex flex-col justify-start items-start">
-            <h2 className="font-main text-base text-white">{statusLabel}</h2>
-            <h3 className="font-body text-xs text-gray-300">@{profile.username}</h3>
-        </div>
+    className={`flex flex-row justify-start items-center gap-2 sm:gap-3 ${statusColor} p-2 sm:p-3 w-full sm:w-auto sm:min-w-[250px] lg:min-w-[300px] border-1 border-black rounded-full`}
+>
+    <Image
+        src={profile.profile_url || "/dashboard/default-picture.png"}
+        alt={""}
+        width={100}
+        height={100}
+        sizes='100vw'
+        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
+    />
+    <div className="flex flex-col justify-start items-start min-w-0 flex-1">
+        <h2 className="font-main text-sm sm:text-base text-white truncate w-full">{statusLabel}</h2>
+        <h3 className="font-body text-xs sm:text-sm text-gray-300 truncate w-full">@{profile.username}</h3>
     </div>
+</div>
   )
 }

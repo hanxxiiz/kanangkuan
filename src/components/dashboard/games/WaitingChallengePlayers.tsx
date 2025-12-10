@@ -42,57 +42,57 @@ export default function WaitingChallengePlayers({ challengeId }: { challengeId: 
     const canStart = readyNonHost >= 1;
 
     return (
-        <div className="flex flex-col justify-center items-center gap-5">
+        <div className="flex flex-col justify-center items-center gap-4 sm:gap-5 px-3 sm:px-5">
 
-            <div className="flex flex-row items-center justify-center gap-10">
-                {profiles.map((profile) => {
-                    const p = presence[profile.id];
-                    const isReady = p?.ready;
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 lg:gap-10 w-full max-w-4xl">
+        {profiles.map((profile) => {
+            const p = presence[profile.id];
+            const isReady = p?.ready;
 
-                    return (
-                        <div
-                            key={profile.id}
-                            className="flex flex-row gap-3 bg-white p-3 w-75 border-3 border-black rounded-full"
-                        >
-                            <Image 
-                                src={profile.profile_url || "/dashboard/default-picture.png"} 
-                                className="w-15 h-15 rounded-full" 
-                                alt={profile.username}
-                                width={100}
-                                height={100}
-                                sizes="100vw"
-                            />
-                            <div className="flex flex-col">
-                                <h2 className={`font-main text-xl ${isReady ? "text-pink" : "text-lime"}`}>
-                                    {isReady ? "Ready" : "Joined"}
-                                </h2>
-                                <h3 className="font-body text-sm text-gray-600">@{profile.username}</h3>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {isHost ? (
-                <Button
-                    variant="flat"
-                    size="lg"
-                    className="w-100 py-4 text-xl"
-                    disabled={!canStart}
-                    onClick={startGame}
+            return (
+                <div
+                    key={profile.id}
+                    className="flex flex-row gap-2 sm:gap-3 bg-white p-2 sm:p-3 w-full sm:w-auto sm:min-w-[240px] lg:min-w-[280px] border-2 sm:border-3 border-black rounded-full"
                 >
-                    {canStart ? "Start Game" : "Not Ready"}
-                </Button>
-            ) : (
-                <Button
-                    variant="flat"
-                    size="lg"
-                    className="w-100 py-4 text-xl"
-                    onClick={markReady}
-                >
-                    Ready
-                </Button>
-            )}
-        </div>
+                    <Image 
+                        src={profile.profile_url || "/dashboard/default-picture.png"} 
+                        className="w-12 h-12 sm:w-14 sm:h-14 lg:w-15 lg:h-15 rounded-full flex-shrink-0" 
+                        alt={profile.username}
+                        width={100}
+                        height={100}
+                        sizes="100vw"
+                    />
+                    <div className="flex flex-col justify-center min-w-0 flex-1">
+                        <h2 className={`font-main text-base sm:text-lg lg:text-xl truncate ${isReady ? "text-pink" : "text-lime"}`}>
+                            {isReady ? "Ready" : "Joined"}
+                        </h2>
+                        <h3 className="font-body text-xs sm:text-sm text-gray-600 truncate">@{profile.username}</h3>
+                    </div>
+                </div>
+            );
+        })}
+    </div>
+
+    {isHost ? (
+        <Button
+            variant="flat"
+            size="lg"
+            className="w-full sm:w-80 lg:w-100 py-3 sm:py-4 text-lg sm:text-xl"
+            disabled={!canStart}
+            onClick={startGame}
+        >
+            {canStart ? "Start Game" : "Not Ready"}
+        </Button>
+    ) : (
+        <Button
+            variant="flat"
+            size="lg"
+            className="w-full sm:w-80 lg:w-100 py-3 sm:py-4 text-lg sm:text-xl"
+            onClick={markReady}
+        >
+            Ready
+        </Button>
+    )}
+</div>
     );
 }

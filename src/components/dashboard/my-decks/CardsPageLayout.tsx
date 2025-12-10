@@ -6,6 +6,7 @@ import { ModalContext } from "@/components/modals/providers";
 import NewCardModal from "./NewCardModal";
 import AIImportModal from "./AIImportModal";
 import PracticeModal from "./PracticeModal";
+import { FaGamepad } from "react-icons/fa6";
 
 type ModalType = "new-card" | "ai-import" | "practice" | null;
 
@@ -60,18 +61,17 @@ export default function CardsPageLayout({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h1 className="text-5xl font-main text-black">{title}</h1>
+        <h1 className="text-xl lg:text-5xl font-main text-black">{title}</h1>
         <div className="flex items-center justify-end gap-2">
-          <button className="flex items-center p-3 bg-white rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
-            <IoShareSocialSharp className="text-xl text-black" />
-          </button>
           <Button
             variant="outline"
-            className="py-1 px-4"
+            className="py-1 flex items-center gap-2"
             onClick={() => openModal("practice")}
           >
-            Practice
+            <FaGamepad className="lg:hidden" />
+            <span className="hidden lg:inline">Practice</span>
           </Button>
+
         </div>
       </div>
 
@@ -117,7 +117,7 @@ export default function CardsPageLayout({
         {children}
       </div>
 
-      <div className="fixed bottom-6 right-6 flex flex-col items-end space-y-3">
+      <div className="fixed bottom-20 lg:bottom-6 right-6 flex flex-col items-end space-y-3">
         <div
           className={`flex flex-col items-end mb-2 space-y-2 origin-bottom-right transition-all ${
             showAddOptions ? "pointer-events-auto" : "pointer-events-none"
@@ -166,11 +166,11 @@ export default function CardsPageLayout({
 
         <button
           onClick={() => setShowAddOptions(!showAddOptions)}
-          className="flex items-center justify-center w-20 h-20 bg-black text-white rounded-full shadow-lg transition-transform duration-300 ease-out cursor-pointer 
+          className="flex items-center justify-center w-15 h-15 lg:w-20 lg:h-20 bg-black text-white rounded-full shadow-lg transition-transform duration-300 ease-out cursor-pointer 
             hover:scale-105 hover:shadow-[0_0_10px_rgba(0,0,0,0.4)]"
         >
           <IoAdd
-            className={`text-6xl transform transition-transform duration-300 ${
+            className={`text-4xl lg:text-6xl transform transition-transform duration-300 ${
               showAddOptions ? "rotate-45" : ""
             }`}
           />

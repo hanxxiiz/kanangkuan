@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-type ResultType = 'baited' | 'baiter' | 'both' | 'correct' | 'wrong';
+type ResultType = 'baited' | 'baiter' | 'both' | 'correct' | 'wrong' | 'safe';
 
 interface BetAndBaitResultsProps {
   show: boolean;
@@ -105,6 +105,20 @@ export default function BetAndBaitResults({
         <h1 className="text-red-500 font-main text-6xl font-bold">Wrong</h1>
         <div className="w-full border-2 border-black rounded-2xl p-6 space-y-3">
           <p className="text-black font-main text-xl">You can get the next one!</p>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  if (type === 'safe') {
+    return (
+      <Wrapper>
+        <h2 className="text-gray-500 font-main text-2xl">Bet and Bait</h2>
+        <h1 className="text-black font-main text-5xl font-bold">Safe Play!</h1>
+        <div className="w-full border-2 border-black rounded-2xl p-6 space-y-3">
+          <p className="text-black font-main text-xl">
+            No one got baited. Everyone is playing safe.
+          </p>
         </div>
       </Wrapper>
     );

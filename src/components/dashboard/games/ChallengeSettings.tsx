@@ -106,14 +106,14 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
           handlePlay();
         }}
       >
-        <div className="flex justify-start mb-4">
+        <div className="flex justify-start mb-4 sm:mb-6 border-b border-gray-200">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={`px-7 py-2 font-main cursor-pointer transition-all duration-200 ease-in-out ${
+              className={`px-4 sm:px-7 py-2 sm:py-3 font-main cursor-pointer transition-all duration-200 ease-in-out ${
                 activeTab === tab.id
-                  ? "border-b-4 border-black text-xl text-black"
-                  : "text-gray-600 text-xl hover:text-black"
+                  ? "border-b-4 border-black text-base sm:text-lg lg:text-xl text-black font-semibold"
+                  : "text-gray-600 text-base sm:text-lg lg:text-xl hover:text-black"
               }`}
               onClick={() => setActiveTab(tab.id as "host" | "join")}
             >
@@ -122,7 +122,7 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
           ))}
         </div>
 
-        <div>{tabContent[activeTab]}</div>
+        <div className="mt-4 sm:mt-6">{tabContent[activeTab]}</div>
       </Modal>
     </div>
   );

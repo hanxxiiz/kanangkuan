@@ -54,12 +54,12 @@ export default function DecksPageLayout({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h1 className="text-5xl text-black font-main">{title}</h1>
+        <h1 className="text-3xl lg:text-5xl text-black font-main">{title}</h1>
 
         <div className="relative" ref={addRef}>
           <Button
             variant="outline"
-            className="py-1 px-15 outline-1"
+            className="py-1 lg:px-15 outline-1"
             onClick={() => {
               if (addOptions.length > 0) {
                 setShowAddOptions((prev) => !prev);
@@ -68,7 +68,8 @@ export default function DecksPageLayout({
               }
             }}
           >
-            + Add
+            <span className="lg:hidden">+</span>
+            <span className="hidden lg:inline">+ Add</span>
           </Button>
 
           <div

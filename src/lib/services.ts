@@ -144,6 +144,31 @@ export const cardService = {
 
         return data;
     },
+
+    async updateCard(
+        cardId: string,
+        updates: Partial<Omit<Card, "id" | "created_at" | "deck_id">>
+    ): Promise<Card> {
+        const { data, error } = await supabase
+            .from("cards")
+            .update(updates)
+            .eq("id", cardId)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async deleteCard(cardId: string): Promise<void> {
+        const { error } = await supabase
+            .from("cards")
+            .delete()
+            .eq("id", cardId)
+
+        if (error) throw error;
+    },
 }
 
 export const lumbaanayService = {
