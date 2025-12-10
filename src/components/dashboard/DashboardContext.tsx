@@ -40,6 +40,7 @@ export function DashboardProvider({
   const [currentUsername, setCurrentUsername] = useState(username);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(initialCount);
   const [currentXp, setCurrentXp] = useState(initialXp);
+  const [currentProfileUrl, setCurrentProfileUrl] = useState<string | null>(profileUrl);
   const [hasSpun, setHasSpun] = useState(initialHasSpun);  
   const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);  
   const supabase = createClient();
@@ -54,6 +55,19 @@ export function DashboardProvider({
       if (data && !error) setCurrentUsername(data.username);
     } catch (err) {
       console.error('Failed to refresh username:', err);
+    }
+  }, [supabase, userId]);
+
+  const refreshProfileUrl = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('profile_url')
+        .eq('id', userId)
+        .single();
+      if (data && !error) setCurrentProfileUrl(data.profile_url);
+    } catch (err) {
+      console.error('Failed to refresh profile url:', err);
     }
   }, [supabase, userId]);
 
@@ -206,12 +220,13 @@ export function DashboardProvider({
   useEffect(() => {
     const handleFocus = () => {
       refreshUsername();
+      refreshProfileUrl();
       refreshNotificationCount();
       refreshXp();
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [refreshNotificationCount, refreshXp, refreshUsername]);
+  }, [refreshNotificationCount, refreshXp, refreshUsername, refreshProfileUrl]);
 
   return (
     <DashboardContext.Provider value={{

@@ -73,7 +73,7 @@ const Navbar = ({
             {/* Notifications */}
             <button
               className="relative rounded-full hover:cursor-pointer hover:scale-105 text-[#101220] transition group"
-              onClick={() => router.push("/notification")}
+              onClick={() => router.push("/dashboard/notification")}
             >
               <IoNotificationsOutline className="text-3xl" />
               {unreadNotificationCount > 0 && (

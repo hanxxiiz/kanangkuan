@@ -17,6 +17,7 @@ interface LeaderboardUser {
 
 const LeaderboardPage = () => {
   const { supabase } = useSupabase();
+  const { session } = useSupabase();
   const { leaderboardData } = useDashboard();
   // Navbar
   const tabs = ["All Time", "Top 100", "XP"];
@@ -45,7 +46,6 @@ const LeaderboardPage = () => {
   // Fetch leaderboard data
   useEffect(() => {
     const loadLeaderboard = async () => {
-      setLoading(true);
       if (!supabase) return;
 
       const { data, error } = await supabase
@@ -62,8 +62,65 @@ const LeaderboardPage = () => {
       setLoading(false);
     };
 
+    // Initial load
+    setLoading(true);
     loadLeaderboard();
+
+    // Poll every 5 seconds to detect XP changes
+    const interval = setInterval(() => {
+      loadLeaderboard();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [supabase]);
+
+  // Detect overtake: if the user directly above you changes, notify once.
+  const prevAboveRef = React.useRef<string | null>(null);
+  const initializedRef = React.useRef(false);
+  useEffect(() => {
+    if (!session?.user?.id || !supabase || leaderboard.length === 0) return;
+    const currentUserId = session.user.id;
+    const idx = leaderboard.findIndex((u) => u.id === currentUserId);
+    if (idx === -1) {
+      // User not found in leaderboard, reset tracking
+      prevAboveRef.current = null;
+      initializedRef.current = false;
+      return;
+    }
+
+    const aboveId = idx > 0 ? leaderboard[idx - 1]?.id ?? null : null;
+    const aboveName = idx > 0 ? leaderboard[idx - 1]?.username ?? "Someone" : null;
+
+    // On first load, just set baseline
+    if (!initializedRef.current) {
+      prevAboveRef.current = aboveId;
+      initializedRef.current = true;
+      console.log(`[Overtake] Initialized: User at rank ${idx + 1}, user above: ${aboveName || "none"}`);
+      return;
+    }
+
+    // If the above user changed, treat as an overtake
+    if (aboveId && aboveId !== prevAboveRef.current && prevAboveRef.current !== null) {
+      console.log(`[Overtake] Detected: ${aboveName} overtook you! Previous: ${prevAboveRef.current}, New: ${aboveId}`);
+      supabase
+        .from("notifications")
+        .insert({
+          user_id: currentUserId,
+          type: "overtake",
+          message: `${aboveName} overtook you on the leaderboard`,
+          read: false,
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Failed to log overtake notification:", error.message ?? error);
+          } else {
+            console.log(`[Overtake] Notification created successfully for ${aboveName}`);
+          }
+        });
+    }
+
+    prevAboveRef.current = aboveId;
+  }, [leaderboard, session?.user?.id, supabase]);
 
   if (loading) {
     return (
@@ -139,17 +196,23 @@ const LeaderboardPage = () => {
             
             {/* Top 3 */}
             <div className="flex justify-center items-center grid grid-cols-3 sm:gap-0 lg:gap-6 flex-wrap md:flex-no-wrap lg:flex-wrap">
-              {top3.map((user, index) => (
-                <LeaderboardCard
-                  key={user.userId ?? `${user.rank}-${index}`}
-                  rank={user.rank as 1 | 2 | 3}
-                  name={user.name}
-                  xp={user.xp}
-                  imageSrc={user.profileUrl || undefined}
-                  userId={user.userId}
-                  gradientSet={currentGradient}
-                />
-              ))}
+              {top3
+                .sort((a, b) => {
+                  // Reorder: rank 2 (left), rank 1 (center), rank 3 (right)
+                  const order = { 2: 0, 1: 1, 3: 2 };
+                  return (order[a.rank as keyof typeof order] ?? a.rank) - (order[b.rank as keyof typeof order] ?? b.rank);
+                })
+                .map((user, index) => (
+                  <LeaderboardCard
+                    key={user.userId ?? `${user.rank}-${index}`}
+                    rank={user.rank as 1 | 2 | 3}
+                    name={user.name}
+                    xp={user.xp}
+                    imageSrc={user.profileUrl || undefined}
+                    userId={user.userId}
+                    gradientSet={currentGradient}
+                  />
+                ))}
             </div>
 
             {/* Ranked Cards */}

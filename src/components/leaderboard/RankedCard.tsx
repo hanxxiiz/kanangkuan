@@ -1,6 +1,8 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSupabase } from "../providers/SupabaseProvider";
+import { useDashboard } from "../dashboard/DashboardContext";
 
 type RankedCardProps = {
   username: string;
@@ -13,6 +15,8 @@ type RankedCardProps = {
 const FALLBACK = "/dashboard/default-picture.png"; //para sa dili ma kita ang picture
 
 const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl, userId }) => {
+  const { supabase, session } = useSupabase();
+  const { username: currentUsername } = useDashboard();
   
   const resolveSrc = (src: string | null): string => {
     if (!src || typeof src !== "string") return FALLBACK;
@@ -21,10 +25,25 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
   };
 
   const router = useRouter();
-  const handleClick = () => {
-    if(userId){
-      router.push(`/dashboard/profile/${userId}`);
+  const handleClick = async () => {
+    if(!userId){
+      return;
     }
+    // Fire-and-forget profile view notification
+    const viewerId = session?.user?.id;
+    const viewerName = currentUsername || "Someone";
+    if (supabase && viewerId && viewerId !== userId) {
+      const { error } = await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "profile_view",
+        message: `${viewerName} viewed your profile`,
+        read: false,
+      });
+      if (error) {
+        console.error("Failed to log profile_view notification:", error?.message ?? error);
+      }
+    }
+    router.push(`/dashboard/profile/${userId}`);
   };
   
   return (

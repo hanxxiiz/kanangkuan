@@ -108,6 +108,14 @@ const ProfileCard = ({profileData, isOwnProfile}: ProfileCardProps) => {
           if (error) throw error;
           setIsFollowing(true);
           setFollowersCount((c) => c + 1);
+          // Notify the followed user
+          const followerName = currentUsername || "Someone";
+          await supabase.from("notifications").insert({
+            user_id: profileId,
+            type: "follow",
+            message: `${followerName} followed you`,
+            read: false,
+          });
         }
       } catch (error) {
         console.error("Error following/unfollowing:", error);

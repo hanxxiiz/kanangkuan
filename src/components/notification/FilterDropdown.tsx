@@ -8,7 +8,12 @@ interface FilterDropdownProps {
   onFilterSelect?: (filter: string) => void;
 }
 
-const filters = ["Newest to Oldest", "Oldest to Newest", "Unread", "Read"];
+const filters = [
+  { label: "Newest to Oldest", value: "newest" },
+  { label: "Oldest to Newest", value: "oldest" },
+  { label: "Unread", value: "unread" },
+  { label: "Read", value: "read" },
+];
 
 const FilterDropdown: React.FC<FilterDropdownProps> = ({
   isOpen,
@@ -38,11 +43,11 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
         </h3>
 
         <div className="flex flex-col gap-1 mt-2">
-          {filters.map((label) => (
+          {filters.map(({ label, value }) => (
             <button
-              key={label}
+              key={value}
               onClick={() => {
-                onFilterSelect?.(label);
+                onFilterSelect?.(value);
                 onClose();
               }}
               className="flex items-center gap-3 px-5 py-2 hover:bg-gray-100 cursor-pointer text-gray-800 text-md font-body transition-colors rounded"
