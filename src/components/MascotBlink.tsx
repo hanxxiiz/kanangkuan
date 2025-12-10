@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, forwardRef } from "react";
+import { SVGProps } from "react";
 import MascotSVG from "./Mascot";
 
-const MascotBlink = forwardRef<SVGSVGElement, Record<string, never>>((props, ref) => {
+const MascotBlink = forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((props, ref) => {
   const mascotRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {

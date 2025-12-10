@@ -12,7 +12,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="w-full max-w-4xl h-[600px] flex overflow-hidden shadow-2xl bg-white">
-      <div className="hidden lg:flex lg:w-7/12 bg-gradient-to-bl from-cyan to-lime-300 
+      <div className="lg:flex lg:w-7/12 bg-gradient-to-bl from-cyan to-lime-300 
         relative rounded-tr-[15%] rounded-br-[15%] drop-shadow-lg overflow-hidden">
         <div className="absolute inset-0 flex flex-col justify-between p-12">
           <div className="flex items-center gap-2">

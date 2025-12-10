@@ -7,15 +7,16 @@ import Image from 'next/image';
 export default function SignUpPage() {
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="w-full max-w-4xl h-[600px] flex overflow-hidden shadow-2xl bg-white">
-        <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
-          <div className="w-full max-w-md -mt-30">
-            <h2 className="text-4xl font-main text-gray-900 mt-28">
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+      <div className="w-full max-w-4xl min-h-[600px] flex flex-col lg:flex-row overflow-hidden shadow-2xl bg-white rounded-lg lg:rounded-none">
+        {/* Form Section */}
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gray-50">
+          <div className="w-full max-w-md">
+            <h2 className="text-3xl sm:text-4xl font-main text-gray-900 mb-6 sm:mb-8">
               Sign up
             </h2>
             <form action={signup}>
-              <div className="mt-8 space-y-7">
+              <div className="space-y-6 sm:space-y-7">
                 <div className="relative">
                   <input
                     name="email"
@@ -83,14 +84,26 @@ export default function SignUpPage() {
                   </label>
                 </div>
 
-
                 <div className="flex flex-col items-center justify-center">
                   <button
                     type="submit"
-                    className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
+                    className="w-full sm:w-[60%] py-2 bg-white border border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-6 sm:mt-8 cursor-pointer"
                   >
                     Sign up
                   </button>
+                </div>
+
+                {/* Mobile Sign In Link */}
+                <div className="lg:hidden text-center pt-4">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Already have an account?
+                  </p>
+                  <Link
+                    href="/auth/signin"
+                    className="inline-block px-12 py-2 bg-pink text-white text-sm font-main rounded-full shadow-lg hover:bg-cyan hover:scale-105 transition-all duration-300"
+                  >
+                    Sign in
+                  </Link>
                 </div>
               </div>
             </form>
@@ -121,7 +134,7 @@ export default function SignUpPage() {
               </p>
               <Link
                 href="/auth/signin"
-                className="px-16 py-2 bg-pink cursor-pointer text-white text-md font-main rounded-full shadow-lg hover:bg-cyan hover:scale-110 transition-all duration-300"
+                className="inline-block px-16 py-2 bg-pink cursor-pointer text-white text-md font-main rounded-full shadow-lg hover:bg-cyan hover:scale-110 transition-all duration-300"
               >
                 Sign in
               </Link>

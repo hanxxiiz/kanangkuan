@@ -104,12 +104,6 @@ export default function Home() {
       description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
       image: "/challenge.png",
       color: "bg-pink",
-    },
-    {
-      title: "Lumbaanay", 
-      description: "It’s a study showdown! Race your barkada in real-time to see who’s the true quiz champ!", 
-      image: "/lumbaanay.png",
-      color: "bg-lime",
     }
   ];
 
@@ -154,29 +148,47 @@ export default function Home() {
   return (
   <>
     <Navigation />
-    <main className="min-h-screen w-full bg-black flex flex-col items-center justify-center">
+    <main className="min-h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden">
       {/* HERO SECTION */}
       <section className="w-full h-screen flex flex-col bg-fixed">
-        <div ref={mascotRef} className="relative pointer-events-none">
+          <div className="hero-text-mobile text-center justify-center self-center -mt-116">
+            <div className="ml-35 w-full">
+              <Image
+                src="kanangkuan-wordmark.svg"
+                alt="Kanang Kuan"
+                width={50}
+                height={50}
+                sizes="100vw"
+                className="w-60 h-auto"
+              />
+            </div>
+            <p className="-mt-6 text-white font-body text-sm">
+              Helping your brain, one 'kuan' at a time.
+            </p>
+          </div>
+        <div ref={mascotRef} className="mascot-container">
+          
+          {/* Desktop-only text with scroll effect */}
           <div
             ref={headingRef}
-            className="absolute inset-0 flex flex-col items-center justify-center z-0 pointer-events-none transition-transform duration-200 ease-out"
+            className="hero-text-desktop"
           >
             <h1 className="text-9xl font-main text-white">Kanang Kuan</h1>
             <p className="text-white font-body text-2xl mt-4">
-              Helping your brain, one ‘kuan’ at a time.
+              Helping your brain, one 'kuan' at a time.
             </p>
           </div>
-          <MascotBlink />
+          <MascotBlink className="mascot-blink"/>
         </div>
       </section>
 
       {/* CLOUDS DIVIDER */}
-      <div className="relative w-full bg-transparent overflow-hidden z-20">
+      <div className="relative w-full bg-transparent overflow-visible z-20">
         <svg
             viewBox="0 0 1440 588"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-auto"
+            style={{ minHeight: 'clamp(100px, 25vw, 400px)', height: 'auto' }}
             preserveAspectRatio="none"
           >
           <g clipPath="url(#clip0_344_4)">
@@ -196,38 +208,38 @@ export default function Home() {
       </div>
 
       {/* OUR FEATURES SECTION */}
-      <section id="#features" className="w-full bg-white z-30 -mt-75">
+      <section id="#features" className="w-full bg-white z-20 -mt-[75px] sm:-mt-[75px] md:-mt-[75px] lg:-mt-[25vw]">
         <div className="max-w-7xl mx-auto px-8 py-16">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <div className="w-full lg:w-5/12 flex-shrink-0">
-              <h2 className="text-8xl font-main text-gray-900">
+              <h2 className="lg:text-8xl text-5xl font-main text-gray-900">
                 OUR FEATURES
               </h2>
-              <p className="text-base font-body text-gray-600 leading-relaxed">
+              <p className="mt-3 text-base font-body text-gray-600 leading-relaxed">
                 Turn your own notes into flashcards, compete on leaderboards, and stay motivated while mastering your lessons effortlessly—all while helping you remember those “kanang-kuan” moments.
               </p>
             </div>
 
-            <div className="w-full lg:w-7/12 relative overflow-hidden py-8">
-              <div className="absolute top-0 left-0 h-full w-12 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
-              <div className="absolute top-0 right-0 h-full w-12 z-10 pointer-events-none bg-gradient-to-l from-white to-transparent" />
+            <div className="w-full lg:w-7/12 relative overflow-hidden">
+              <div className="absolute top-0 left-0 h-full w-5 lg:w-12 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
+              <div className="absolute top-0 right-0 h-full w-7 lg:w-12 z-10 pointer-events-none bg-gradient-to-l from-white to-transparent" />
 
               <CardCarousel
                 cards={slides}
                 breakpoints={{
                   1920: { slidesPerView: 4, spaceBetween: 8 },
-                  1028: { slidesPerView: 2, spaceBetween: 8 },
-                  640: { slidesPerView: 1, spaceBetween: 8 },
+                  1028: { slidesPerView: 3, spaceBetween: 1},
+                  640: { slidesPerView: 1, spaceBetween: 1},
                 }}
                 renderCard={(card, isActive) => (
                   <div
-                    className={`rounded-2xl h-96 flex flex-col justify-center items-center transition-all duration-300 ${
+                    className={`rounded-2xl h-75 w-75 lg:w-full lg:h-96 flex flex-col justify-center items-center transition-all duration-300 ${
                       isActive ? "scale-100 shadow-xl" : "scale-75 opacity-50"
                     } ${card.color}`}
                   >
                     <span className="text-7xl mb-4">{card.icon}</span>
-                    <span className="text-3xl font-main mb-2">{card.title}</span>
-                    <span className="text-sm font-body opacity-80 px-10 text-center">
+                    <span className="text-xl lg:text-3xl font-main mb-2">{card.title}</span>
+                    <span className="text-xs lg:text-sm font-body opacity-80 px-10 text-center">
                       {card.description}
                     </span>
                   </div>
@@ -241,16 +253,16 @@ export default function Home() {
       
       {/* PRACTICE MODES */}
       <section className="w-full bg-black">
-        <div className="max-w-7xl mx-auto px-8 py-16 ">
-          <div className="flex flex-col items-center">
-            <p className="text-lg font-body text-gray-200 leading-relaxed">
+        <div className="max-w-7xl mx-auto px-8 py-16">
+          <div className="flex flex-col items-center justify-center">
+            <p className="text-sm text-center lg:text-lg font-body text-gray-200 leading-relaxed">
                 Enjoy a fun, interactive learning experience and test your skills with
             </p>
-            <h1 className="text-8xl font-main text-white">
+            <h1 className="text-6xl lg:text-8xl text-center font-main text-white">
               Practice Modes
             </h1>
 
-            <div className="w-full relative overflow-hidden py-8">
+            <div className="w-full relative overflow-hidden pt-8">
                 
               <CardCarousel
                 cards={practiceSlides}
@@ -261,10 +273,9 @@ export default function Home() {
                 }}
                 renderCard={(card, isActive) => (
                   <div
-                    className={`rounded-2xl overflow-hidden transition-all duration-300 ${
-                      isActive ? "scale-100 shadow-xl" : "scale-75 opacity-50"
-                    } ${card.color}`}
-                    style={{ width: '400px', height: 'auto' }}
+                    className={`rounded-2xl overflow-hidden transition-all duration-300 
+                      ${isActive ? "scale-100 shadow-xl" : "scale-75 opacity-50"} 
+                      ${card.color} w-[310px] lg:w-[400px] h-auto`}
                   >
                     <div className="w-full p-4 flex flex-col items-center justify-center">
                       <div className="relative w-full h-full rounded-xl overflow-hidden bg-white shadow-sm">
@@ -299,16 +310,6 @@ export default function Home() {
       <section id="about" className="w-full bg-black">
         <div className="max-w-7xl mx-auto px-8 py-16">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
-            <div className="w-full">
-              <Image
-                src="/about.png"
-                alt="Descriptive Alt Text"
-                width={0}
-                height={0}
-                sizes="100vw"
-                className="w-full h-auto rounded-lg object-cover"
-              />
-            </div>
             <div className="w-full lg:w-1/2 flex flex-col items-center text-center">
               <h1 className="text-5xl font-main text-white -mb-10">
                 About
@@ -327,17 +328,28 @@ export default function Home() {
                 With AI-powered decks and fun games to play with friends or classmates, studying feels less like work and more like a good time.
               </p>
             </div>
-
+            
+            <div className="w-full">
+              <Image
+                src="/about.png"
+                alt="Descriptive Alt Text"
+                width={0}
+                height={0}
+                sizes="100vw"
+                className="hidden lg:block w-full h-auto rounded-lg object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* CLOUDS DIVIDER */}
-      <div className="relative w-full -mt-20 bg-transparent overflow-hidden z-20">
+      <div className="relative w-full -mt-5 sm:-mt-10 md:-mt-15 lg:-mt-20 bg-transparent overflow-visible z-20">
         <svg
             viewBox="0 0 1440 588"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-auto"
+            style={{ minHeight: 'clamp(100px, 25vw, 400px)', height: 'auto' }}
             preserveAspectRatio="none"
           >
           <g clipPath="url(#clip0_344_4)">
@@ -357,15 +369,15 @@ export default function Home() {
       </div>
 
       {/* CTA SECTION */}
-      <section className="w-full -mt-80 bg-white z-30">
-        <div className="max-w-7xl mx-auto px-8 py-60">
-          <div className="flex flex-col items-center">
-            <h1 className="text-7xl font-main text-center text-black">
+      <section className="w-full -mt-20 sm:-mt-50 md:-mt-60 lg:-mt-80 bg-white z-20">
+        <div className="max-w-7xl mx-auto px-8 py-20 lg:py-60">
+          <div className="flex flex-col items-center mt-10 lg:mt-0">
+            <h1 className="text-xl lg:text-7xl font-main text-center text-black">
               Turn every ‘hala familiar’ into <br /> I got this!
             </h1>
             <Link
                 href="/auth/signin"
-                className="m-10 px-40 py-5 bg-lime cursor-pointer text-white text-lg font-main rounded-full hover:bg-pink hover:scale-110 transition-all duration-300"
+                className="mt-3 lg:mt-10 px-20 py-2 lg:px-40 lg:py-5 bg-lime cursor-pointer text-white text-lg font-main rounded-full hover:bg-pink hover:scale-110 transition-all duration-300"
               >
                 Start Learning
             </Link>
@@ -375,11 +387,12 @@ export default function Home() {
 
 
       {/* CLOUDS DIVIDER */}
-      <div className="relative -mt-90 w-full bg-transparent overflow-hidden z-20">
+      <div className="relative -mt-10 sm:-mt-20 md:-mt-40 lg:-mt-90 w-full bg-transparent overflow-visible z-10">
         <svg
             viewBox="0 0 1440 588"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-auto transform scale-y-[-1]"
+            style={{ minHeight: 'clamp(100px, 25vw, 400px)', height: 'auto' }}
             preserveAspectRatio="none"
           >
           <g clipPath="url(#clip0_344_4)">
@@ -400,10 +413,10 @@ export default function Home() {
 
 
       {/* FOOTER */}
-      <footer className="w-full bg-black -mt-20">
+      <footer className="w-full bg-black mt-2 lg:-mt-20">
         <div className="max-w-7xl mx-auto px-8 py-8">
           <div className="flex flex-col items-center">
-            <p className="text-base font-body text-center text-white">
+            <p className="text-xs lg:text-base font-body text-center text-white">
               © 2025 Kanang Kuan. All rights reserved.
             </p>
           </div>
