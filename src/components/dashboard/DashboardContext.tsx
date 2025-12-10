@@ -89,10 +89,10 @@ export function DashboardProvider({
         setCurrentUsername(data.username);
         retryCount.current.username = 0;
       }
-    } catch (err: any) {
+    } catch {
       retryCount.current.username++;
       
-      // Only log if it's not a network error or we've exceeded retries
+      // Only log if we've exceeded retries
       if (retryCount.current.username >= MAX_RETRIES) {
         console.error('Failed to refresh username after retries');
         retryCount.current.username = 0;
@@ -116,7 +116,7 @@ export function DashboardProvider({
         setUnreadNotificationCount(count || 0);
         retryCount.current.notifications = 0;
       }
-    } catch (error: any) {
+    } catch {
       retryCount.current.notifications++;
       
       if (retryCount.current.notifications >= MAX_RETRIES) {
@@ -142,7 +142,7 @@ export function DashboardProvider({
         setCurrentXp(data.xp);
         retryCount.current.xp = 0;
       }
-    } catch (error: any) {
+    } catch {
       retryCount.current.xp++;
       
       if (retryCount.current.xp >= MAX_RETRIES) {
@@ -180,7 +180,7 @@ export function DashboardProvider({
           setNextSpinTime(null);
         }
       }
-    } catch (error) {
+    } catch {
       // Silent fail
     }
   }, [supabase, userId, isOnline]);

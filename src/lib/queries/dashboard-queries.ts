@@ -19,15 +19,16 @@ async function safeQuery<T>(
 
     const result = await Promise.race([queryFn(), timeoutPromise]);
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Only log non-network errors to reduce noise
-    const isNetworkError = error.message?.toLowerCase().includes('fetch failed') ||
-                          error.message?.toLowerCase().includes('econnreset') ||
-                          error.message?.toLowerCase().includes('timeout') ||
-                          error.message?.toLowerCase().includes('socket');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isNetworkError = errorMessage.toLowerCase().includes('fetch failed') ||
+                          errorMessage.toLowerCase().includes('econnreset') ||
+                          errorMessage.toLowerCase().includes('timeout') ||
+                          errorMessage.toLowerCase().includes('socket');
     
     if (!isNetworkError) {
-      console.error(`Error fetching ${errorContext}:`, error.message || error);
+      console.error(`Error fetching ${errorContext}:`, errorMessage);
     }
     
     return fallback;
