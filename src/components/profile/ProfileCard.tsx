@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 
 type ProfileCardProps = {
-  profileData?: any;
+  profileData?: Record<string, any>;
   isOwnProfile?: boolean;
 };
 

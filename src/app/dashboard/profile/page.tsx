@@ -13,7 +13,8 @@ const ProfilePage = () => {
     const { supabase, session, isLoaded } = useSupabase();
     const router = useRouter();
     const [activeIndex, setActiveIndex] = useState(0);
-    const [profileData, setProfileData] = useState<any>(null);
+    type Profile = Record<string, any>; 
+    const [profileData, setProfileData] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
 
     
