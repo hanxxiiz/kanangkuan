@@ -79,6 +79,7 @@ export default function Dashboard() {
               name={user.username}
               xp={user.xp}
               imageSrc={user.profile_url || undefined}
+              userId={user.id}
             />
           ))}
         </div>

@@ -1,15 +1,67 @@
-import React from "react";
-import { useDashboard } from "@/components/dashboard/DashboardContext";
+import React, { useEffect, useState } from "react";
+import { useSupabase } from "@/components/providers/SupabaseProvider";
 import Image from "next/image";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-export default function ProfileMonthlyProgress({monthlyXPData}: {monthlyXPData: Record<string, number>}) {
-  const date = null; // Uncomment to use real date
+type ProfileMonthlyProgressProps = {
+  userId: string;
+};
+
+export default function ProfileMonthlyProgress({ userId }: ProfileMonthlyProgressProps) {
+  const { supabase } = useSupabase();
+  const [monthlyXPData, setMonthlyXPData] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user's monthly XP data
+  useEffect(() => {
+    const fetchMonthlyXP = async () => {
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+      if (!supabase) {
+        setLoading(true);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Fetch the user's daily XP records
+        // Adjust table name and columns based on your schema
+        const { data, error } = await supabase
+          .from("xp_transactions") // or whatever your table is called
+          .select("created_at, amount")
+          .eq("user_id", userId);
+
+        if (error) {
+          console.error("Error fetching monthly XP:", error);
+          return;
+        }
+
+        // Convert array to object with date (YYYY-MM-DD) as key
+        const xpMap: Record<string, number> = {};
+        data?.forEach((record) => {
+          const dateKey = new Date(record.created_at).toISOString().slice(0, 10);
+          xpMap[dateKey] = (xpMap[dateKey] ?? 0) + (record.amount ?? 0);
+        });
+
+        setMonthlyXPData(xpMap);
+      } catch (error) {
+        console.error("Error in fetchMonthlyXP:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMonthlyXP();
+  }, [userId, supabase]);
+
+  const date = null;
   
   const rows = 5;
   const today = date || new Date();
-  const month = today.getMonth() + 1; // Convert to 1-indexed (1-12)
+  const month = today.getMonth() + 1;
   const year = today.getFullYear();
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
@@ -57,8 +109,18 @@ export default function ProfileMonthlyProgress({monthlyXPData}: {monthlyXPData: 
     }
     
     const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-    return monthlyXPData[dateKey] || 0;  // Changed from mockProgressData to monthlyXPData
+    return monthlyXPData[dateKey] || 0;
   };
+
+  if (loading) {
+    return (
+      <div className="w-full h-full">
+        <div className="mx-auto w-full h-full rounded-3xl bg-[#10FFE2] px-6 pt-6 pb-12 min-h-[200px] shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)] flex items-center justify-center">
+          <p className="text-black font-main">Loading progress...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full">

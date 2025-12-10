@@ -139,14 +139,14 @@ const LeaderboardPage = () => {
             
             {/* Top 3 */}
             <div className="flex justify-center items-center grid grid-cols-3 sm:gap-0 lg:gap-6 flex-wrap md:flex-no-wrap lg:flex-wrap">
-              {sortedLeaderboard.map((user,index) => (
+              {top3.map((user, index) => (
                 <LeaderboardCard
-                  key={user.id ?? `${user.rank}-${index}`}
+                  key={user.userId ?? `${user.rank}-${index}`}
                   rank={user.rank as 1 | 2 | 3}
-                  name={user.username}
+                  name={user.name}
                   xp={user.xp}
-                  imageSrc={user.profile_url || undefined}  
-                  userId={user.id}
+                  imageSrc={user.profileUrl || undefined}
+                  userId={user.userId}
                   gradientSet={currentGradient}
                 />
               ))}

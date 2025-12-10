@@ -48,14 +48,15 @@ const RankedCard: React.FC<RankedCardProps> = ({ username, xp, ranking, imageUrl
 
         <p className="font-main text-pink text-2xl ml-5 sm:text-4xl">{ranking}</p>
         
-        <Image
-          src={resolveSrc(imageUrl)}
-          alt="/dashboard/default-picture.png"
-          width={0}
-          height={0}
-          sizes="100vw"
-          className="h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
-        />
+        <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden">
+          <Image
+            src={resolveSrc(imageUrl)}
+            alt="/dashboard/default-picture.png"
+            fill
+            sizes="80px"
+            className="object-cover"
+          />
+        </div>
 
         <div className="flex flex-col">
           <p className="font-body text-2xl font-main text-gray-900 sm:text-3xl">{username}</p>
