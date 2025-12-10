@@ -74,6 +74,7 @@ export interface DashboardContextType {
   refreshNotificationCount: () => Promise<void>;
   refreshXp: () => Promise<void>;
   refreshUsername: () => Promise<void>;
+  refreshProfileUrl: () => Promise<void>;
   monthlyXPData: Record<string, number>;
   hasSpun: boolean;  
   nextSpinTime: string | null; 
