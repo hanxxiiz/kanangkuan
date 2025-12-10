@@ -40,7 +40,6 @@ export function DashboardProvider({
   const [currentUsername, setCurrentUsername] = useState(username);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(initialCount);
   const [currentXp, setCurrentXp] = useState(initialXp);
-  const [currentProfileUrl, setCurrentProfileUrl] = useState<string | null>(profileUrl);
   const [hasSpun, setHasSpun] = useState(initialHasSpun);  
   const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);
   const [isOnline, setIsOnline] = useState(true);
@@ -100,19 +99,6 @@ export function DashboardProvider({
       }
     }
   }, [supabase, userId, isOnline]);
-
-  const refreshProfileUrl = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('profile_url')
-        .eq('id', userId)
-        .single();
-      if (data && !error) setCurrentProfileUrl(data.profile_url);
-    } catch (err) {
-      console.error('Failed to refresh profile url:', err);
-    }
-  }, [supabase, userId]);
 
   const refreshNotificationCount = useCallback(async () => {
     if (typeof window === 'undefined' || !isMounted.current || !isOnline) return;
@@ -325,8 +311,7 @@ export function DashboardProvider({
       userId,
       username: currentUsername,
       xp: currentXp,
-      profileUrl: currentProfileUrl,
-      refreshProfileUrl,
+      profileUrl,
       leaderboardData,
       recentDecks,
       allDecks,
