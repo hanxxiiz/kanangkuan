@@ -14,7 +14,7 @@ const OutOfLivesModal: React.FC<OutOfLivesModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/25 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-    <div className="bg-gradient-to-b from-black to-gray-700 rounded-3xl p-8 max-w-[550px] w-full flex flex-col items-center text-center">
+    <div className="bg-gradient-to-b from-purple to-blue rounded-3xl p-8 max-w-[550px] w-full flex flex-col items-center text-center">
         {/* Mascot Image */}
         <div className="pt-2 mb-6">
           <Image
@@ -27,7 +27,7 @@ const OutOfLivesModal: React.FC<OutOfLivesModalProps> = ({
         </div>
 
         {/* Out of Lives Content */}
-        <h2 className="text-white text-2xl font-main">
+        <h2 className="text-lime text-2xl font-main">
           {`You're out of lives!`}
         </h2>
         <p className="text-white font-body text-lg mb-6">
@@ -36,7 +36,7 @@ const OutOfLivesModal: React.FC<OutOfLivesModalProps> = ({
         
         <button
           onClick={onReturnToDeck}
-          className="cursor-pointer px-7 bg-lime text-white py-3 rounded-full text-lg font-main hover:bg-pink transition-colors duration-500 mb-5 "
+          className="cursor-pointer px-9 bg-lime text-white py-3 rounded-full text-lg font-main hover:bg-pink transition-colors duration-500 mb-5 "
         >
           Return to Deck
         </button>

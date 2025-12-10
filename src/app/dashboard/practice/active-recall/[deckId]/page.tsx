@@ -104,12 +104,60 @@ export default function ActiveRecallPage({
   // Ref to track previous card ID for animation logic
   const previousCardIdRef = useRef<string | null>(null);
 
+  // Preload audio files
+  const correctAudioRef = useRef<HTMLAudioElement | null>(null);
+  const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioLoadedRef = useRef({ correct: false, wrong: false });
+
+  useEffect(() => {
+    // Preload sounds on component mount
+    const loadAudio = () => {
+      try {
+        correctAudioRef.current = new Audio('/practice/correct.mp3');
+        wrongAudioRef.current = new Audio('/practice/wrong.mp3');
+        
+        // Wait for audio to be loaded before marking as ready
+        correctAudioRef.current.addEventListener('canplaythrough', () => {
+          audioLoadedRef.current.correct = true;
+        });
+        
+        wrongAudioRef.current.addEventListener('canplaythrough', () => {
+          audioLoadedRef.current.wrong = true;
+        });
+        
+        correctAudioRef.current.addEventListener('error', () => {
+          correctAudioRef.current = null;
+        });
+        
+        wrongAudioRef.current.addEventListener('error', () => {
+          wrongAudioRef.current = null;
+        });
+        
+        // Preload the audio files
+        correctAudioRef.current.load();
+        wrongAudioRef.current.load();
+      } catch {
+        correctAudioRef.current = null;
+        wrongAudioRef.current = null;
+      }
+    };
+    
+    loadAudio();
+  }, []);
+
 
   // Initialize hints and lives from context
   useEffect(() => {
     if (initialData?.dailyLimits) {
       setHintsLeft(initialData.dailyLimits.hints_left);
       setLivesLeft(initialData.dailyLimits.lives_left);
+    }
+  }, [initialData]);
+
+  // CHECK IF USER HAS NO LIVES AT START - Show modal immediately
+  useEffect(() => {
+    if (initialData?.dailyLimits && initialData.dailyLimits.lives_left <= 0) {
+      setShowOutOfLivesModal(true);
     }
   }, [initialData]);
 
@@ -189,6 +237,17 @@ export default function ActiveRecallPage({
   };
 
   const handleCorrectAnswer = async (xp: number) => {
+    
+    // Only play if audio is loaded
+    try {
+      if (correctAudioRef.current && audioLoadedRef.current.correct) {
+        correctAudioRef.current.currentTime = 0;
+        await correctAudioRef.current.play();
+      }
+    } catch {
+      // Silently ignore audio errors
+    }
+
     setIsCorrect(true);
     setXpEarned(xp);
     setTotalXpEarned(prev => prev + xp);
@@ -215,6 +274,22 @@ export default function ActiveRecallPage({
   };
 
   const handleWrongAnswer = async () => {
+    // Only play if audio is loaded
+    try {
+      if (wrongAudioRef.current && audioLoadedRef.current.wrong) {
+        wrongAudioRef.current.currentTime = 0;
+        await wrongAudioRef.current.play();
+      }
+    } catch {
+      // Silently ignore audio errors
+    }
+
+    // PREVENT DECREMENT IF ALREADY AT 0
+    if (livesLeft <= 0) {
+      setShowOutOfLivesModal(true);
+      return;
+    }
+
     // Update UI immediately (optimistic update)
     const newLivesLeft = livesLeft - 1;
     setLivesLeft(newLivesLeft);
@@ -258,6 +333,12 @@ export default function ActiveRecallPage({
   };
 
   const handleReveal = () => {
+    // PREVENT DECREMENT IF ALREADY AT 0
+    if (livesLeft <= 0) {
+      setShowOutOfLivesModal(true);
+      return;
+    }
+
     // Update UI immediately
     const newLivesLeft = livesLeft - 1;
     setLivesLeft(newLivesLeft);
@@ -305,13 +386,8 @@ export default function ActiveRecallPage({
       setHintsLeft(hintsLeft - 1);
 
       // Update database in background (fire and forget)
-      DecrementHints().then(result => {
-        if (!result.success) {
-          console.error("Failed to decrement hints:", result.error);
-        } else if (result.newValue !== undefined) {
-          // Sync with actual DB value to be safe
-          setHintsLeft(result.newValue);
-        }
+      DecrementHints().catch(() => {
+        // Silently handle errors - UI already updated optimistically
       });
 
       return true;
@@ -476,7 +552,7 @@ export default function ActiveRecallPage({
   // Show summary report if session is complete
   if (showSummaryReport) {
     return (
-      <div className="h-[800px]  bg-white p-10 sm:p-5">
+      <div className="h-[800px]  bg-white p-10 sm:p-5">
         <SummaryReport
           totalXpEarned={totalXpEarned}
           itemsCompleted={completedCards.size}

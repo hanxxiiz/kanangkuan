@@ -141,7 +141,11 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
     const userAnswer = inputValue.toLowerCase().trim();
     const correctAnswer = card.blank_word ? card.blank_word.toLowerCase().trim() : card.back.toLowerCase().trim();
 
-    if (userAnswer === correctAnswer) {
+    // Normalize for comparison - remove all spaces
+    const normalizedUser = userAnswer.replace(/\s+/g, '');
+    const normalizedCorrect = correctAnswer.replace(/\s+/g, '');
+
+    if (normalizedUser === normalizedCorrect) {
       const endTime = Date.now();
       const timeTaken = startTimeRef.current ? (endTime - startTimeRef.current) / 1000 : 999;
       // Award more XP for faster answers
@@ -162,7 +166,28 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
   // Handle hint button click
   const handleHintClick = (): void => {
     if (onUseHint()) {
-      setHintsUsed(prev => prev + 1);
+      const newHintsUsed = hintsUsed + 1;
+      setHintsUsed(newHintsUsed);
+      
+      // Check if all letters are now revealed
+      const blankWord = card.blank_word || card.back;
+      const nonSpaceCharCount = blankWord.replace(/\s+/g, '').length;
+      
+      // If all non-space characters are revealed, auto-submit as correct
+      if (newHintsUsed >= nonSpaceCharCount) {
+        // Small delay so user sees the final hint reveal
+        setTimeout(() => {
+          const endTime = Date.now();
+          const timeTaken = startTimeRef.current ? (endTime - startTimeRef.current) / 1000 : 999;
+          const xpAwarded = timeTaken <= 10 ? 100 : 50;
+          
+          onCorrectAnswer(xpAwarded);
+          
+          setTimeout(() => {
+            setTargetXP(prev => prev + xpAwarded);
+          }, 100);
+        }, 500);
+      }
     }
   };
 
@@ -189,10 +214,12 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
 
     // Helper function to convert word to underscores with progressive reveal
     const toUnderscoresWithReveal = (text: string, revealCount: number) => {
-      return text.split('').map((char, idx) => {
+      let nonSpaceCount = 0;
+      return text.split('').map((char) => {
         if (char === ' ') return ' ';
-        // Reveal characters up to revealCount
-        if (idx < revealCount) return char;
+        // Count non-space characters and reveal up to revealCount
+        nonSpaceCount++;
+        if (nonSpaceCount <= revealCount) return char;
         return '_';
       }).join('');
     };
@@ -263,7 +290,7 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
           +{displayXP}XP
         </div>
 
-        <div className="flex items-center gap-6 px-5 py-1.5 bg-black rounded-full">
+        <div className={`flex items-center gap-6 px-5 py-1.5 ${colors.bg} rounded-full`}>
           {/* Hints Left */}
           <div className="flex items-center gap-2">
             <FaLightbulb className="text-white text-xl" />
@@ -291,8 +318,7 @@ const ActiveRecallInterface: React.FC<ActiveRecallInterfaceProps> = ({
           </div>
 
           {/* Dashed Divider */}
-          <div className="border-t-2 border-dashed border-gray-200"></div>
-
+          <div className={`border-t-2 border-dashed ${colors.border}`}></div>
           {/* Answer Section - Lower Half */}
           <div className="p-5">
             <div className="flex items-center gap-2 text-lg font-regular">

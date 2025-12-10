@@ -12,7 +12,6 @@ interface ImportProgressModalProps {
 
 function ImportProgressModal({
   showModal,
-  setShowModal,
   progress,
   statusText = "Extracting the text...",
 }: ImportProgressModalProps) {
@@ -56,7 +55,9 @@ function ImportProgressModal({
           <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" />
 
           {/* Modal Content */}
-          <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-4 z-10 flex flex-col items-center">
+          <div className="relative bg-white rounded-lg shadow-xl p-12 w-full max-w-xl mx-4 z-10 flex flex-col items-center">
+            {/* Inner Dashed Border */}
+            <div className="absolute inset-8 border-3 border-dashed border-black rounded-lg pointer-events-none"></div>
             {/* Main Mascot with Blinking Animation */}
             <div className="mb-6">
               <Image

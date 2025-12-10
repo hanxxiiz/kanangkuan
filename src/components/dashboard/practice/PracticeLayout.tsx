@@ -9,6 +9,7 @@ import { GetDeckInfo, DeckInfo } from "@/lib/queries/practice-queries";
 import { UpdateUserSettings } from "@/lib/actions/basic-review-actions";
 import AudioPlayerSettingsContent from "./audio-player/AudioPlayerSettingsContent";
 import { UpdateAudioSettings } from "@/lib/actions/audio-player-actions";
+import { checkWrongOptionsAndBlankWordsStatus } from "@/lib/actions/generate-qna-and-blank-words";
 import {
   GetBasicReviewUserSettings,
   GetCardsForReview,
@@ -69,6 +70,8 @@ export default function PracticeLayout({
   const [sortOrder, setSortOrder] = useState<SortOrder>("oldest_first");
   const [deckInfo, setDeckInfo] = useState<DeckInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPipelineComplete, setIsPipelineComplete] = useState(false);
+  const [pipelineProgress, setPipelineProgress] = useState(0);
   const [initialData, setInitialData] = useState<PracticeInitialData | null>(null);
   const [audioSettings, setAudioSettings] = useState({
     delay: 3,
@@ -76,6 +79,7 @@ export default function PracticeLayout({
     voice: 1,
   }); 
   const hasFetchedRef = useRef(false);
+  const pipelineCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
   const isActiveRecall = pathname.includes("/dashboard/practice/active-recall");
@@ -86,6 +90,43 @@ export default function PracticeLayout({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Check pipeline status for Active Recall
+  useEffect(() => {
+    if (!isActiveRecall || !deckId || !mounted) return;
+
+    const checkPipeline = async () => {
+      try {
+        const status = await checkWrongOptionsAndBlankWordsStatus(deckId);
+        
+        if (status.success) {
+          setPipelineProgress(status.percentage || 0);
+          
+          if (!status.needsGeneration) {
+            setIsPipelineComplete(true);
+            if (pipelineCheckInterval.current) {
+              clearInterval(pipelineCheckInterval.current);
+              pipelineCheckInterval.current = null;
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Pipeline check error:", error);
+      }
+    };
+
+    // Initial check
+    checkPipeline();
+    
+    // Poll every 2 seconds until complete
+    pipelineCheckInterval.current = setInterval(checkPipeline, 2000);
+
+    return () => {
+      if (pipelineCheckInterval.current) {
+        clearInterval(pipelineCheckInterval.current);
+      }
+    };
+  }, [isActiveRecall, deckId, mounted]);
 
   useEffect(() => {
     async function loadData() {
@@ -112,7 +153,6 @@ export default function PracticeLayout({
             voice: audioSettingsData.audio_voice,
           };
           setAudioSettings(fetchedAudioSettings);
-          console.log("🔊 Loaded audio settings from DB:", fetchedAudioSettings);
         }
 
         if (!deckId) return;
@@ -121,6 +161,19 @@ export default function PracticeLayout({
         setDeckInfo(info);
 
         if (isActiveRecall) {
+          // Wait for pipeline to complete before loading cards
+          let pipelineReady = false;
+          while (!pipelineReady) {
+            const status = await checkWrongOptionsAndBlankWordsStatus(deckId);
+            if (status.success && !status.needsGeneration) {
+              pipelineReady = true;
+              setIsPipelineComplete(true);
+            } else {
+              // Wait 2 seconds before checking again
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+          
           const [cardsData, dailyLimitsData] = await Promise.all([
             GetCardsForActiveRecall(deckId),
             GetUserDailyLimits(),
@@ -156,8 +209,20 @@ export default function PracticeLayout({
 
   if (!mounted || isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white">
+        <div className="text-xl mb-4">
+          {isActiveRecall && !isPipelineComplete 
+            ? "Preparing your cards..." 
+            : "Loading..."}
+        </div>
+        {isActiveRecall && !isPipelineComplete && (
+          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-500 transition-all duration-500"
+              style={{ width: `${pipelineProgress}%` }}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -166,7 +231,6 @@ export default function PracticeLayout({
     const route = deckId ? `/dashboard/my-decks/${deckId}` : "/dashboard/practice";
     router.push(route);
   };
-
 
   const handleSaveSettings = async () => {
     const result = await UpdateUserSettings(sortOrder);
@@ -178,21 +242,6 @@ export default function PracticeLayout({
       alert("Failed to save settings. Please try again.");
     }
   };
-
-  {/*const handleSaveAudioSettings = async () => {
-    const result = await UpdateAudioSettings({
-      audio_delay: audioSettings.delay,
-      audio_repetition: audioSettings.repetition,
-      audio_voice: audioSettings.voice,
-    });
-    
-    if (result.success) {
-      setShowModal(false);
-    } else {
-      console.error("Failed to save settings:", result.error);
-      alert("Failed to save settings. Please try again.");
-    }
-  };*/}
 
   const handleSaveAudioSettings = async () => {
     setInitialData(prev => prev ? {

@@ -46,7 +46,7 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState(STEP_TEXTS[0]);
-  const [importId, setImportId] = useState<string | null>(null);
+  const [, setImportId] = useState<string | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const acceptedTypes = [
@@ -128,26 +128,29 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
   };
 
   const pollProcessingStatus = async (id: string) => {
-    let currentProgress = 0;
+    let localProgress = 0;
+    let pollCount = 0;
     
     pollIntervalRef.current = setInterval(async () => {
       try {
         const status = await getProcessingStatus(id);
-        console.log('Processing status:', status); // Debug log
+        console.log('Processing status:', status); 
+        pollCount++;
         
         if (status.status === 'pending' || status.status === 'processing') {
-          // Increment progress gradually
-          currentProgress = Math.min(currentProgress + 2, 95);
-          setProgress(currentProgress);
+          const increment = pollCount % 2 === 0 ? 15 : 10;
+          localProgress = Math.min(localProgress + increment, 90);
           
-          // Update status text based on progress
-          if (currentProgress < 20) {
+          setProgress(localProgress);
+          
+          // Update status text based on progress ranges
+          if (localProgress < 25) {
             setStatusText(STEP_TEXTS[0]);
-          } else if (currentProgress < 40) {
+          } else if (localProgress < 45) {
             setStatusText(STEP_TEXTS[1]);
-          } else if (currentProgress < 60) {
+          } else if (localProgress < 65) {
             setStatusText(STEP_TEXTS[2]);
-          } else if (currentProgress < 80) {
+          } else if (localProgress < 80) {
             setStatusText(STEP_TEXTS[3]);
           } else {
             setStatusText(STEP_TEXTS[4]);

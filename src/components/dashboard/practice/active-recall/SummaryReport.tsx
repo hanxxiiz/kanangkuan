@@ -1,4 +1,9 @@
 import React from "react";
+import { HiMiniNewspaper } from "react-icons/hi2";
+import { TiPlus } from "react-icons/ti";
+import { FaClone } from "react-icons/fa";
+import { HiEmojiHappy } from "react-icons/hi";
+import { RiEmotionUnhappyFill } from "react-icons/ri";
 
 interface SummaryReportProps {
   totalXpEarned: number;
@@ -33,6 +38,29 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   const masteryRating = itemsCompleted > 0 
     ? ((firstAttempts / itemsCompleted) * 100).toFixed(1)
     : "0.0";
+
+  const [displayedPercentage, setDisplayedPercentage] = React.useState(0);
+
+  React.useEffect(() => {
+    const targetPercentage = parseFloat(masteryRating);
+    const duration = 1500; // 1.5 seconds
+    const steps = 60;
+    const increment = targetPercentage / steps;
+    const stepDuration = duration / steps;
+
+    let currentStep = 0;
+    const timer = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        setDisplayedPercentage(targetPercentage);
+        clearInterval(timer);
+      } else {
+        setDisplayedPercentage(increment * currentStep);
+      }
+    }, stepDuration);
+
+    return () => clearInterval(timer);
+  }, [masteryRating]);
 
   const getColorClasses = () => {
     const colorMap: { [key: string]: ColorClasses } = {
@@ -83,7 +111,7 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   const colors = getColorClasses();
   
   return (
-    <div className="max-w-2xl mx-auto mt-8">
+    <div className="max-w-3xl mx-auto mt-8 px-4">
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
@@ -94,68 +122,82 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
         }
       `}</style>
 
-      <div className="bg-white rounded-3xl w-full modal-fade-in border-3 border-black overflow-hidden">
+      <div className="bg-black rounded-3xl w-full modal-fade-in overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className={`${colors.bg} px-8 py-6 border-b-3 border-black`}>
-          <h2 className="text-3xl font-main text-white">Summary Report</h2>
+        <div className={`${colors.bg} px-4 sm:px-8 py-4 sm:py-6`}>
+          <h2 className="text-2xl sm:text-3xl font-main text-white flex items-center gap-2 sm:gap-3">
+            <HiMiniNewspaper className="text-white" size={28} />
+            Summary Report
+          </h2>
         </div>
 
         {/* Content */}
-        <div className="p-8">
-          <div className="flex gap-8">
-            {/* Left: Mastery Rating */}
-            <div className={`${colors.bg} rounded-2xl p-8 border-3 border-black flex-shrink-0`} style={{width: '280px'}}>
+        <div className="p-6 sm:p-10">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            {/* Left: Mastery Rating Rectangle */}
+            <div className={`${colors.bg} rounded-2xl p-8 sm:p-12 lg:p-15 flex-shrink-0 w-full lg:w-[280px]`}>
               <div className="text-center">
-                <p className="text-black font-main text-md mb-4">MASTERY RATING</p>
-                <div className="text-6xl font-main text-black mb-2">{masteryRating}%</div>
+                <p className="text-white font-main text-base sm:text-lg mb-3 sm:mb-4">MASTERY RATING</p>
+                <div className="text-4xl sm:text-5xl font-main text-white font-bold">{displayedPercentage.toFixed(1)}%</div>
               </div>
             </div>
 
             {/* Right: Stats */}
-            <div className="flex-1 space-y-6">
+            <div className="pt-2 lg:pt-3 lg:ml-4 flex-1 space-y-4 sm:space-y-6">
               {/* XP Earned */}
               <div className="flex items-center justify-between">
-                <span className="font-main text-xl text-black">XP EARNED</span>
-                <span className="font-main text-2xl text-black">{totalXpEarned} XP</span>
+                <span className="font-main text-base sm:text-xl text-white flex items-center gap-2 sm:gap-3">
+                  <TiPlus size={20} className="sm:w-6 sm:h-6" />
+                  XP EARNED
+                </span>
+                <span className={`font-main text-base sm:text-xl ${colors.text}`}>{totalXpEarned} XP</span>
               </div>
 
               {/* Items Completed */}
               <div className="flex items-center justify-between">
-                <span className="font-main text-xl text-black">ITEMS COMPLETED</span>
-                <span className="font-main text-2xl text-black">{itemsCompleted} items</span>
+                <span className="font-main text-base sm:text-xl text-white flex items-center gap-2 sm:gap-3">
+                  <FaClone size={18} className="sm:w-5 sm:h-5" />
+                  ITEMS COMPLETED
+                </span>
+                <span className="font-main text-base sm:text-xl text-pink">{itemsCompleted} ITEMS</span>
               </div>
 
               {/* First Attempts */}
               <div className="flex items-center justify-between">
-                <span className="font-main text-xl text-black">FIRST ATTEMPTS</span>
-                <span className="font-main text-2xl text-black">{firstAttempts} items</span>
+                <span className="font-main text-base sm:text-xl text-white flex items-center gap-2 sm:gap-3">
+                  <HiEmojiHappy size={20} className="sm:w-6 sm:h-6" />
+                  FIRST ATTEMPTS
+                </span>
+                <span className={`font-main text-base sm:text-xl ${colors.text}`}>{firstAttempts} ITEMS</span>
               </div>
 
               {/* Reattempts */}
               <div className="flex items-center justify-between">
-                <span className="font-main text-xl text-black">REATTEMPTS</span>
-                <span className="font-main text-2xl text-black">{reattempts} items</span>
+                <span className="font-main text-base sm:text-xl text-white flex items-center gap-2 sm:gap-3">
+                  <RiEmotionUnhappyFill size={20} className="sm:w-6 sm:h-6" />
+                  REATTEMPTS
+                </span>
+                <span className={`font-main text-base sm:text-xl ${colors.text}`}>{reattempts} ITEMS</span>
               </div>
             </div>
           </div>
         </div>
 
-      </div>
-
-      {/* Buttons */}
-      <div className="mt-6 flex gap-4">
-        <button
-          onClick={onClose}
-          className="flex-1 py-4 bg-white hover:bg-gray-100 text-black border-2 border-black rounded-full font-main text-lg transition-all duration-300"
-        >
-          Go Back
-        </button>
-        <button
-          onClick={onRetry}
-          className={`flex-1 py-4 bg-black text-white border-2 border-black rounded-full font-main text-lg transition-all duration-300 ${colors.hover}`}
-        >
-          Retry
-        </button>
+        {/* Buttons INSIDE the container */}
+        <div className="px-4 sm:px-8 pb-8 sm:pb-12 flex flex-col sm:flex-row gap-4 sm:gap-8">
+          <button
+            onClick={onClose}
+            className={`cursor-pointer flex-1 py-3 text-white border-2 border-white rounded-full font-main text-base sm:text-lg transition-all duration-300 hover:bg-white hover:text-black`}
+          >
+            Exit Session
+          </button>
+          <button
+            onClick={onRetry}
+            className={`cursor-pointer flex-1 py-3 bg-white text-black border-2 border-white rounded-full font-main text-base sm:text-lg transition-all duration-300 ${colors.hover} ${colors.hoverBorder} hover:text-white`}
+          >
+            Retry Session
+          </button>
+        </div>
       </div>
     </div>
   );
