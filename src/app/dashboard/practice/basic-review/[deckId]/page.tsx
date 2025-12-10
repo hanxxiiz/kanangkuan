@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useContext, useMemo, useCallback } from "react";
 import Flashcard from "@/components/dashboard/practice/basic-review/Flashcard";
 import { TbKeyFilled } from "react-icons/tb";
+import { LuBot } from "react-icons/lu";
 import { GrLinkPrevious, GrLinkNext } from "react-icons/gr";
 import { Card } from "@/lib/queries/basic-review-queries";
 import { DecrementUserKeys } from "@/lib/actions/basic-review-actions";
@@ -26,6 +27,7 @@ const BasicReview = () => {
   const [originalCards, setOriginalCards] = useState<Card[]>(initialData?.cards || []);
   const [keysRemaining, setKeysRemaining] = useState(initialData?.keys || 0);
   const [userProfilePic, setUserProfilePic] = useState<string | null>(initialData?.profilePic || null);
+  const [deckColor, setDeckColor] = useState<string>(initialData?.deckColor || 'lime');
 
   const [currentCard, setCurrentCard] = useState(0);
   const [nextCard, setNextCard] = useState<number | null>(null);
@@ -44,6 +46,7 @@ const BasicReview = () => {
       setOriginalCards(initialData.cards || []);
       setKeysRemaining(initialData.keys || 0);
       setUserProfilePic(initialData.profilePic || null);
+      setDeckColor(initialData.deckColor || 'lime');
     }
   }, [initialData]);
 
@@ -168,18 +171,38 @@ const BasicReview = () => {
 
   return (
     <div className="w-full h-full flex flex-col items-center overflow-hidden pt-20 sm:pt-30 xl:pt-0">
-      {/* Keys Display */}
-      <div className="w-full max-w-[900px] flex justify-end px-6 flex-shrink-0 mb-4 sm:mb-10 min-h-[42px]">
-        {keysRemaining > 0 && (
-          <div className="flex items-center group">
-            {Array.from({ length: keysRemaining }).map((_, i) => (
-              <TbKeyFilled
-                key={i} 
-                className="cursor-pointer text-4xl text-gray-200 text-lime sm:text-gray-200 group-hover:text-lime transition-colors duration-300"
-              />
-            ))}
-          </div>
-        )}
+      {/* Keys Display and Explain Button */}
+      <div className="w-full max-w-[900px] flex justify-between items-center px-6 flex-shrink-0 mb-4 sm:mb-10 min-h-[42px]">
+        <div className="flex-1"></div>
+        
+        <div className="flex items-center gap-4">
+          {keysRemaining > 0 && (
+            <div className="flex items-center">
+              {Array.from({ length: keysRemaining }).map((_, i) => (
+                <TbKeyFilled
+                  key={i} 
+                  className="text-4xl"
+                  style={{ color: `var(--color-${deckColor})` }}
+                />
+              ))}
+            </div>
+          )}
+          
+          <button
+            onClick={handleExplainClick}
+            className="flex items-center gap-2 px-7 py-2 text-white rounded-full transition-all duration-300 font-main text-md cursor-pointer"
+            style={{ backgroundColor: `var(--color-${deckColor})` }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'black';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = `var(--color-${deckColor})`;
+            }}
+          >
+            <LuBot className="text-xl" />
+            <span>Explain</span>
+          </button>
+        </div>
       </div>
       
       {/* Flashcard Section */}
@@ -194,7 +217,6 @@ const BasicReview = () => {
             <Flashcard 
               card={cards[currentCard]} 
               key={`current-${currentCard}`}
-              onExplainClick={handleExplainClick}
             />
           </div>
           
@@ -207,7 +229,6 @@ const BasicReview = () => {
               <Flashcard 
                 card={cards[nextCard]} 
                 key={`next-${nextCard}`}
-                onExplainClick={handleExplainClick}
               />
             </div>
           )}
@@ -215,21 +236,33 @@ const BasicReview = () => {
       </div>
 
       {/* Navigation */}
-      <div className="w-full max-w-[900px] flex justify-center items-center gap-5 sm:gap-10 px-6 flex-shrink-0 mt-5 sm:mt-15">
+      <div className="w-full max-w-[900px] flex justify-center items-center gap-5 sm:gap-10 px-6 flex-shrink-0 mt-5 sm:mt-12">
         <button
           onClick={() => navigateCard('right')}
-          className="z-50 cursor-pointer border-[2px] border-[#101220] rounded-full px-8 py-4 text-[#101220] hover:bg-[#101220] hover:text-white transition-colors duration-300"
+          className="nav-button z-50 cursor-pointer bg-black rounded-full px-10 py-5 text-white transition-colors duration-300"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = `var(--color-${deckColor})`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'black';
+          }}
         >
-          <GrLinkPrevious className="textl-xl sm:text-2xl" />
+          <GrLinkPrevious className="textl-xl sm:text-3xl" />
         </button>
-        <span className="text-[#101220] text-lg font-body min-w-[80px] text-center">
+        <span className="text-black text-lg font-body min-w-[80px] text-center">
           {currentCard + 1}/{cards.length}
         </span>
         <button
           onClick={() => navigateCard('left')}
-          className="z-50 cursor-pointer border-[2px] border-[#101220] rounded-full px-8 py-4 text-[#101220] hover:bg-[#101220] hover:text-white transition-colors duration-300"
+          className="nav-button z-50 cursor-pointer bg-black rounded-full px-10 py-5 text-white transition-colors duration-300"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = `var(--color-${deckColor})`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'black';
+          }}
         >
-          <GrLinkNext className="text-xl sm:text-2xl" />
+          <GrLinkNext className="text-xl sm:text-3xl" />
         </button>
       </div>
       

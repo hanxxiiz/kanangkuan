@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { DashboardContextType, LeaderboardEntry, Deck, Folder } from '@/types/dashboard';
 
@@ -42,21 +42,64 @@ export function DashboardProvider({
   const [currentXp, setCurrentXp] = useState(initialXp);
   const [currentProfileUrl, setCurrentProfileUrl] = useState<string | null>(profileUrl);
   const [hasSpun, setHasSpun] = useState(initialHasSpun);  
-  const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);  
+  const [nextSpinTime, setNextSpinTime] = useState(initialNextSpinTime);
+  const [isOnline, setIsOnline] = useState(true);
   const supabase = createClient();
+  
+  // Track if component is mounted to prevent state updates after unmount
+  const isMounted = useRef(true);
+  
+  // Track retry attempts to prevent infinite loops
+  const retryCount = useRef({ username: 0, notifications: 0, xp: 0 });
+  const MAX_RETRIES = 3;
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const refreshUsername = useCallback(async () => {
+    if (typeof window === 'undefined' || !isMounted.current || !isOnline) return;
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('username')
         .eq('id', userId)
         .single();
-      if (data && !error) setCurrentUsername(data.username);
-    } catch (err) {
-      console.error('Failed to refresh username:', err);
+      
+      if (error) throw error;
+      
+      if (data && isMounted.current) {
+        setCurrentUsername(data.username);
+        retryCount.current.username = 0;
+      }
+    } catch {
+      retryCount.current.username++;
+      
+      // Only log if we've exceeded retries
+      if (retryCount.current.username >= MAX_RETRIES) {
+        console.error('Failed to refresh username after retries');
+        retryCount.current.username = 0;
+      }
     }
-  }, [supabase, userId]);
+  }, [supabase, userId, isOnline]);
 
   const refreshProfileUrl = useCallback(async () => {
     try {
@@ -72,20 +115,34 @@ export function DashboardProvider({
   }, [supabase, userId]);
 
   const refreshNotificationCount = useCallback(async () => {
+    if (typeof window === 'undefined' || !isMounted.current || !isOnline) return;
+    
     try {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('read', false);
       
-      setUnreadNotificationCount(count || 0);
-    } catch (error) {
-      console.error('Failed to refresh notification count:', error);
+      if (error) throw error;
+      
+      if (isMounted.current) {
+        setUnreadNotificationCount(count || 0);
+        retryCount.current.notifications = 0;
+      }
+    } catch {
+      retryCount.current.notifications++;
+      
+      if (retryCount.current.notifications >= MAX_RETRIES) {
+        // Silent fail - keep existing count
+        retryCount.current.notifications = 0;
+      }
     }
-  }, [supabase, userId]); 
+  }, [supabase, userId, isOnline]); 
 
   const refreshXp = useCallback(async () => {
+    if (typeof window === 'undefined' || !isMounted.current || !isOnline) return;
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -93,15 +150,25 @@ export function DashboardProvider({
         .eq('id', userId)
         .single();
       
-      if (data && !error) {
+      if (error) throw error;
+      
+      if (data && isMounted.current) {
         setCurrentXp(data.xp);
+        retryCount.current.xp = 0;
       }
-    } catch (error) {
-      console.error('Failed to refresh XP:', error);
+    } catch {
+      retryCount.current.xp++;
+      
+      if (retryCount.current.xp >= MAX_RETRIES) {
+        // Silent fail - keep existing XP
+        retryCount.current.xp = 0;
+      }
     }
-  }, [supabase, userId]);
+  }, [supabase, userId, isOnline]);
 
   const refreshDailyLimits = useCallback(async () => {
+    if (typeof window === 'undefined' || !isMounted.current || !isOnline) return;
+    
     try {
       const { data, error } = await supabase
         .from('user_daily_limits')
@@ -109,7 +176,9 @@ export function DashboardProvider({
         .eq('user_id', userId)
         .single();
       
-      if (data && !error) {
+      if (error) throw error;
+      
+      if (data && isMounted.current) {
         setHasSpun(data.has_spun);
         
         if (data.has_spun) {
@@ -125,25 +194,29 @@ export function DashboardProvider({
           setNextSpinTime(null);
         }
       }
-    } catch (error) {
-      console.error('Failed to refresh daily limits:', error);
+    } catch {
+      // Silent fail
     }
-  }, [supabase, userId]);
+  }, [supabase, userId, isOnline]);
 
   const updateSpinStatus = useCallback((newHasSpun: boolean, newNextSpinTime: string | null) => {
-    setHasSpun(newHasSpun);
-    setNextSpinTime(newNextSpinTime);
+    if (isMounted.current) {
+      setHasSpun(newHasSpun);
+      setNextSpinTime(newNextSpinTime);
+    }
   }, []);
 
-   useEffect(() => {
-    // Username changes
+  // Setup realtime subscriptions only on client
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isOnline) return;
+
     const usernameChannel = supabase
       .channel('user_username_changes')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
         (payload) => {
-          if (payload.new && 'username' in payload.new) {
+          if (payload.new && 'username' in payload.new && isMounted.current) {
             setCurrentUsername(payload.new.username);
           }
         }
@@ -153,10 +226,11 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(usernameChannel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, supabase, isOnline]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !isOnline) return;
+
     const channel = supabase
       .channel('notifications_changes')
       .on(
@@ -168,7 +242,9 @@ export function DashboardProvider({
           filter: `user_id=eq.${userId}`
         },
         () => {
-          refreshNotificationCount();
+          if (isMounted.current) {
+            refreshNotificationCount();
+          }
         }
       )
       .subscribe();
@@ -176,10 +252,11 @@ export function DashboardProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, refreshNotificationCount]);
+  }, [userId, refreshNotificationCount, supabase, isOnline]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !isOnline) return;
+
     const channel = supabase
       .channel('user_xp_changes')
       .on(
@@ -191,42 +268,57 @@ export function DashboardProvider({
           filter: `id=eq.${userId}`
         },
         (payload) => {
-          console.log('XP Update received:', payload);
-          if (payload.new && 'xp' in payload.new) {
-            console.log('Setting new XP:', payload.new.xp);
+          if (payload.new && 'xp' in payload.new && isMounted.current) {
             setCurrentXp(payload.new.xp as number);
           }
         }
       )
-      .subscribe((status) => {
-        console.log('XP subscription status:', status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, supabase, isOnline]);
 
-  // Fallback (if dim gana realtime): Poll for XP changes every 10 seconds
+  // Polling fallback - only when online
   useEffect(() => {
+    if (typeof window === 'undefined' || !isOnline) return;
+
     const interval = setInterval(() => {
-      refreshXp();
-    }, 10000); 
+      if (isMounted.current && isOnline) {
+        refreshXp();
+      }
+    }, 30000); // Increased to 30 seconds to reduce load
 
     return () => clearInterval(interval);
-  }, [refreshXp]);
+  }, [refreshXp, isOnline]);
 
+  // Refresh on window focus - with debounce
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let timeoutId: NodeJS.Timeout;
+    
     const handleFocus = () => {
-      refreshUsername();
-      refreshProfileUrl();
-      refreshNotificationCount();
-      refreshXp();
+      if (!isOnline || !isMounted.current) return;
+      
+      // Debounce to prevent multiple rapid calls
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (isMounted.current && isOnline) {
+          refreshUsername();
+          refreshNotificationCount();
+          refreshXp();
+        }
+      }, 500);
     };
+    
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [refreshNotificationCount, refreshXp, refreshUsername, refreshProfileUrl]);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearTimeout(timeoutId);
+    };
+  }, [refreshNotificationCount, refreshXp, refreshUsername, isOnline]);
 
   return (
     <DashboardContext.Provider value={{

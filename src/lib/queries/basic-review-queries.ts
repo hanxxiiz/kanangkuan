@@ -13,7 +13,7 @@ export type UserSettings = {
   review_sort_order: 'oldest_first' | 'newest_first' | 'random_order';
 };
 
-export async function GetUserSettings(): Promise<UserSettings> {
+export async function GetBasicReviewUserSettings(): Promise<UserSettings> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -42,7 +42,7 @@ export async function GetCardsForReview(deckId: string, sortOrder?: 'oldest_firs
   if (!user) return [];
 
   if (!sortOrder) {
-    const settings = await GetUserSettings();
+    const settings = await GetBasicReviewUserSettings();
     sortOrder = settings.review_sort_order;
   }
 
