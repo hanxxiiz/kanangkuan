@@ -1,5 +1,4 @@
 import React from "react";
-import { useDashboard } from "@/components/dashboard/DashboardContext";
 import Image from "next/image";
 
 const ProfileLevelBar = ({xp}: {xp: number}) => {

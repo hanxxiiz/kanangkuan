@@ -11,17 +11,17 @@ export function useCards(deckId?: string, userId?: string) {
 
     useEffect(() => {
         if (deckId) {
-            loadCards(deckId, userId)
+            loadCards(deckId)
         } else {
-            loadAllCards(userId)
+            loadAllCards()
         }
     }, [deckId, userId]);
 
-    async function loadAllCards(userId?: string) {
+    async function loadAllCards() {
         try {
             setCardLoading(true);
             setCardError(null);
-            const data = await cardService.getAllCards(userId); 
+            const data = await cardService.getAllCards(); 
             setCards(data);
         } catch (err) {
             setCardError(err instanceof Error ? err.message : "Failed to load cards.");
@@ -30,7 +30,7 @@ export function useCards(deckId?: string, userId?: string) {
         }
     }
 
-    async function loadCards(deckId: string, userId?: string) {
+    async function loadCards(deckId: string) {
         if (!deckId) return;
 
         try{

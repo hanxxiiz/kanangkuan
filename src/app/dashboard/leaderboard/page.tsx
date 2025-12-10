@@ -148,21 +148,6 @@ const LeaderboardPage = () => {
     userId: user.id,
   }));
 
-  const mobileTop3 = isMobile
-    ? [...top3].sort((a, b) => a.rank === 1 ? -1 : b.rank === 1 ? 1 : a.rank - b.rank)
-    : top3;
-
-      const sortedLeaderboard = isMobile
-    ? [...leaderboardData].sort((a, b) => {
-        if (a.rank === 1) return -1;
-        if (b.rank === 1) return 1;
-        return a.rank - b.rank;
-      })
-    : [...leaderboardData].sort((a, b) => { 
-        const order = { 2: 0, 1: 1, 3: 2 };
-        return (order[a.rank as keyof typeof order] ?? a.rank) - (order[b.rank as keyof typeof order] ?? b.rank);
-      });
-
       const gradientBackup = (
     <div className="hidden
       from-blue from-lime from-cyan from-pink

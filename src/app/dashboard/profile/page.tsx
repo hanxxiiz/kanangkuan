@@ -7,13 +7,13 @@ import DecksPanel from "@/components/profile/DecksPanel";
 import Navbar from "@/components/profile/Navbar";
 import ProfileCard from "@/components/profile/ProfileCard";
 import { useRouter } from "next/navigation";
+import type { Profile } from "@/utils/supabase/models";
 
 
 const ProfilePage = () => {
     const { supabase, session, isLoaded } = useSupabase();
     const router = useRouter();
     const [activeIndex, setActiveIndex] = useState(0);
-    type Profile = Record<string, any>; 
     const [profileData, setProfileData] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -43,7 +43,7 @@ const ProfilePage = () => {
             console.error("Error loading profile:", error);
             setProfileData(null);
           } else {
-            setProfileData(profile);
+            setProfileData(profile as Profile);
           }
         } catch (error) {
           console.error("Error in loadProfile:", error);

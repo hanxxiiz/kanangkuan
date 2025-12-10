@@ -4,9 +4,10 @@ import { useDashboard } from "../dashboard/DashboardContext";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
+import type { Profile } from "@/utils/supabase/models";
 
 type ProfileCardProps = {
-  profileData?: Record<string, any>;
+  profileData?: Profile | null;
   isOwnProfile?: boolean;
 };
 

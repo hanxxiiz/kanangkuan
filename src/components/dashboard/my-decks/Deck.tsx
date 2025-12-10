@@ -24,7 +24,6 @@ export default function Deck({
     deckName = "My Deck",
     cardCount,
     userId,
-    readonly = false,
 }:DeckProps) {
     const router = useRouter();
     const pathname = usePathname();

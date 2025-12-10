@@ -24,7 +24,6 @@ export default function Folder({
   folderName = "My Folder",
   deckCount = 0,
   userId,
-  readonly = false,
 }: FolderProps) {
   const router = useRouter();
   const pathname = usePathname();

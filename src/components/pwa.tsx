@@ -1,6 +1,6 @@
 "use client";
 
-import react, { useEffect } from "react";
+import { useEffect } from "react";
 
 export default function PWA() {
     useEffect(() => {

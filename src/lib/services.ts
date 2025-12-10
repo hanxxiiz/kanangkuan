@@ -96,7 +96,7 @@ export const deckService = {
 }
 
 export const cardService = {
-    async getAllCards(userId?: string): Promise<Card[]> {
+    async getAllCards(): Promise<Card[]> {
         const { data, error } = await supabase
             .from("cards")
             .select("*")
