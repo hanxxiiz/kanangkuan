@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useMemo } from "react";
 import { Profile } from "@/utils/supabase/models";
 import { profileService } from "../services";
@@ -15,7 +14,10 @@ export function useProfiles({ userId, userIds }: UseProfilesParams) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const stableUserIds = useMemo(() => userIds?.slice() || [], [userIds?.join(",")]);
+  // Create stable string representation for comparison
+  const userIdsKey = useMemo(() => {
+    return userIds ? JSON.stringify([...userIds].sort()) : "";
+  }, [userIds]);
 
   useEffect(() => {
     async function fetchData() {
@@ -27,8 +29,8 @@ export function useProfiles({ userId, userIds }: UseProfilesParams) {
           const data = await profileService.getProfiles([userId]);
           setProfile(data[0] || null);
           setProfiles([]);
-        } else if (stableUserIds.length > 0) {
-          const data = await profileService.getProfiles(stableUserIds);
+        } else if (userIds && userIds.length > 0) {
+          const data = await profileService.getProfiles(userIds);
           setProfiles(data);
           setProfile(null);
         } else {
@@ -45,7 +47,8 @@ export function useProfiles({ userId, userIds }: UseProfilesParams) {
     }
 
     fetchData();
-  }, [userId, stableUserIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, userIdsKey]); // userIdsKey captures userIds changes
 
   return { profile, profiles, loading, error };
 }

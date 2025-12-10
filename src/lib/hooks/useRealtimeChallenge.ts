@@ -14,7 +14,7 @@ export interface TimerState {
   timer_start_at: string | null;
   timer_end_at: string | null;
   is_timer_running: boolean;
-  bet_baittimer_start_at: string | null;
+  bet_bait_timer_start_at: string | null;
   bet_bait_timer_end_at: string | null;
   is_bet_bait_timer_running: boolean;
   question_index?: number;
@@ -73,12 +73,12 @@ export function useRealtimeChallenge({
             filter: `session_id=eq.${challengeId}`,
           },
           (payload) => {
-            const newData = payload.new as any;
+            const newData = payload.new as TimerState;
             setTimerState({
               timer_start_at: newData.timer_start_at,
               timer_end_at: newData.timer_end_at,
               is_timer_running: newData.is_timer_running,
-              bet_baittimer_start_at: newData.bet_bait_timer_start_at,
+              bet_bait_timer_start_at: newData.bet_bait_timer_start_at,
               bet_bait_timer_end_at: newData.bet_bait_timer_end_at,
               is_bet_bait_timer_running: newData.is_bet_bait_timer_running,
               question_index: newData.question_index
@@ -96,7 +96,7 @@ export function useRealtimeChallenge({
           },
           (payload) => {
             console.log("📨 Session updated:", payload);
-            const newData = payload.new as any;
+            const newData = payload.new as { current_question_index: number };
             setSessionState({
               current_question_index: newData.current_question_index,
             });

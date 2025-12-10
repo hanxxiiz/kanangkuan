@@ -2,7 +2,14 @@
 
 import React from 'react'
 import PlayerStatus from './PlayerStatus';
-import { PlayerGameState, PlayerStatus as PlayerStatusType } from '@/types/challenge-gameplay';
+import { PresencePayload } from '@/lib/hooks/useRealtimeChallenge';
+
+type PlayerStatusType = PresencePayload["status"];
+
+interface PlayerGameState {
+    status: PresencePayload["status"];
+    correct?: boolean;
+}
 
 export default function ChallengePlayersBar({
     profiles,
@@ -40,12 +47,22 @@ export default function ChallengePlayersBar({
                 if (state?.status === "done") status = "done"; 
             }
 
+            const presence: PresencePayload | undefined = state ? {
+                user_id: profile.id,
+                status: status,
+                updated_at: new Date().toISOString()
+            } : undefined;
+
             return (
             <PlayerStatus
                 key={profile.id}
-                playerUsername={profile.username}
-                playerProfile={profile.avatar_url}
-                status={status}
+                profile={{
+                    id: profile.id,
+                    profile_url: profile.avatar_url || "/dashboard/default-picture.png",
+                    username: profile.username
+                }}
+                presence={presence}
+                showResult={showResults}
             />
             );
         })}

@@ -1,4 +1,5 @@
 import WaitingChallengePlayers from "@/components/dashboard/games/WaitingChallengePlayers";
+import Image from "next/image";
 
 
 export default async function ChallengeWaitingScreen({ params }: {
@@ -8,13 +9,21 @@ export default async function ChallengeWaitingScreen({ params }: {
 
     return (
         <div className="relative min-h-screen flex items-center justify-center bg-black overflow-hidden">
-            <img
+            <Image
                 src="/practice/challenge-waiting.svg"
+                alt="Waiting..."
+                width={100}
+                height={100}
+                sizes="100vw"
                 className="absolute w-full -top-10 lg:w-5/6 pointer-events-none z-20"
             />
 
-            <img
+            <Image
                 src="/practice/clouds.svg"
+                alt="Waiting..."
+                width={100}
+                height={100}
+                sizes="100vw"
                 className="absolute -bottom-1/8 w-full pointer-events-none z-20"
             />
 

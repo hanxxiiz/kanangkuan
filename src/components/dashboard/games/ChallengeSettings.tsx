@@ -70,8 +70,7 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
         return;
       }
 
-      const newHost = await insertParticipant(newChallenge!.id, hostUser);
-
+      await insertParticipant(newChallenge!.id, hostUser);
       router.push(`/dashboard/games/challenge/${newChallenge.id}/waiting`);
     }
 
@@ -92,7 +91,7 @@ export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: str
 
       console.log("Join code valid, navigating to challenge:", validation.challengeId);
       if (validation.challengeId) {
-        const newParticipant = await insertParticipant(validation.challengeId, user!.id);
+        await insertParticipant(validation.challengeId, user!.id);
         router.push(`/dashboard/games/challenge/${validation.challengeId}/waiting`);
       }
     }

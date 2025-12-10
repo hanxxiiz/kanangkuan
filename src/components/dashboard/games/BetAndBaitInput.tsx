@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import React, { useEffect, useState, useRef } from 'react'
 
 interface BetAndBaitInputProps {
@@ -40,7 +41,7 @@ export default function BetAndBaitInput({
       
       return () => clearTimeout(timeout);
     }
-  }, [show]);
+  }, [show, isTimerEnded]);
 
   useEffect(() => {
     // ✅ CRITICAL: Don't auto-submit on mount if timer was already ended
@@ -92,7 +93,14 @@ export default function BetAndBaitInput({
         <div className="flex flex-col justify-center items-center px-10 pt-5 pb-15">
           {/* XP Badge */}
           <div className="fixed flex flex-col top-0 right-0 items-center justify-center">
-            <img src="/dashboard/star.svg" className="w-20 mt-5 mx-5" alt="star" />
+            <Image
+              src="/dashboard/star.svg" 
+              className="w-20 mt-5 mx-5" 
+              alt="star" 
+              width={100}
+              height={100}
+              sizes='100vw'
+            />
             <h2 className="text-base text-white font-main">20 XP</h2>
           </div>
 

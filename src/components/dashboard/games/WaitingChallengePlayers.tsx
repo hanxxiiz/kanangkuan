@@ -6,6 +6,7 @@ import { useProfiles } from "@/lib/hooks/useProfile";
 import { Button } from "@/components/buttons/PrimaryButton";
 import { useChallenges } from "@/lib/hooks/useChallenges";
 import { useRealtimeWaiting } from "@/lib/hooks/useRealtimeWaiting";
+import Image from "next/image";
 
 export interface PresencePayload {
   user_id: string;
@@ -53,7 +54,14 @@ export default function WaitingChallengePlayers({ challengeId }: { challengeId: 
                             key={profile.id}
                             className="flex flex-row gap-3 bg-white p-3 w-75 border-3 border-black rounded-full"
                         >
-                            <img src={profile.profile_url} className="w-15 h-15 rounded-full" />
+                            <Image 
+                                src={profile.profile_url || "/dashboard/default-picture.png"} 
+                                className="w-15 h-15 rounded-full" 
+                                alt={profile.username}
+                                width={100}
+                                height={100}
+                                sizes="100vw"
+                            />
                             <div className="flex flex-col">
                                 <h2 className={`font-main text-xl ${isReady ? "text-pink" : "text-lime"}`}>
                                     {isReady ? "Ready" : "Joined"}

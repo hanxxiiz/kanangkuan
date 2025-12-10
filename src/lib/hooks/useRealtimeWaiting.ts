@@ -82,7 +82,7 @@ export function useRealtimeWaiting({
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [userId, game, gameId, supabase]);
+    }, [gameType, userId, game, gameId, supabase]);
 
     const markReady = useCallback(async () => {
         if (!channel) return;
@@ -94,7 +94,7 @@ export function useRealtimeWaiting({
         });
 
         await challengeService.markPlayerReady(gameId, userId!);
-    }, [channel, userId]);
+    }, [gameId, channel, userId]);
 
     const startGame = useCallback(async () => {
         if (!channel) return;
@@ -110,7 +110,8 @@ export function useRealtimeWaiting({
         router.push(
             `/dashboard/games/${gameType}/${game!.id}/playing`
         );
-    }, [channel, router, game?.id]);
+    }, [game, gameId, gameType, channel, router]);
+
 
     return {
         presence,

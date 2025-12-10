@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ReactNode, useEffect, useState } from "react";
 
 function GameModal({
@@ -7,13 +8,11 @@ function GameModal({
     heading,
     xp,
     children,
-    onAction,
 }: {
     showModal: boolean;
     heading: string;
     xp: number;
     children: ReactNode;
-    onAction?: () => void;
 }) {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,7 +43,14 @@ function GameModal({
             >
                 <div className="flex flex-col justify-center items-center px-10 pt-5 pb-15">
                     <div className="fixed flex flex-col top-0 right-0 items-center justify-center">
-                        <img src="/dashboard/star.svg" className="w-20 mt-5 mx-5" />
+                        <Image
+                            src="/dashboard/star.svg" 
+                            className="w-20 mt-5 mx-5" 
+                            alt="Kanang Kuan..."
+                            width={100}
+                            height={100}
+                            sizes="100vw"
+                        />
                         <h2 className="text-base text-white font-main">{`${xp} XP`}</h2>
                     </div>
                     <h3 className="text-3xl text-pink font-main">{`Betting Time!`}</h3>
@@ -66,18 +72,15 @@ export function useGameModal() {
         heading,
         children,
         xp,
-        onAction,
     }: {
         heading: string;
         xp: number;
         children: ReactNode;
-        onAction?: () => void;
     }) => (
         <GameModal
             showModal={showModal}
             heading={heading}
             xp={xp}
-            onAction={onAction}
         >
             {children}
         </GameModal>

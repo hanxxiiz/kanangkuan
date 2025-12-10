@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
-import { Card, Challenge, Deck, Folder, Lumbaanay, Profile } from "@/utils/supabase/models";
+import { Card, Deck, Folder, Lumbaanay, Profile } from "@/utils/supabase/models";
 
 const supabase = createClient();
 

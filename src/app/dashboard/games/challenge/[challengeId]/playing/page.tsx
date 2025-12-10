@@ -8,7 +8,7 @@ import { useChallenges } from '@/lib/hooks/useChallenges';
 import { useProfiles } from '@/lib/hooks/useProfile';
 import { useRealtimeChallenge } from '@/lib/hooks/useRealtimeChallenge';
 import { useUser } from '@/lib/hooks/useUser';
-import React, { useMemo, useState, useEffect, useRef } from 'react'
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client';
 import { challengeService } from '@/lib/services/challenge';
 
@@ -118,15 +118,13 @@ export default function ChallengePlay({ params }: {
 }) {
     const { challengeId } = React.use(params);
     const { user } = useUser();
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     
     const { 
         challenge,
         challengeLoading,
-        challengeError,
         currentQuestion,
         currentQuestionIndex,
-        questions,
         questionsLoading,
         goToNextQuestion,
         startTimer,
@@ -135,7 +133,7 @@ export default function ChallengePlay({ params }: {
         submitResponse,
         submitFakeAnswer,
         refreshCurrentQuestion,
-        getUserFakeAnswer, // NEW
+        getUserFakeAnswer,
     } = useChallenges(challengeId);
 
     const { presence, timerState, sessionState, updatePlayerStatus } = useRealtimeChallenge({
@@ -200,7 +198,7 @@ export default function ChallengePlay({ params }: {
             isBetAndBaitMode,
             showBetAndBaitInput
         });
-    }, [currentQuestion?.id, isBetAndBaitQuestion, isBetAndBaitMode, showBetAndBaitInput]);
+    }, [currentQuestion?.id, currentQuestion?.question_data?.wrong_options, isBetAndBaitQuestion, isBetAndBaitMode, showBetAndBaitInput]);
 
     // DEBUG: User & Host Info
     useEffect(() => {
@@ -246,7 +244,7 @@ export default function ChallengePlay({ params }: {
         if (sessionState.current_question_index !== currentQuestionIndex) {
             syncQuestionByIndex(sessionState.current_question_index);
         }
-    }, [sessionState, isHost, currentQuestionIndex]);
+    }, [sessionState, isHost, currentQuestionIndex, syncQuestionByIndex]);
 
     useEffect(() => {
     // ✅ CRITICAL: Check question index FIRST before any processing
@@ -333,7 +331,7 @@ export default function ChallengePlay({ params }: {
 
         const timeout = setTimeout(initQuestion, 100);
         return () => clearTimeout(timeout);
-    }, [currentQuestion?.id, isHost, questionsLoading, isBetAndBaitQuestion]);
+    }, [currentQuestion?.id, isHost, questionsLoading, isBetAndBaitQuestion, getTimerStatus, startTimer]);
 
     // Reset state on question change - ONLY when question ID actually changes
     useEffect(() => {
@@ -379,7 +377,7 @@ export default function ChallengePlay({ params }: {
         setWasOriginallyBetAndBait(false);
         updatePlayerStatus("answering");
     }
-}, [currentQuestion?.id, isBetAndBaitQuestion]);
+}, [currentQuestion?.id, isBetAndBaitQuestion, updatePlayerStatus]);
 
     // NEW: Fetch user's fake answer and detect if this was a Bet & Bait question
     useEffect(() => {
@@ -402,10 +400,10 @@ export default function ChallengePlay({ params }: {
         if (!isBetAndBaitMode) {
             fetchFakeAnswer();
         }
-    }, [currentQuestion?.id, isBetAndBaitMode, user?.id]);
+    }, [currentQuestion?.id, isBetAndBaitMode, user?.id, getUserFakeAnswer, wasOriginallyBetAndBait]);
 
     // Handle Bet & Bait fake answer submission
-    const handleFakeAnswerSubmit = async (fakeAnswer: string) => {
+    const handleFakeAnswerSubmit = useCallback(async (fakeAnswer: string) => {
     console.log("✏️ Submitting fake answer:", fakeAnswer);
     
     // Prevent double submissions
@@ -428,7 +426,7 @@ export default function ChallengePlay({ params }: {
         fakeAnswerSubmittedRef.current = false;
         setBetAndBaitSubmitted(false);
     }
-};
+}, [user?.id, betAndBaitSubmitted, submitFakeAnswer, updatePlayerStatus]);
 
     // Close Bet & Bait modal when timer ends and refresh question
     useEffect(() => {
@@ -467,9 +465,9 @@ export default function ChallengePlay({ params }: {
             
             closeModal();
         }
-    }, [isTimerEnded, isBetAndBaitMode, showBetAndBaitInput, isHost]);
+    }, [isTimerEnded, isBetAndBaitMode, showBetAndBaitInput, isHost, refreshCurrentQuestion, updatePlayerStatus, startTimer]);
 
-    const handleAnswerSelect = async (answer: string) => {
+    const handleAnswerSelect = useCallback(async (answer: string) => {
         if (isTimerEnded || isBetAndBaitMode) return;
         
         console.log("✅ Answer selected:", answer);
@@ -482,7 +480,7 @@ export default function ChallengePlay({ params }: {
         }
 
         await updatePlayerStatus("done");
-    };
+    }, [isTimerEnded, isBetAndBaitMode, answerTime, timerState?.timer_start_at, updatePlayerStatus]);
 
     useEffect(() => {
     if (!isTimerEnded || !user?.id || !currentQuestion || isBetAndBaitMode) return;
@@ -567,7 +565,7 @@ export default function ChallengePlay({ params }: {
     };
 
     submitAnswer();
-}, [isTimerEnded, selectedAnswer, user?.id, currentQuestion?.id, currentQuestion?.question_data?.wrong_options, isBetAndBaitMode, wasOriginallyBetAndBait, userFakeAnswer]);
+}, [isTimerEnded, selectedAnswer, user?.id, currentQuestion, isBetAndBaitMode, wasOriginallyBetAndBait, userFakeAnswer, answerTime, updatePlayerStatus, submitResponse]);
 
     // ✅ NEW: Check bet & bait results after answers are submitted
     useEffect(() => {
@@ -690,9 +688,9 @@ export default function ChallengePlay({ params }: {
         };
 
         checkResults();
-    }, [isTimerEnded, user?.id, challengeId, wasOriginallyBetAndBait, isBetAndBaitMode, currentQuestionIndex, userFakeAnswer]);
+    }, [isTimerEnded, user?.id, challengeId, wasOriginallyBetAndBait, isBetAndBaitMode, currentQuestionIndex, userFakeAnswer, supabase]);
 
-    const handleNextQuestion = async () => {
+    const handleNextQuestion = useCallback(async () => {
         console.log("➡️ Moving to next question...");
         await updatePlayerStatus("answering");
         
@@ -701,7 +699,7 @@ export default function ChallengePlay({ params }: {
             await updatePlayerStatus("done");
             alert("No more questions! Challenge complete.");
         }
-    };
+    }, [updatePlayerStatus, goToNextQuestion]);
 
     if (!user) { 
         return <div className="min-h-screen flex items-center justify-center">

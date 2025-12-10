@@ -36,7 +36,7 @@ export const challengeService = {
     },
 
     async removeParticipant (sessionId: string, userId: string): Promise<void> {
-        const { data, error } = await supabase
+        const { error } = await supabase
             .schema("challenge")
             .from("participants")
             .delete()
@@ -46,7 +46,7 @@ export const challengeService = {
     },
 
     async updateGameStatus(sessionId: string, status: string): Promise<void> {
-        const { data, error } = await supabase
+        const { error } = await supabase
             .schema("challenge")
             .from("sessions")
             .update({ status, started_at: new Date().toISOString() })
@@ -56,7 +56,7 @@ export const challengeService = {
     },
 
     async markPlayerReady(sessionId: string, userId: string): Promise<void> {
-        const { data, error } = await supabase
+        const { error } = await supabase
             .schema("challenge")
             .from("participants")
             .update({ is_ready: true })
@@ -548,21 +548,35 @@ async getUserFakeAnswer(
   userId: string,
   questionIndex: number
 ): Promise<string | null> {
-  const { data, error } = await supabase
-    .schema("challenge")
-    .from('bet_and_bait_answers')
-    .select('fake_answer')
-    .eq('session_id', sessionId)
-    .eq('user_id', userId)
-    .eq('question_index', questionIndex)
-    .maybeSingle(); // Use maybeSingle to avoid error when no row found
+  try {
+    const { data, error } = await supabase
+      .schema("challenge")
+      .from('bet_and_bait_answers')
+      .select('fake_answer')
+      .eq('session_id', sessionId)
+      .eq('user_id', userId)
+      .eq('question_index', questionIndex)
+      .maybeSingle();
 
-  if (error) {
-    console.error("Error fetching user's fake answer:", error);
+    if (error) {
+      console.error("Error fetching user's fake answer:", {
+        error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        sessionId,
+        userId,
+        questionIndex
+      });
+      return null;
+    }
+    
+    return data?.fake_answer || null;
+  } catch (err) {
+    console.error("Unexpected error in getUserFakeAnswer:", err);
     return null;
   }
-  
-  return data?.fake_answer || null;
 },
 
 // NEW: Count how many players fell for a user's fake answer
@@ -625,6 +639,20 @@ async getBetAndBaitResults(
   baitedCount: number;
   xpChange: number;
 }> {
+  const defaultResult = {
+    wasBaited: false,
+    baiterUserId: null as string | null,
+    baitedOthers: false,
+    baitedCount: 0,
+    xpChange: 0,
+  };
+
+  const participantId = await this.getParticipantId(sessionId, userId);
+  if (!participantId) {
+    console.error("Unable to find participant for bet & bait results");
+    return defaultResult;
+  }
+
   // Check if user was baited (their response matches someone else's fake answer)
   const { data: userResponse, error: responseError } = await supabase
     .schema("challenge")
@@ -632,11 +660,17 @@ async getBetAndBaitResults(
     .select('answer, is_correct')
     .eq('session_id', sessionId)
     .eq('question_index', questionIndex)
-    .eq('participant_id', (await this.getParticipantId(sessionId, userId)))
-    .single();
+    .eq('participant_id', participantId)
+    .maybeSingle();
 
   if (responseError) {
     console.error("Error fetching user response:", responseError);
+    return defaultResult;
+  }
+
+  if (!userResponse) {
+    console.log("No response found for participant, skipping bet & bait results");
+    return defaultResult;
   }
 
   let wasBaited = false;

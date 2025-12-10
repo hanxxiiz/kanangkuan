@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { challengeService } from '../services/challenge';
 import { Question, Session } from '@/types/challenge';
 
@@ -14,27 +14,45 @@ export function useChallenges(challengeId?: string) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionsLoading, setQuestionsLoading] = useState(false);
 
+  const loadSession = useCallback(async () => {
+    if (!challengeId) return;
+
+    try {
+      setChallengeLoading(true);
+      setChallengeError(null);
+      const data = await challengeService.getSession(challengeId);
+      setChallenge(data);
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : "Failed to load challenge game.");
+    } finally {
+      setChallengeLoading(false);
+    }
+  }, [challengeId]);
+
+  const loadQuestions = useCallback(async () => {
+    if (!challengeId) return;
+
+    try {
+      setQuestionsLoading(true);
+      const data = await challengeService.getSessionQuestions(challengeId);
+      setQuestions(data);
+
+      if (data.length > 0) {
+        setCurrentQuestion(data[0]);
+      }
+    } catch (err) {
+      setChallengeError(err instanceof Error ? err.message : "Failed to load questions.");
+    } finally {
+      setQuestionsLoading(false);
+    }
+  }, [challengeId]);
+
   useEffect(() => {
     if (challengeId) {
       loadSession();
       loadQuestions();
     }
-  }, [challengeId]);
-
-  async function loadSession() {
-    if (!challengeId) return;
-
-    try{
-        setChallengeLoading(true);
-        setChallengeError(null);
-        const data = await challengeService.getSession(challengeId);
-        setChallenge(data);
-    } catch (err){
-        setChallengeError (err instanceof Error ? err.message : "Failed to load challenge game.");
-    } finally{
-        setChallengeLoading(false);
-    }
-  }
+  }, [challengeId, loadSession, loadQuestions]);
 
   async function createChallenge(challengeData: {
     hostId: string,
@@ -58,25 +76,7 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
-  async function loadQuestions() {
-    if (!challengeId) return;
-
-    try {
-        setQuestionsLoading(true);
-        const data = await challengeService.getSessionQuestions(challengeId);
-        setQuestions(data);
-        
-        if (data.length > 0) {
-            setCurrentQuestion(data[0]);
-        }
-    } catch (err) {
-        setChallengeError(err instanceof Error ? err.message : "Failed to load questions.");
-    } finally {
-        setQuestionsLoading(false);
-    }
-  }
-
-  async function goToNextQuestion() {
+  const goToNextQuestion = useCallback(async () => {
     if (!challengeId || !questions.length) return;
 
     const nextIndex = currentQuestionIndex + 1;
@@ -96,9 +96,9 @@ export function useChallenges(challengeId?: string) {
         setChallengeError(err instanceof Error ? err.message : "Failed to go to next question.");
         return false;
     }
-  }
+  }, [challengeId, questions, currentQuestionIndex]);
 
-  async function startTimer(durationSeconds: number = 15) {
+  const startTimer = useCallback(async (durationSeconds: number = 15) => {
     if (!challengeId) return false;
 
     try {
@@ -108,7 +108,7 @@ export function useChallenges(challengeId?: string) {
         setChallengeError(err instanceof Error ? err.message : "Failed to start timer.");
         return false;
     }
-  }
+  }, [challengeId, currentQuestionIndex]);
 
   async function stopTimer() {
     if (!challengeId) return false;
@@ -122,7 +122,7 @@ export function useChallenges(challengeId?: string) {
     }
   }
 
-  async function getTimerStatus() {
+  const getTimerStatus = useCallback(async () => {
     if (!challengeId) return null;
 
     try {
@@ -132,15 +132,15 @@ export function useChallenges(challengeId?: string) {
         setChallengeError(err instanceof Error ? err.message : "Failed to get timer status.");
         return null;
     }
-  }
+  }, [challengeId, currentQuestionIndex]);
 
-  async function submitResponse(
+  const submitResponse = useCallback(async (
     userId: string,
     questionId: string,
     answer: string,
     isCorrect: boolean,
     responseTime: number
-  ) {
+  ) => {
     if (!challengeId) return false;
 
     try {
@@ -165,9 +165,9 @@ export function useChallenges(challengeId?: string) {
       setChallengeError(err instanceof Error ? err.message : "Failed to submit response.");
       return false;
     }
-  }
+  }, [challengeId, currentQuestionIndex]);
 
-  async function submitFakeAnswer(userId: string, fakeAnswer: string) {
+  const submitFakeAnswer = useCallback(async (userId: string, fakeAnswer: string) => {
     if (!challengeId) return false;
 
     try {
@@ -182,9 +182,9 @@ export function useChallenges(challengeId?: string) {
       setChallengeError(err instanceof Error ? err.message : "Failed to submit fake answer.");
       return false;
     }
-  }
+  }, [challengeId, currentQuestionIndex]);
 
-  async function refreshCurrentQuestion() {
+  const refreshCurrentQuestion = useCallback(async () => {
     if (!challengeId) return;
 
     try {
@@ -198,7 +198,7 @@ export function useChallenges(challengeId?: string) {
     } catch (err) {
       setChallengeError(err instanceof Error ? err.message : "Failed to refresh question.");
     }
-  }
+  }, [challengeId, currentQuestionIndex]);
 
   async function insertParticipant(sessionId: string, userId: string) {
     try {
@@ -232,14 +232,14 @@ export function useChallenges(challengeId?: string) {
     }
   } 
 
-  function syncQuestionByIndex(index: number) {
+  const syncQuestionByIndex = useCallback((index: number) => {
     if (questions.length > 0 && index < questions.length) {
       setCurrentQuestionIndex(index);
       setCurrentQuestion(questions[index]);
     }
-  }
+  }, [questions]);
 
-  async function getUserFakeAnswer(userId: string): Promise<string | null> {
+  const getUserFakeAnswer = useCallback(async (userId: string): Promise<string | null> => {
     if (!challengeId) return null;
     
     try {
@@ -248,7 +248,7 @@ export function useChallenges(challengeId?: string) {
       console.error("Failed to get user's fake answer:", err);
       return null;
     }
-  }
+  }, [challengeId, currentQuestionIndex]);
 
   async function startBetBaitTimer(durationSeconds: number = 15) {
     if (!challengeId) return false;
@@ -300,9 +300,9 @@ async function getBetBaitTimerStatus() {
     startTimer,
     stopTimer,
     getTimerStatus,
-    startBetBaitTimer,      // ✅ NEW
-    stopBetBaitTimer,       // ✅ NEW
-    getBetBaitTimerStatus,  // ✅ NEW
+    startBetBaitTimer,
+    stopBetBaitTimer,
+    getBetBaitTimerStatus,
     submitResponse,
     submitFakeAnswer,
     refreshCurrentQuestion,
