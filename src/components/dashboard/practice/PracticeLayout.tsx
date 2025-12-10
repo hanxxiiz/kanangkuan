@@ -1,25 +1,43 @@
 "use client";
 
-import React, { useContext, useEffect, useState, createContext } from "react";
+import React, { useContext, useEffect, useState, createContext, useRef } from "react";
 import { IoSettingsSharp } from "react-icons/io5";
 import { FaArrowLeft, FaClone } from "react-icons/fa6";
 import { usePathname, useRouter, useParams } from "next/navigation";
 import { ModalContext } from "@/components/modals/providers";
 import { GetDeckInfo, DeckInfo } from "@/lib/queries/practice-queries";
 import { UpdateUserSettings } from "@/lib/actions/basic-review-actions";
+import AudioPlayerSettingsContent from "./audio-player/AudioPlayerSettingsContent";
+import { UpdateAudioSettings } from "@/lib/actions/audio-player-actions";
+import { checkWrongOptionsAndBlankWordsStatus } from "@/lib/actions/generate-qna-and-blank-words";
 import {
-  GetUserSettings,
+  GetBasicReviewUserSettings,
   GetCardsForReview,
   GetUserKeys,
   GetUserProfilePic,
 } from "@/lib/queries/basic-review-queries";
+import {
+  GetCardsForActiveRecall,
+  GetUserDailyLimits,
+  ActiveRecallCard,
+  UserDailyLimits,
+} from "@/lib/queries/active-recall-queries";
+import { GetAudioPlayerUserSettings } from "@/lib/queries/audio-player-queries";
 
 type SortOrder = "oldest_first" | "newest_first" | "random_order";
 
 interface PracticeInitialData {
-  cards: Awaited<ReturnType<typeof GetCardsForReview>>;
-  keys: Awaited<ReturnType<typeof GetUserKeys>>;
-  profilePic: Awaited<ReturnType<typeof GetUserProfilePic>>;
+  cards: Awaited<ReturnType<typeof GetCardsForReview>> | ActiveRecallCard[];
+  keys?: Awaited<ReturnType<typeof GetUserKeys>>;
+  profilePic?: Awaited<ReturnType<typeof GetUserProfilePic>>;
+  dailyLimits?: UserDailyLimits | null;
+  deckColor?: string;
+  isActiveRecall?: boolean;
+  audioSettings?: {  
+    delay: number;
+    repetition: number;
+    voice: number;
+  };
 }
 
 export const SortOrderContext = createContext<{
@@ -52,51 +70,159 @@ export default function PracticeLayout({
   const [sortOrder, setSortOrder] = useState<SortOrder>("oldest_first");
   const [deckInfo, setDeckInfo] = useState<DeckInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPipelineComplete, setIsPipelineComplete] = useState(false);
+  const [pipelineProgress, setPipelineProgress] = useState(0);
   const [initialData, setInitialData] = useState<PracticeInitialData | null>(null);
+  const [audioSettings, setAudioSettings] = useState({
+    delay: 3,
+    repetition: 1,
+    voice: 1,
+  }); 
+  const hasFetchedRef = useRef(false);
+  const pipelineCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   const isBasicReview = pathname.includes("/dashboard/practice/basic-review");
-  const showSettings = isBasicReview || pathname.includes("/dashboard/practice/audio-player");
+  const isActiveRecall = pathname.includes("/dashboard/practice/active-recall");
+  const isAudioPlayer = pathname.includes("/dashboard/practice/audio-player");
+  const showSettings = isBasicReview || isAudioPlayer;
+  const showDeckInfo = isBasicReview || isActiveRecall || isAudioPlayer;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Check pipeline status for Active Recall
+  useEffect(() => {
+    if (!isActiveRecall || !deckId || !mounted) return;
+
+    const checkPipeline = async () => {
+      try {
+        const status = await checkWrongOptionsAndBlankWordsStatus(deckId);
+        
+        if (status.success) {
+          setPipelineProgress(status.percentage || 0);
+          
+          if (!status.needsGeneration) {
+            setIsPipelineComplete(true);
+            if (pipelineCheckInterval.current) {
+              clearInterval(pipelineCheckInterval.current);
+              pipelineCheckInterval.current = null;
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Pipeline check error:", error);
+      }
+    };
+
+    // Initial check
+    checkPipeline();
+    
+    // Poll every 2 seconds until complete
+    pipelineCheckInterval.current = setInterval(checkPipeline, 2000);
+
+    return () => {
+      if (pipelineCheckInterval.current) {
+        clearInterval(pipelineCheckInterval.current);
+      }
+    };
+  }, [isActiveRecall, deckId, mounted]);
+
   useEffect(() => {
     async function loadData() {
       if (!mounted) return;
 
+      hasFetchedRef.current = true;
       setIsLoading(true);
+
       try {
-        const settings = await GetUserSettings();
+        const settings = await GetBasicReviewUserSettings();
         setSortOrder(settings.review_sort_order);
+
+        let fetchedAudioSettings = {
+          delay: 3,
+          repetition: 1,
+          voice: 1,
+        };
+
+        if (isAudioPlayer) {
+          const audioSettingsData = await GetAudioPlayerUserSettings();
+          fetchedAudioSettings = {
+            delay: audioSettingsData.audio_delay,
+            repetition: audioSettingsData.audio_repetition,
+            voice: audioSettingsData.audio_voice,
+          };
+          setAudioSettings(fetchedAudioSettings);
+        }
 
         if (!deckId) return;
 
         const info = await GetDeckInfo(deckId);
         setDeckInfo(info);
 
-        if (isBasicReview) {
+        if (isActiveRecall) {
+          // Wait for pipeline to complete before loading cards
+          let pipelineReady = false;
+          while (!pipelineReady) {
+            const status = await checkWrongOptionsAndBlankWordsStatus(deckId);
+            if (status.success && !status.needsGeneration) {
+              pipelineReady = true;
+              setIsPipelineComplete(true);
+            } else {
+              // Wait 2 seconds before checking again
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+          
+          const [cardsData, dailyLimitsData] = await Promise.all([
+            GetCardsForActiveRecall(deckId),
+            GetUserDailyLimits(),
+          ]);
+          setInitialData({ 
+            cards: cardsData, 
+            dailyLimits: dailyLimitsData,
+            deckColor: info?.deck_color || "lime", 
+            isActiveRecall: true 
+          });
+        } else if (isBasicReview || isAudioPlayer) {
           const [cardsData, keysData, profilePicData] = await Promise.all([
-            GetCardsForReview(deckId, "oldest_first"),
+            GetCardsForReview(deckId, settings.review_sort_order),
             GetUserKeys(),
             GetUserProfilePic(),
           ]);
-          setInitialData({ cards: cardsData, keys: keysData, profilePic: profilePicData });
-        }
-        // Add other modes here as needed
+          setInitialData({ 
+            cards: cardsData, 
+            keys: keysData, 
+            profilePic: profilePicData,
+            deckColor: info?.deck_color || "lime",
+            isActiveRecall: false,
+            audioSettings: fetchedAudioSettings  
+          });
+        } 
       } finally {
         setIsLoading(false);
       }
     }
 
     loadData();
-  }, [mounted, deckId, pathname, isBasicReview]);
+  }, [mounted, deckId, pathname, isBasicReview, isActiveRecall, isAudioPlayer]);
 
-  //will be changed with the loading component later on
   if (!mounted || isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white">
+        <div className="text-xl mb-4">
+          {isActiveRecall && !isPipelineComplete 
+            ? "Preparing your cards..." 
+            : "Loading..."}
+        </div>
+        {isActiveRecall && !isPipelineComplete && (
+          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-500 transition-all duration-500"
+              style={{ width: `${pipelineProgress}%` }}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -117,29 +243,93 @@ export default function PracticeLayout({
     }
   };
 
+  const handleSaveAudioSettings = async () => {
+    setInitialData(prev => prev ? {
+      ...prev,
+      audioSettings: audioSettings
+    } : null);
+    
+    setShowModal(false);
+    
+    UpdateAudioSettings({
+      audio_delay: audioSettings.delay,
+      audio_repetition: audioSettings.repetition,
+      audio_voice: audioSettings.voice,
+    }).then((result) => {
+      if (!result.success) {
+        console.error("Failed to save settings:", result.error);
+        alert("Failed to save settings. Please try again.");
+      }
+    }).catch((error) => {
+      console.error("Error saving settings:", error);
+      alert("Failed to save settings. Please try again.");
+    });
+  };
+
+  const bgColor = isAudioPlayer ? "bg-black" : "bg-white";
+
+  const getIconColor = (isHovered: boolean) => {
+    if ((isBasicReview || isActiveRecall) && deckInfo) {
+      return isHovered ? `var(--color-${deckInfo.deck_color})` : '#101220';
+    }
+    if (isAudioPlayer && deckInfo) {
+      return isHovered ? `var(--color-${deckInfo.deck_color})` : 'white';
+    }
+    return undefined;
+  };
+
   return (
     <SortOrderContext.Provider value={{ sortOrder, updateSortOrder: setSortOrder }}>
       <PracticeDataContext.Provider value={initialData}>
-        <div className="fixed inset-0 flex flex-col overflow-hidden">
+        <div className={`fixed inset-0 flex flex-col overflow-hidden ${bgColor}`}>
           {/* Header */}
           <div className="flex-shrink-0 w-full flex items-center px-3 sm:px-6 py-4">
             <div className="flex items-center gap-3 sm:gap-5">
               <FaArrowLeft
                 onClick={handleBack}
-                className="cursor-pointer text-2xl text-[#101220] xl:text-gray-200 hover:text-[#101220] hover:scale-105 transition-all duration-250"
+                className="cursor-pointer text-2xl hover:scale-105 transition-all duration-300"
+                style={{ 
+                  color: getIconColor(false)
+                }}
+                onMouseEnter={(e) => {
+                  if (deckInfo) {
+                    e.currentTarget.style.color = getIconColor(true) || '';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (deckInfo) {
+                    e.currentTarget.style.color = getIconColor(false) || '';
+                  }
+                }}
               />
               {showSettings && (
                 <IoSettingsSharp
                   onClick={() => setShowModal(true)}
-                  className="cursor-pointer text-2xl text-[#101220] xl:text-gray-200 hover:text-[#101220] hover:scale-105 transition-all duration-250"
+                  className="cursor-pointer text-2xl hover:scale-105 transition-all duration-300"
+                  style={{ 
+                    color: getIconColor(false)
+                  }}
+                  onMouseEnter={(e) => {
+                    if (deckInfo) {
+                      e.currentTarget.style.color = getIconColor(true) || '';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (deckInfo) {
+                      e.currentTarget.style.color = getIconColor(false) || '';
+                    }
+                  }}
                 />
               )}
             </div>
 
-            {isBasicReview && deckInfo && (
+            {showDeckInfo && deckInfo && (
               <div className="flex items-center gap-3 ml-5 sm:ml-6">
-                <FaClone className="text-2xl" style={{ color: deckInfo.deck_color }} />
-                <span className="text-black text-md sm:text-lg font-body truncate max-w-[185px] sm:max-w-none">
+                <FaClone 
+                  className="text-2xl" 
+                  style={{ color: `var(--color-${deckInfo.deck_color})` }}
+                />
+                <span className={`${isAudioPlayer ? 'text-white' : 'text-black'} text-md sm:text-lg font-regular truncate max-w-[185px] sm:max-w-none`}>
                   {deckInfo.deck_name}
                 </span>
               </div>
@@ -175,6 +365,21 @@ export default function PracticeLayout({
                   ))}
                 </div>
               </div>
+            </Modal>
+          )}
+          {/* Settings Modal for Audio Player */}
+          {isAudioPlayer && (
+            <Modal
+              heading="Settings"
+              actionButtonText="Save"
+              onAction={handleSaveAudioSettings}
+            >
+              <AudioPlayerSettingsContent 
+                initialDelay={audioSettings.delay as 1 | 3 | 5}
+                initialRepetition={audioSettings.repetition as 1 | 2 | 3}
+                initialVoice={audioSettings.voice as 1 | 2}
+                onSettingsChange={(settings) => setAudioSettings(settings)}
+              />
             </Modal>
           )}
         </div>

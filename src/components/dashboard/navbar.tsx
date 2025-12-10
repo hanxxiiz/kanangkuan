@@ -35,7 +35,7 @@ const Navbar = ({
           {/* Left section: sidebar icon + logo */}
           <div className="flex flex-row items-center space-x-2 sm:space-x-4 lg:space-x-6">
             <button
-              className="hidden lg:block p-3 sm:p-2 rounded-md hover:cursor-pointer hover:text-[#101220] transition-all duration-200"
+              className="hidden lg:block p-3 sm:p-2 rounded-md hover:cursor-pointer text-gray-200 hover:text-[#101220] transition-all duration-200"
               onClick={onMenuClick} 
             >
               <IoMenu className="text-2xl" />
@@ -96,7 +96,7 @@ const Navbar = ({
                 />
               </div>
               <button
-                className="relative rounded-full hover:cursor-pointer hover:text-[#101220] transition flex-shrink-0"
+                className="relative rounded-full hover:cursor-pointer text-gray-200 hover:text-[#101220] transition flex-shrink-0"
                 onClick={() => onDropdownToggle?.()} 
               >
                 <RiArrowDropDownLine

@@ -28,3 +28,24 @@ export async function GetDeckInfo(deckId: string): Promise<DeckInfo | null> {
     return null;
   }
 }
+
+export async function GetDeckCardCount(deckId: string): Promise<number> {
+  const supabase = await createClient();
+  
+  try {
+    const { count, error } = await supabase
+      .from("cards")
+      .select("*", { count: 'exact', head: true })
+      .eq("deck_id", deckId);
+
+    if (error) {
+      console.error("Error fetching card count:", error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error("Error in GetDeckCardCount:", error);
+    return 0;
+  }
+}
