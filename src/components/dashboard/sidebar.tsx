@@ -55,12 +55,8 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
             );
           })}
           
-          <Link
-            href="/practice"
-            onClick={(e) => {
-              e.preventDefault();
-              onPracticeClick();
-            }}
+          <button
+            onClick={onPracticeClick}
             className="flex flex-col items-center py-1 px-2 rounded-lg transition-all duration-200 group flex-1"
           >
             <MdLibraryBooks className={`text-xl mb-1 transition-colors ${
@@ -75,7 +71,7 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
             }`}>
               Practice
             </span>
-          </Link>
+          </button>
           
           {menuItems.slice(2, 4).map((item) => {
             const Icon = item.icon;
