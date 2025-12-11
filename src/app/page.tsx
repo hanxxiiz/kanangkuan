@@ -385,7 +385,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-8 py-20 lg:py-60">
           <div className="flex flex-col items-center mt-10 lg:mt-0">
             <h1 className="text-xl lg:text-7xl font-main text-center text-black">
-              {`Turn every ‘hala familiar’ into <br /> I got this!`}
+              {`Turn every ‘hala familiar’ into I got this!`}
             </h1>
             <Link
                 href="/auth/signin"
