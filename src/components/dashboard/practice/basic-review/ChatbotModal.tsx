@@ -92,7 +92,7 @@ function ChatMessage({ sender, message, shouldAnimate = false, onUpdate, userPro
   return (
     <div className="flex gap-3 mb-4">
       <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${
-        sender === "user" ? "bg-black" : "bg-blue"
+        sender === "user" ? "bg-black" : "bg-purple"
       }`}>
         {sender === "user" && !userProfilePic ? (
           <span className="text-white font-body text-sm">{avatarFallback}</span>
@@ -370,7 +370,7 @@ export default function ChatbotModal({
               
               {isLoading && (
                 <div className="flex gap-3 mb-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-black flex items-center justify-center overflow-hidden">
+                  <div className="flex-shrink-0 w-10 h-10 bg-purple rounded-full flex items-center justify-center overflow-hidden">
                     <Image 
                       src="/practice/chatbot-mascot.svg" 
                       alt="Bot" 

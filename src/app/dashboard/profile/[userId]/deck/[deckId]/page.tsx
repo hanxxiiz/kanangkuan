@@ -2,6 +2,7 @@
 
 import Card from "@/components/dashboard/my-decks/Card";
 import CardsPageLayout from "@/components/profile/CardsPageLayout";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useViewMode } from "@/lib/hooks/useViewMode";
@@ -10,11 +11,11 @@ import { use, useMemo } from "react";
 export default function MyDeckPage({
     params,
 }: {
-    params: Promise<{ deckId: string }>
+    params: Promise<{ userId: string; deckId: string }>
 }) {
-    const { deckId } = use(params);
-    const { deck, deckLoading, deckError } = useDecks(deckId); 
-    const { cards, cardLoading, cardError } = useCards(deckId);
+    const { userId, deckId } = use(params);
+    const { deck, deckLoading, deckError } = useDecks(deckId, userId); 
+    const { cards, cardLoading, cardError } = useCards(deckId, userId);
 
     const deckName = deckLoading
         ? "Loading..."
@@ -39,7 +40,7 @@ export default function MyDeckPage({
     });
 
     if (cardLoading || deckLoading) {
-        return <div>Loading...</div>;
+        return <StylishLoader2 />
     }
 
     if (cardError || deckError) {

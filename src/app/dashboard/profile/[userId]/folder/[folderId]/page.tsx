@@ -8,16 +8,17 @@ import { useDecks } from "@/lib/hooks/useDecks";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useViewMode } from "@/lib/hooks/useViewMode";
 import { use, useMemo } from "react";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 export default function MyFolderPage({
     params,
 }: {
-    params: Promise<{ folderId: string }>
+    params: Promise<{ userId: string; folderId: string }>
 }) {
-    const { folderId } = use(params);
-    const { decks, deckLoading, deckError } = useDecks();
-    const { cards } = useCards();
-    const { folder, folderLoading, folderError } = useFolders(folderId);
+    const { userId, folderId } = use(params);
+    const { decks, deckLoading, deckError } = useDecks(undefined, userId);
+    const { cards } = useCards(undefined, userId);
+    const { folder, folderLoading, folderError } = useFolders(folderId, userId);
 
     const folderName = folderLoading
         ? "Loading..."
@@ -42,7 +43,7 @@ export default function MyFolderPage({
     });
 
     if (deckLoading || folderLoading) {
-        return <div>Loading...</div>;
+        return <StylishLoader2 />;
     }
 
     if (deckError || folderError) {

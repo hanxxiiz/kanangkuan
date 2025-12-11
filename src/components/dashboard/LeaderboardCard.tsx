@@ -2,12 +2,57 @@
 
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useSupabase } from "../providers/SupabaseProvider";
+import { useDashboard } from "./DashboardContext";
+
+type PresetGradientSet = {
+  baseFrom: string;
+  baseTo: string;
+  hoverFrom: string;
+  hoverTo: string;
+  badgeBase: string;
+  badgeHover: string;
+  badgeMobile: string;
+};
+
+export const GradientSets = {
+  blueToPink: {
+    baseFrom: "from-blue",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-blue",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-cyan",
+  },
+  limeToPink: {
+    baseFrom: "from-lime",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-lime",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-lime",
+  },
+  cyanToPink: {
+    baseFrom: "from-cyan",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-cyan",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-blue",
+  },
+};
 
 type LeaderboardCardProps = {
   rank?: 1 | 2 | 3;
   name?: string;
   xp?: number;
   imageSrc?: string;
+  gradientSet?: PresetGradientSet;
+  userId?: string;
 };
 
 const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
@@ -15,21 +60,59 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   name = "username",
   xp = 666,
   imageSrc = "/dashboard/default-picture.png",
+  gradientSet,
+  userId,
 }) => {
+
+  const defaultGradient: PresetGradientSet = {
+    baseFrom: "from-lime",
+    baseTo: "to-[#FFE566]",
+    hoverFrom: "from-pink",
+    hoverTo: "to-[#FFE566]",
+    badgeBase: "bg-lime",
+    badgeHover: "bg-pink",
+    badgeMobile: "bg-purple",
+  };
+
+  const gradient = gradientSet || defaultGradient;
+  const { supabase, session } = useSupabase();
+  const { username: currentUsername } = useDashboard();
+  const router = useRouter();
+  const handleClick = async () => {
+    if(!userId){
+      return;
+    }
+    const viewerId = session?.user?.id;
+    const viewerName = currentUsername || "Someone";
+    if (supabase && viewerId && viewerId !== userId) {
+      const { error } = await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "profile_view",
+        message: `${viewerName} viewed your profile`,
+        read: false,
+      });
+      if (error) {
+        console.error("Failed to log profile_view notification:", error?.message ?? error);
+      }
+    }
+    router.push(`/dashboard/profile/${userId}`);
+  };
+
   return (
     <>
       {/* FOR LAPTOP/IPAD */}
       <div
+      onClick={handleClick}
         className={`hidden sm:block group relative w-full max-w-[260px] lg:max-w-[360px] rounded-[2rem] overflow-hidden 
           cursor-pointer hover:scale-105 transform transition-transform duration-300 ease-in-out 
-          shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)]
+          shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)] hover:cursor-pointer
           ${rank === 1 ? "z-10" : ""}
           ${rank === 2 ? "sm:-mr-12 lg:mr-0" : ""}
           ${rank === 3 ? "sm:-ml-12 lg:ml-0" : ""}`}
       >
         <div
-          className={`relative bg-gradient-to-b from-lime to-[#FFE566]
-          transition-colors duration-[1000ms] ease-in-out group-hover:from-pink group-hover:to-[#FFE566]
+          className={`relative bg-gradient-to-b ${gradient.baseFrom} ${gradient.baseTo}
+          transition-colors duration-[1000ms] ease-in-out group-hover:${gradient.hoverFrom} group-hover:${gradient.hoverTo}
           ${
             rank === 1
               ? "md:h-[180px] lg:h-[210px]"
@@ -52,11 +135,11 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             </div>
             <div className="absolute -bottom-2 -right-1 w-15 h-15 rounded-full flex items-center justify-center text-[#65C110] font-main text-lg border-[4px] border-white">
               <div
-                className="absolute inset-0 rounded-full bg-lime pointer-events-none"
+                className={`absolute inset-0 rounded-full ${gradient.badgeBase} pointer-events-none`}
                 aria-hidden
               />
               <div
-                className="absolute inset-0 rounded-full bg-pink opacity-0 group-hover:opacity-100 transition-opacity duration-[1000ms] ease-in-out pointer-events-none"
+                className={`absolute inset-0 rounded-full ${gradient.badgeHover} opacity-0 group-hover:opacity-100 transition-opacity duration-[1000ms] ease-in-out pointer-events-none`}
                 aria-hidden
               />
               <span className="relative z-10 text-white transition-colors duration-[1000ms] ease-in-out">
@@ -84,6 +167,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
 
       {/* FOR MOBILE — stays the same height */}
       <div
+      onClick={handleClick}
         className="block sm:hidden relative w-full max-w-[500px] rounded-[1.5rem] overflow-hidden mb-5"
         style={{
           boxShadow:

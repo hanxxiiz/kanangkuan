@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { cardService } from "../services"
 import { Card } from "@/utils/supabase/models";
 
-export function useCards(deckId?: string) {
+export function useCards(deckId?: string, userId?: string) {
     const [cards, setCards] = useState<Card[]>([])
     const [cardLoading, setCardLoading] = useState(true);
     const [cardError, setCardError] = useState<string | null>(null);
@@ -15,7 +15,7 @@ export function useCards(deckId?: string) {
         } else {
             loadAllCards()
         }
-    }, [deckId]);
+    }, [deckId, userId]);
 
     async function loadAllCards() {
         try {
