@@ -25,6 +25,7 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
   const [, setIsCheckingPipeline] = useState(true);
   const [showInsufficientCardsError, setShowInsufficientCardsError] = useState(false);
   const pipelineCheckInterval = useRef<NodeJS.Timeout | null>(null);
+  const generationTriggered = useRef(false); // Track if generation was triggered
 
   useEffect(() => {
     setShowModal(true);
@@ -37,12 +38,20 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
         const status = await checkWrongOptionsAndBlankWordsStatus(currentDeckId);
         
         if (status.success && !status.needsGeneration) {
+          // Pipeline is complete!
           setIsPipelineComplete(true);
           setIsCheckingPipeline(false);
           
+          // CRITICAL: Clear the interval to stop checking
           if (pipelineCheckInterval.current) {
             clearInterval(pipelineCheckInterval.current);
             pipelineCheckInterval.current = null;
+          }
+        } else if (status.success && status.needsGeneration) {
+          // Cards need generation - trigger ONCE
+          if (!generationTriggered.current) {
+            generationTriggered.current = true;
+            triggerGenerationInBackground(currentDeckId);
           }
         }
       } catch (error) {
@@ -51,22 +60,28 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
     };
     
     if (currentDeckId) {
-      triggerGenerationInBackground(currentDeckId);
-      
+      // Get card count
       GetDeckCardCount(currentDeckId).then((count) => {
         setCardCount(count);
         setIsLoadingCount(false);
       });
 
+      // Do initial check
       checkPipelineStatus();
+      
+      // Start polling every 2 seconds
       pipelineCheckInterval.current = setInterval(checkPipelineStatus, 2000);
     }
     
     return () => {
       setShowModal(false);
+      // Clear interval on unmount
       if (pipelineCheckInterval.current) {
         clearInterval(pipelineCheckInterval.current);
+        pipelineCheckInterval.current = null;
       }
+      // Reset generation flag
+      generationTriggered.current = false;
     };
   }, [setShowModal, currentDeckId]);
 
@@ -108,10 +123,11 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
     },
     {
       title: "Active Recall", 
-      description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
+      description: "Struggle a little, remember a lot — it's the good kind of brain sweat!", 
       image: "/active-recall.png",
       color: "bg-blue",
       path: `/dashboard/practice/active-recall/${currentDeckId}`,
+      requiresPipeline: true,
     },
     {
       title: "Basic Review", 
@@ -119,6 +135,7 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
       image: "/basic-review.png",
       color: "bg-purple",
       path: `/dashboard/practice/basic-review/${currentDeckId}`,
+      requiresPipeline: false,
     },
     {
       title: "Audio Player", 
@@ -126,6 +143,7 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
       image: "/audio-player.png",
       color: "bg-cyan",
       path: `/dashboard/practice/audio-player/${currentDeckId}`,
+      requiresPipeline: false,
     },
   ];
 

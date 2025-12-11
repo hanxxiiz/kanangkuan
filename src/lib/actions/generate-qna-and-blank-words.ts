@@ -392,8 +392,17 @@ export async function checkWrongOptionsAndBlankWordsStatus(deckId: string) {
 // BACKGROUND TRIGGER (NON-BLOCKING)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// In generate-qna-and-blank-words.ts
 export async function triggerGenerationInBackground(deckId: string): Promise<void> {
   console.log(`\n[TRIGGER] Starting background generation for deck ${deckId}...`);
+  
+  // Check status first before triggering
+  const status = await checkWrongOptionsAndBlankWordsStatus(deckId);
+  
+  if (!status.needsGeneration) {
+    console.log('[TRIGGER] Generation not needed - all cards complete');
+    return;
+  }
   
   generateWrongOptionsAndBlankWordsForDeck(deckId).catch((error) => {
     console.error('[TRIGGER] Background generation failed:', error);
