@@ -23,7 +23,8 @@ const DashboardLayoutClient = ({ children }: { children: React.ReactNode }) => {
 
   const hasLayout = 
     pathname.startsWith("/dashboard") && 
-    !pathname.startsWith("/dashboard/practice/");
+    !pathname.startsWith("/dashboard/practice/") &&
+    !pathname.startsWith("/dashboard/games/");
   
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

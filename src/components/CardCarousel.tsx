@@ -82,35 +82,33 @@ export default function CardCarousel<T>({
       </button>
 
       <Swiper
-        modules={[Navigation, Keyboard]}
-        navigation={{
-          prevEl: prevRef.current ?? undefined,
-          nextEl: nextRef.current ?? undefined,
-        }}
-        onBeforeInit={(swiper) => {
-          // @ts-expect-error Swiper types are incorrect for dynamic nav assignment
-          swiper.params.navigation.prevEl = prevRef.current;
-          // @ts-expect-error Swiper types are incorrect for dynamic nav assignment
-          swiper.params.navigation.nextEl = nextRef.current;
-        }}
-        breakpoints={breakpoints}
-        centeredSlides
-        loop={enableLoop}
-        keyboard={{ enabled: true, onlyInViewport: true }}
-        onSlideChange={(swiper) => {
-          setActiveIndex(swiper.realIndex);
-          onActiveChange?.(swiper.realIndex);
-        }}
-        {...(!breakpoints
-          ? { slidesPerView: 1, spaceBetween: 12 }
-          : { spaceBetween: 12 })}
-      >
-        {cards.map((card, index) => (
-          <SwiperSlide key={index}>
-            {renderCard(card, index === activeIndex)}
-          </SwiperSlide>
-        ))}
-      </Swiper>
+  modules={[Navigation, Keyboard]}
+  navigation={{
+    prevEl: prevRef.current ?? undefined,
+    nextEl: nextRef.current ?? undefined,
+  }}
+  onBeforeInit={(swiper) => {
+    // @ts-expect-error Swiper types are incorrect for dynamic nav assignment
+    swiper.params.navigation.prevEl = prevRef.current;
+    // @ts-expect-error Swiper types are incorrect for dynamic nav assignment
+    swiper.params.navigation.nextEl = nextRef.current;
+  }}
+  breakpoints={breakpoints} // <-- let breakpoints handle spaceBetween
+  centeredSlides
+  loop={enableLoop}
+  keyboard={{ enabled: true, onlyInViewport: true }}
+  onSlideChange={(swiper) => {
+    setActiveIndex(swiper.realIndex);
+    onActiveChange?.(swiper.realIndex);
+  }}
+>
+  {cards.map((card, index) => (
+    <SwiperSlide key={index}>
+      {renderCard(card, index === activeIndex)}
+    </SwiperSlide>
+  ))}
+</Swiper>
+
     </div>
   );
 }

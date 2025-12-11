@@ -53,7 +53,7 @@ export async function signup(formData: FormData) {
 
 export async function sendResetPasswordEmail(email: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
     console.log(error);
@@ -68,7 +68,7 @@ export async function sendResetPasswordEmail(email: string) {
 
 export async function updatePassword(password: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.updateUser({password: password})
+  const { error } = await supabase.auth.updateUser({password: password})
 
   if (error) {
     console.log(error);

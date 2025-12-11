@@ -69,6 +69,7 @@ export default function MyDeckPage({
                             front={item.data.front}
                             back={item.data.back}
                             color={deck?.deck_color}
+                            deckId={deckId}
                         />
                     ))}
                 </>

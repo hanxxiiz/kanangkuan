@@ -64,7 +64,7 @@ export default function MyDecksPage() {
   }
 
   return (
-    <div className="w-full bg-white p-10">
+    <div className="w-full bg-white lg:p-10">
       <DecksPageLayout
         title="My Decks"
         onAddClick={() => {

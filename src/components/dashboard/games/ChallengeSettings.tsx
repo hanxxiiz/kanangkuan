@@ -1,0 +1,129 @@
+"use client";
+
+import { ModalContext } from '@/components/modals/providers';
+import React, { useContext, useEffect, useState } from 'react';
+import HostTab from './HostTab';
+import JoinTab from './JoinTab';
+import { useUser } from '@/lib/hooks/useUser';
+import { useRouter } from 'next/navigation';
+import { useChallenges } from '@/lib/hooks/useChallenges';
+
+export default function ChallengeSettings({practiceDeckId} :{practiceDeckId: string | null}) {
+  const { Modal, setShowModal } = useContext(ModalContext);
+  const { user } = useUser();
+  const router = useRouter();
+  const { createChallenge, insertParticipant, validateJoinCode } = useChallenges();
+
+  const [activeTab, setActiveTab] = useState<"host" | "join">("host");
+  const [joinCode, setJoinCode] = useState("");
+  const [hostUser, setHostUser] = useState("");
+  const [enteredJoinCode, setEnteredJoinCode] = useState("");
+
+  useEffect(() => {
+    setShowModal(true);
+    if (user?.id) setHostUser(user.id);
+  }, [setShowModal, user?.id]);
+
+  const tabs = [
+    { id: "host", label: "Host" },
+    { id: "join", label: "Join" },
+  ];
+
+  const tabContent = {
+    host: 
+      <HostTab onDataChange={(data) => {
+          setJoinCode(data.joinCode);
+          console.log("ChallengeSettings joinCode updated:", data.joinCode);
+        }} 
+      />,
+    join: 
+      <JoinTab onJoinCodeComplete={(code) => {
+          setEnteredJoinCode(code);
+          console.log("Join code entered:", code);
+        }}
+      />
+  };
+
+  const handlePlay = async () => {
+    console.log("Active tab:", activeTab);
+
+    if (activeTab === "host") {
+      if (!practiceDeckId) {
+        alert("Cannot play: No deck chosen!");
+        return;
+      }
+
+      if (!joinCode) {
+        alert("Cannot play: Please generate a code first!");
+        return;
+      }
+
+      const newChallenge = await createChallenge({
+        hostId: hostUser,
+        sessionCode: joinCode,
+        deckId: practiceDeckId,
+        status: "waiting",
+      });
+
+      if (!newChallenge?.id) {
+        alert("Failed to create challenge.");
+        return;
+      }
+
+      await insertParticipant(newChallenge!.id, hostUser);
+      router.push(`/dashboard/games/challenge/${newChallenge.id}/waiting`);
+    }
+
+    if (activeTab === "join") {
+      if (!enteredJoinCode || enteredJoinCode.length !== 5) {
+        alert("Please enter a complete 5-character join code.");
+        return;
+      }
+
+      console.log("Validating join code:", enteredJoinCode);
+      
+      const validation = await validateJoinCode(enteredJoinCode);
+      
+      if (!validation.isValid) {
+        alert(validation.message || "Invalid join code.");
+        return;
+      }
+
+      console.log("Join code valid, navigating to challenge:", validation.challengeId);
+      if (validation.challengeId) {
+        await insertParticipant(validation.challengeId, user!.id);
+        router.push(`/dashboard/games/challenge/${validation.challengeId}/waiting`);
+      }
+    }
+  };
+
+  return (
+    <div>
+      <Modal 
+        heading="Challenge" 
+        actionButtonText="Play"
+        onAction={() => {
+          handlePlay();
+        }}
+      >
+        <div className="flex justify-start mb-4 sm:mb-6 border-b border-gray-200">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`px-4 sm:px-7 py-2 sm:py-3 font-main cursor-pointer transition-all duration-200 ease-in-out ${
+                activeTab === tab.id
+                  ? "border-b-4 border-black text-base sm:text-lg lg:text-xl text-black font-semibold"
+                  : "text-gray-600 text-base sm:text-lg lg:text-xl hover:text-black"
+              }`}
+              onClick={() => setActiveTab(tab.id as "host" | "join")}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 sm:mt-6">{tabContent[activeTab]}</div>
+      </Modal>
+    </div>
+  );
+}

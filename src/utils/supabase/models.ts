@@ -33,3 +33,22 @@ export interface Card {
     back: string;
     created_at: string;
 }
+
+export interface Challenge {
+    id: string;
+    host_id: string;
+    deck_id: string;
+    join_code: string;
+    max_players: number;
+    status: string | "waiting" | "playing" | "finished";
+    created_at: string;
+}
+
+export interface Lumbaanay {
+    id: string;
+    host_id: string;
+    join_code: string;
+    max_players: number;
+    status: string | "waiting" | "playing" | "finished";
+    created_at: string;
+}

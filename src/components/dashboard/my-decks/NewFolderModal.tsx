@@ -55,12 +55,12 @@ export default function NewFolderModal() {
         />
 
         <label className="text-xs text-black font-body">Folder Color</label>
-        <div className="flex justify-center items-center gap-4 p-6">
+        <div className="flex justify-center items-center gap-2 lg:gap-4 p-1 lg:p-6">
           {colors.map((color) => (
             <button
               key={color.id}
               onClick={() => setSelectedColor(color.id)}
-              className="w-20 h-20 rounded-full transition-transform duration-200 ease-out cursor-pointer"
+              className="w-15 h-11 lg:w-20 lg:h-20 rounded-full transition-transform duration-200 ease-out cursor-pointer"
               style={{
                 backgroundColor: color.value,
                 boxShadow:

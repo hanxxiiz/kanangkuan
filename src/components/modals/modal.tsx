@@ -30,17 +30,17 @@ function Modal({
                         onClick={() => setShowModal(false)}
                     />
 
-                    <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-4 z-10">
+                    <div className="relative bg-white rounded-lg shadow-xl p-8 w-[85%] lg:w-full max-w-xl mx-10 z-10">
                         <div className="text-left font-main">
-                            <h2 className="text-4xl text-black font-semibold">{heading}</h2>
+                            <h2 className="text-3xl lg:text-4xl text-black font-semibold">{heading}</h2>
                             <div className="h-px my-2 w-full bg-black" />
                             <div className="flex-1 overflow-auto mb-6">
                                 {children}
                             </div>
-                            <div className="flex justify-end gap-2">
-                                <Button 
+                            <div className="flex justify-center lg:justify-end gap-2">
+                                <Button
                                     variant="outline"
-                                    size="lg"
+                                    className="px-3 py-1 text-sm lg:px-15 lg:py-1 lg:text-base"
                                     disabled={cancelButtonClicked}
                                     onClick={() => {
                                         setCancelButtonClicked(true);
@@ -49,20 +49,20 @@ function Modal({
                                 >
                                     Cancel
                                 </Button>
-                                <Button 
+
+                                <Button
                                     variant="flat"
-                                    size="lg"
+                                    className="px-3 py-1 text-sm lg:px-15 lg:py-1 lg:text-base"
                                     disabled={actionButtonClicked}
                                     onClick={() => {
                                         setActionButtonClicked(true);
-                                        if (onAction) {
-                                            onAction();
-                                        }
+                                        if (onAction) onAction();
                                     }}
                                 >
                                     {actionButtonText}
                                 </Button>
                             </div>
+
                         </div>
                     </div>
                 </div>
