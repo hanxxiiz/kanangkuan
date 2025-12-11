@@ -52,26 +52,40 @@ async function extractTextFromDocument(
   filePath: string,
   fileType: string
 ): Promise<string> {
-  console.log(`Extracting text from ${fileType} file: ${filePath}`);
+  console.log('[EXTRACT] Starting text extraction:', {
+    filePath,
+    fileType
+  });
   
+  console.log('[EXTRACT] Downloading file from storage...');
   const { data: fileData, error: downloadError } = await supabase.storage
     .from('documents')
     .download(filePath);
 
   if (downloadError || !fileData) {
+    console.error('[EXTRACT] ERROR: Failed to download file:', downloadError);
     throw new Error(`Failed to download file: ${downloadError?.message}`);
   }
 
-  console.log(`File downloaded successfully (${fileData.size} bytes)`);
+  console.log('[EXTRACT] File downloaded, size:', fileData.size, 'bytes');
 
+  console.log('[EXTRACT] Converting to buffer...');
   const arrayBuffer = await fileData.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   
+  console.log('[EXTRACT] Buffer created, size:', buffer.length);
+  console.log('[EXTRACT] Calling extractText utility...');
+  
   const result = await extractText(buffer, fileType);
   
-  console.log(` Extracted ${result.wordCount} words from ${fileType.toUpperCase()}`);
+  console.log('[EXTRACT] Extraction complete:', {
+    wordCount: result.wordCount,
+    textLength: result.text.length,
+    pageCount: result.pageCount || 'N/A'
+  });
   
   if (!result.text || result.text.trim().length < 5) {
+    console.error('[EXTRACT] ERROR: Insufficient text content');
     throw new Error('Insufficient text content extracted');
   }
   
@@ -271,10 +285,16 @@ async function generateAllBlankWords(cards: CardWithId[]): Promise<void> {
 // MAIN PIPELINE ORCHESTRATOR
 
 export async function processDocument(importId: string): Promise<ProcessResult> {
+  console.log('===============================================================');
+  console.log('[PROCESS] DOCUMENT PROCESSING STARTED');
+  console.log('[PROCESS] Import ID:', importId);
+  console.log('[PROCESS] Timestamp:', new Date().toISOString());
+  console.log('===============================================================');
+  
   const supabase = await createClient();
 
   try {
-    console.log('[PIPELINE START] Document:', importId);
+    console.log('[PROCESS] Fetching import record...');
     
     const { data: importRecord, error: importError } = await supabase
       .from('ai_imports')
@@ -283,18 +303,29 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
       .single();
 
     if (importError || !importRecord) {
+      console.error('[PROCESS] ERROR: Failed to fetch import record:', importError);
       throw new Error('Import record not found');
     }
 
-    console.log('File:', importRecord.file_name);
+    console.log('[PROCESS] Import record found:', {
+      fileName: importRecord.file_name,
+      fileType: importRecord.file_type,
+      filePath: importRecord.file_path,
+      deckId: importRecord.deck_id,
+      status: importRecord.status
+    });
 
+    console.log('[PROCESS] Updating status to processing...');
     await supabase
       .from('ai_imports')
       .update({ status: 'processing' })
       .eq('id', importId);
 
     // STEP 1: Extract text
-    console.log('[STEP 1/5] Extracting text...');
+    console.log('[PROCESS] ========================================');
+    console.log('[PROCESS] STEP 1/5: Text Extraction');
+    console.log('[PROCESS] ========================================');
+    
     const extractedText = await extractTextFromDocument(
       supabase,
       importRecord.file_path,
@@ -302,18 +333,30 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
     );
 
     if (!extractedText || extractedText.trim().length < 5) {
+      console.error('[PROCESS] ERROR: Insufficient text content');
+      console.error('[PROCESS] Text length:', extractedText?.length || 0);
       throw new Error('Insufficient text content');
     }
     
-    console.log('Extracted:', extractedText.length, 'characters');
+    console.log('[PROCESS] Text extracted successfully:', {
+      length: extractedText.length,
+      wordCount: extractedText.split(/\s+/).length,
+      preview: extractedText.substring(0, 200) + '...'
+    });
 
     // STEP 2: Generate flashcards
-    console.log('[STEP 2/5] Generating flashcards...');
+    console.log('[PROCESS] ========================================');
+    console.log('[PROCESS] STEP 2/5: Flashcard Generation');
+    console.log('[PROCESS] ========================================');
+    
     const generatedCards = await generateFlashcards(extractedText);
-    console.log('Generated:', generatedCards.length, 'flashcards');
+    console.log('[PROCESS] Flashcards generated:', generatedCards.length);
 
     // STEP 3: Save to database
-    console.log('[STEP 3/5] Saving to database...');
+    console.log('[PROCESS] ========================================');
+    console.log('[PROCESS] STEP 3/5: Saving to Database');
+    console.log('[PROCESS] ========================================');
+    
     const cardIds = await saveCardsToDatabase(
       supabase,
       importRecord.deck_id,
@@ -321,13 +364,17 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
     );
 
     if (cardIds.length === 0) {
+      console.error('[PROCESS] ERROR: Failed to save any cards');
       throw new Error('Failed to save cards');
     }
     
-    console.log('Saved:', cardIds.length, 'cards');
+    console.log('[PROCESS] Cards saved successfully:', cardIds.length);
 
     // STEP 4: Mark complete & cleanup
-    console.log('[STEP 4/5] Updating status & cleaning up...');
+    console.log('[PROCESS] ========================================');
+    console.log('[PROCESS] STEP 4/5: Updating Status & Cleanup');
+    console.log('[PROCESS] ========================================');
+    
     await supabase
       .from('ai_imports')
       .update({ 
@@ -336,45 +383,53 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
       })
       .eq('id', importId);
 
+    console.log('[PROCESS] Status updated to completed');
+
     const { error: deleteError } = await supabase.storage
       .from('documents')
       .remove([importRecord.file_path]);
 
     if (deleteError) {
-      console.error('File deletion failed:', deleteError);
+      console.error('[PROCESS] File deletion failed:', deleteError);
     } else {
-      console.log('File deleted from storage');
+      console.log('[PROCESS] File deleted from storage');
     }
 
     // STEP 5: Fetch all cards for batch processing
-    console.log('[STEP 5/5] Fetching cards for batch AI processing...');
+    console.log('[PROCESS] ========================================');
+    console.log('[PROCESS] STEP 5/5: Background AI Processing');
+    console.log('[PROCESS] ========================================');
+    
     const { data: savedCards } = await supabase
       .from('cards')
       .select('id, front, back')
       .in('id', cardIds);
 
     if (!savedCards || savedCards.length === 0) {
+      console.error('[PROCESS] ERROR: Failed to fetch saved cards');
       throw new Error('Failed to fetch saved cards');
     }
+
+    console.log('[PROCESS] Cards fetched for background processing:', savedCards.length);
 
     // BACKGROUND: Process all cards with just 2 AI requests!
     (async () => {
       try {
-        console.log('Starting batched background processing (2 AI requests total)...');
+        console.log('[BACKGROUND] Starting batched processing...');
         
-        // Request 1: Generate all wrong options
         await generateAllWrongOptions(savedCards);
-        
-        // Request 2: Generate all blank words
         await generateAllBlankWords(savedCards);
         
-        console.log('All background processing complete!');
+        console.log('[BACKGROUND] All processing complete!');
       } catch (error) {
-        console.error('Background processing failed:', error);
+        console.error('[BACKGROUND] Processing failed:', error);
       }
     })();
 
-    console.log('[PIPELINE COMPLETE] Success!');
+    console.log('===============================================================');
+    console.log('[PROCESS] DOCUMENT PROCESSING COMPLETED SUCCESSFULLY');
+    console.log('[PROCESS] Cards generated:', cardIds.length);
+    console.log('===============================================================');
 
     return {
       success: true,
@@ -382,7 +437,14 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
     };
 
   } catch (error) {
-    console.error('[PIPELINE FAILED]', error);
+    console.error('===============================================================');
+    console.error('[PROCESS] PROCESSING FAILED');
+    console.error('[PROCESS] Error:', error);
+    if (error instanceof Error) {
+      console.error('[PROCESS] Error message:', error.message);
+      console.error('[PROCESS] Error stack:', error.stack);
+    }
+    console.error('===============================================================');
 
     await supabase
       .from('ai_imports')
