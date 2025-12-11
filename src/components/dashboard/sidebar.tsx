@@ -59,16 +59,8 @@ const Sidebar = ({ isOpen, onSearchClick, onPracticeClick}: { isOpen: boolean; o
             onClick={onPracticeClick}
             className="flex flex-col items-center py-1 px-2 rounded-lg transition-all duration-200 group flex-1"
           >
-            <MdLibraryBooks className={`text-xl mb-1 transition-colors ${
-              pathname.startsWith("/dashboard/practice")
-                ? "text-white" 
-                : "text-gray-300"
-            }`} />
-            <span className={`font-regular text-xs transition-colors text-center leading-tight ${
-              pathname.startsWith("/dashboard/practice")
-                ? "text-white" 
-                : "text-gray-300"
-            }`}>
+            <MdLibraryBooks className="text-xl mb-1 transition-colors text-gray-300" />
+            <span className="font-regular text-xs transition-colors text-center leading-tight text-gray-300">
               Practice
             </span>
           </button>
