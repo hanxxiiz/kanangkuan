@@ -174,8 +174,7 @@ export default function AIImportModal({ currentDeckId }: AIImportModalProps) {
             if (inputRef.current) {
               inputRef.current.value = '';
             }
-            // Optionally trigger a refresh of the cards list here
-            //window.location.reload(); comment for now.. idek unsay pamaagi ani ug nanay bag o cards if murefresh ba gyud ang whole website or ang decks page ra 
+            window.location.reload(); 
           }, 2000);
         } else if (status.status === 'failed') {
           if (pollIntervalRef.current) {
