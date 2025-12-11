@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import LevelBar from "./Levelbar";
 import MonthlyProgress from "./ProfileMonthlyProgress";
+import StylishLoader from "../ui/StylishLoader";
+import StylishLoader2 from "../ui/StylishLoader2";
 
 type StatsPanelProps = {
     userId: string;
@@ -49,9 +51,7 @@ export default function StatsPanel({ userId, isOwnProfile }: StatsPanelProps) {
                 <h1 className="font-main text-3xl text-gray-900 py-3.5">XP</h1>
                 <div className="py-5 w-full max-h-2xl h-40 border-1 border-black rounded-2xl">
                     {loading ? (
-                        <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500">Loading...</p>
-                        </div>
+                        <StylishLoader2 />
                     ) : (
                         <LevelBar xp={userXP} />
                     )}

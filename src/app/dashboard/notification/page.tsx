@@ -8,6 +8,7 @@ import NotificationCards from "@/components/notification/NotificationCards";
 import FilterDropdown from "@/components/notification/FilterDropdown";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import type { Notification, NotificationFilter } from "@/types/notification";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 const NotificationPage = () => {
   const { supabase, session } = useSupabase();
@@ -134,9 +135,7 @@ const NotificationPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl font-main">Loading notifications...</p>
-      </div>
+      <StylishLoader2 />
     );
   }
 

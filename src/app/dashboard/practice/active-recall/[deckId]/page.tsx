@@ -17,6 +17,7 @@ import {
   DecrementLives,
   AddXPTransaction
 } from '@/lib/actions/active-recall-actions';
+import StylishLoader from '@/components/ui/StylishLoader';
 
 interface CardWithState extends ActiveRecallCard {
   failCount: number;
@@ -569,9 +570,7 @@ export default function ActiveRecallPage({
   // Safety check for currentCard
   if (!currentCard) {
     return (
-      <div className="min-h-screen bg-white p-10 sm:p-5 flex items-center justify-center">
-        <div className="text-xl">Loading card...</div>
-      </div>
+      <StylishLoader />
     );
   }
 

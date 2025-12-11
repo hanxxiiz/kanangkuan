@@ -9,6 +9,7 @@ import ProfileCard from "@/components/profile/ProfileCard";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import { useRouter } from "next/navigation";
 import type { Profile } from "@/utils/supabase/models";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 // For /profile/[userId]/page.tsx - shows other users' profiles
 type DynamicProfilePageProps = {
@@ -72,9 +73,7 @@ const DynamicProfilePage = ({ params }: DynamicProfilePageProps) => {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl font-main">
-        Loading profile...
-      </div>
+      <StylishLoader2 />
     );
   }
 
