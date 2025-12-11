@@ -6,6 +6,7 @@ import Deck from "@/components/dashboard/my-decks/Deck";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useCards } from "@/lib/hooks/useCards";
+import StylishLoader2 from "../ui/StylishLoader2";
 
 type RecentItemsProps = {
   userId: string;
@@ -52,7 +53,7 @@ export default function ProfileRecentItems({ userId }: RecentItemsProps) {
   const topThree = sorted.slice(0, 3);
 
   if (folderLoading || deckLoading) {
-    return <div>Loading recent decks...</div>;
+    return <StylishLoader2 />
   }
 
   if (topThree.length === 0) {

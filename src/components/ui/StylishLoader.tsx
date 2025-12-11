@@ -2,9 +2,9 @@ import React from 'react'
 import { Ring2 } from 'ldrs/react'
 import 'ldrs/react/Ring2.css'
 
-export default function Loading() {
+export default function StylishLoader() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gradient-to-br from-purple-50 via-white to-pink-50">
+    <div className="flex flex-col items-center justify-center h-screen gap-6 bg-white overflow-hidden">
       {/* Animated container with glow effect */}
       <div className="relative">
         {/* Glow effect behind loader */}
@@ -23,6 +23,7 @@ export default function Loading() {
         </div>
       </div>
 
+      {/* Loading text with animation */}
       <p className="font-main text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent animate-pulse">
         Loading
       </p>

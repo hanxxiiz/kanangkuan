@@ -8,6 +8,7 @@ import Navbar from "@/components/profile/Navbar";
 import ProfileCard from "@/components/profile/ProfileCard";
 import { useRouter } from "next/navigation";
 import type { Profile } from "@/utils/supabase/models";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 
 const ProfilePage = () => {
@@ -61,9 +62,7 @@ const ProfilePage = () => {
 
     if (!isLoaded || loading) {
       return (
-        <div className="min-h-screen flex items-center justify-center text-xl font-main">
-          Loading profile...
-        </div>
+        <StylishLoader2 />
       );
     }
 

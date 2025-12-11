@@ -23,6 +23,7 @@ import {
   UserDailyLimits,
 } from "@/lib/queries/active-recall-queries";
 import { GetAudioPlayerUserSettings } from "@/lib/queries/audio-player-queries";
+import StylishLoader from "@/components/ui/StylishLoader";
 
 type SortOrder = "oldest_first" | "newest_first" | "random_order";
 
@@ -209,22 +210,8 @@ export default function PracticeLayout({
 
   if (!mounted || isLoading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white">
-        <div className="text-xl mb-4">
-          {isActiveRecall && !isPipelineComplete 
-            ? "Preparing your cards..." 
-            : "Loading..."}
-        </div>
-        {isActiveRecall && !isPipelineComplete && (
-          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 transition-all duration-500"
-              style={{ width: `${pipelineProgress}%` }}
-            />
-          </div>
-        )}
-      </div>
-    );
+      <StylishLoader />
+    )
   }
 
   const handleBack = () => {

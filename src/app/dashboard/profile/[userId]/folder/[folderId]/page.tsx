@@ -8,6 +8,7 @@ import { useDecks } from "@/lib/hooks/useDecks";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useViewMode } from "@/lib/hooks/useViewMode";
 import { use, useMemo } from "react";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 export default function MyFolderPage({
     params,
@@ -42,7 +43,7 @@ export default function MyFolderPage({
     });
 
     if (deckLoading || folderLoading) {
-        return <div>Loading...</div>;
+        return <StylishLoader2 />;
     }
 
     if (deckError || folderError) {

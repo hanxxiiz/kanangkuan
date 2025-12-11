@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
 import Image from "next/image";
+import StylishLoader2 from "../ui/StylishLoader2";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -114,11 +115,7 @@ export default function ProfileMonthlyProgress({ userId }: ProfileMonthlyProgres
 
   if (loading) {
     return (
-      <div className="w-full h-full">
-        <div className="mx-auto w-full h-full rounded-3xl bg-[#10FFE2] px-6 pt-6 pb-12 min-h-[200px] shadow-[0px_8px_28px_-9px_rgba(0,0,0,0.45)] flex items-center justify-center">
-          <p className="text-black font-main">Loading progress...</p>
-        </div>
-      </div>
+      <StylishLoader2 />
     );
   }
 

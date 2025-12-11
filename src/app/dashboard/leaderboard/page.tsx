@@ -5,6 +5,7 @@ import Navbar from "../../../components/profile/Navbar";
 import LeaderboardCard, {GradientSets} from "../../../components/dashboard/LeaderboardCard";
 import RankedCard from "../../../components/leaderboard/RankedCard";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 interface LeaderboardUser {
   id: string;
@@ -123,9 +124,7 @@ const LeaderboardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl font-main">
-        Loading leaderboard...
-      </div>
+      <StylishLoader2 />
     );
   }
 
