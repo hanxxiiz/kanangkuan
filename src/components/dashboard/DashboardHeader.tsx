@@ -41,7 +41,7 @@ const DashboardHeader = () => {
         </div>
     
         <div className="relative z-10 h-full px-6 sm:px-8 lg:px-12 py-6 sm:py-12 flex flex-col justify-center items-start">
-          <h2 className="font-main text-3xl sm:text-4xl lg:text-5xl">
+          <h2 className="text-white font-main text-3xl sm:text-4xl lg:text-5xl">
             Welcome, <span className="block sm:inline">classmate!</span>
           </h2>
           <p className="font-regular font-semibold text-lg sm:text-xl lg:text-3xl text-lime mt-1 sm:mt-2 lg:pl-2">

@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       
       try {
         const fallbackResponse = await ai.models.generateContentStream({
-          model: 'gemini-2.5-flash-lite',
+          model: 'gemini-2.5-pro',
           config: {
             temperature: 0.7,
             thinkingConfig: { thinkingBudget: -1 },
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
         console.log('Second model failed, trying gemini-2.0-flash...');
         
         const finalFallbackResponse = await ai.models.generateContentStream({
-          model: 'gemini-2.0-flash',
+          model: 'gemini-2.5-flash-lite',
           config: {
             temperature: 0.7,
           },

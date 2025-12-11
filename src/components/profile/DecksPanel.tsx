@@ -3,6 +3,7 @@
 import DecksPageLayout from "@/components/profile/DecksPageLayout";
 import Folder from "@/components/dashboard/my-decks/Folder";
 import Deck from "@/components/dashboard/my-decks/Deck";
+import StylishLoader from "@/components/ui/StylishLoader";
 import { useMemo } from "react";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
@@ -48,7 +49,7 @@ export default function MyDecksPage({userId, isOwnProfile}: DecksPanelProps) {
   });
   
   if (folderLoading || deckLoading) {
-    return <div>My Decks Page is Loading...</div>
+    return <StylishLoader />
   }
 
   if (folderError || deckError) {

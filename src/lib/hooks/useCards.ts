@@ -62,5 +62,30 @@ export function useCards(deckId?: string, userId?: string) {
             setCardError (err instanceof Error ? err.message : "Failed to create card.");
         }
     }
-    return {cards, cardLoading, cardError, createCard}
+
+    async function updateCard(cardId: string, cardData: {
+        front: string,
+        back: string,
+    }) {
+        try {
+            const updatedCard = await cardService.updateCard(cardId, {
+                front: cardData.front,
+                back: cardData.back,
+            });
+            setCards((prev) => prev.map((card) => card.id === cardId ? updatedCard : card));
+        } catch (err) {
+            setCardError(err instanceof Error ? err.message : "Failed to update card.");
+        }
+    }
+
+    async function deleteCard(cardId: string) {
+        try {
+            await cardService.deleteCard(cardId);
+            setCards((prev) => prev.filter((card) => card.id !== cardId));
+        } catch (err) {
+            setCardError(err instanceof Error ? err.message : "Failed to delete card.");
+        }
+    }
+
+    return {cards, cardLoading, cardError, createCard, updateCard, deleteCard}
 }

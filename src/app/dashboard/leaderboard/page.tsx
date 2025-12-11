@@ -5,7 +5,7 @@ import Navbar from "../../../components/profile/Navbar";
 import LeaderboardCard, {GradientSets} from "../../../components/dashboard/LeaderboardCard";
 import RankedCard from "../../../components/leaderboard/RankedCard";
 import { useSupabase } from "@/components/providers/SupabaseProvider";
-import { useDashboard } from "@/components/dashboard/DashboardContext";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 interface LeaderboardUser {
   id: string;
@@ -18,11 +18,11 @@ interface LeaderboardUser {
 const LeaderboardPage = () => {
   const { supabase } = useSupabase();
   const { session } = useSupabase();
-  const { leaderboardData } = useDashboard();
+
   // Navbar
   const tabs = ["All Time", "Top 100", "XP"];
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [, setIsMobile] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,9 +124,7 @@ const LeaderboardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl font-main">
-        Loading leaderboard...
-      </div>
+      <StylishLoader2 />
     );
   }
 

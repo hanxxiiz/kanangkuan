@@ -2,6 +2,7 @@
 
 import Card from "@/components/dashboard/my-decks/Card";
 import CardsPageLayout from "@/components/profile/CardsPageLayout";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useViewMode } from "@/lib/hooks/useViewMode";
@@ -39,7 +40,7 @@ export default function MyDeckPage({
     });
 
     if (cardLoading || deckLoading) {
-        return <div>Loading...</div>;
+        return <StylishLoader2 />
     }
 
     if (cardError || deckError) {
@@ -68,6 +69,7 @@ export default function MyDeckPage({
                             front={item.data.front}
                             back={item.data.back}
                             color={deck?.deck_color}
+                            deckId={deckId}
                         />
                     ))}
                 </>

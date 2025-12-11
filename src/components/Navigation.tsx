@@ -74,7 +74,7 @@ const Navigation = () => {
               <div className="md:hidden flex items-center">
                 <button onClick={() => setIsMenuVisible(!isMenuVisible)}
                 className="inline-flex items-center justify-center p-2 rounded-md
-                text-gray-600 hover:text-gray-900"
+                text-gray-900"
                 >
                   {!isMenuVisible ? (
                     <IoMenu className="text-3xl" />

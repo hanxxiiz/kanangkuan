@@ -11,6 +11,7 @@ import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useCards } from "@/lib/hooks/useCards";
 import { useViewMode } from "@/lib/hooks/useViewMode";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 
 type ModalType = "folder" | "deck" | null;
 
@@ -55,7 +56,7 @@ export default function MyDecksPage() {
   });
   
   if (folderLoading || deckLoading) {
-    return <div>My Decks Page is Loading...</div>
+    return <StylishLoader2 />
   }
 
   if (folderError || deckError) {
@@ -63,7 +64,7 @@ export default function MyDecksPage() {
   }
 
   return (
-    <div className="w-full bg-white p-10">
+    <div className="w-full bg-white lg:p-10">
       <DecksPageLayout
         title="My Decks"
         onAddClick={() => {

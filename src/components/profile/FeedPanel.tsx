@@ -4,6 +4,7 @@ import { useSupabase } from "@/components/providers/SupabaseProvider";
 import ProfileLevelBar from "./Levelbar"
 import ProfileMonthlyProgress from "./ProfileMonthlyProgress"
 import RecentDeck from "./RecentDeck";
+import StylishLoader2 from "../ui/StylishLoader2";
 
 type FeedPanelProps = {
     userId: string;
@@ -51,9 +52,7 @@ export default function Feed({ userId, isOwnProfile, switchToDecks }: FeedPanelP
                 <h1 className="font-main text-3xl text-gray-900 py-3.5">XP</h1>
                 <div className="py-5 w-full max-h-2xl h-40 border-1 border-black rounded-2xl">
                     {loading ? (
-                        <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500">Loading...</p>
-                        </div>
+                        <StylishLoader2 />
                     ) : (
                         <ProfileLevelBar xp={userXP} />
                     )}

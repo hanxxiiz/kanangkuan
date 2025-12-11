@@ -1,7 +1,19 @@
 import { createClient } from "@/utils/supabase/client";
-import { Card, Deck, Folder } from "@/utils/supabase/models";
+import { Card, Deck, Folder, Lumbaanay, Profile } from "@/utils/supabase/models";
 
 const supabase = createClient();
+
+export const profileService = {
+    async getProfiles(userId: string[]): Promise<Profile[]>{
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .in("id", userId)
+
+        if (error) throw error;
+        return data || [];
+    },
+}
 
 export const folderService = {
     async getFolders(userId: string): Promise<Folder[]> {
@@ -132,4 +144,165 @@ export const cardService = {
 
         return data;
     },
+
+    async updateCard(
+        cardId: string,
+        updates: Partial<Omit<Card, "id" | "created_at" | "deck_id">>
+    ): Promise<Card> {
+        const { data, error } = await supabase
+            .from("cards")
+            .update(updates)
+            .eq("id", cardId)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async deleteCard(cardId: string): Promise<void> {
+        const { error } = await supabase
+            .from("cards")
+            .delete()
+            .eq("id", cardId)
+
+        if (error) throw error;
+    },
 }
+
+export const lumbaanayService = {
+    async createLumbaanay(
+        lumbaanay: Omit<Lumbaanay, "id" | "max_players" | "created_at">        
+    ): Promise<Lumbaanay> {
+        const { data, error } = await supabase
+            .from("lumbaanays")
+            .insert(lumbaanay)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+    
+    async  incrementMaxPlayers(id: string) {
+        const { error } = await supabase.rpc("increment_lumbaanays_max_players", {
+            lumbaanay_id: id,
+        });
+
+        if (error) throw error;
+
+        console.log("Incremented max_players successfully!");
+    },
+
+    async getLumbaanay(lumbaanayId: string): Promise<Lumbaanay> {
+        const { data, error } = await supabase
+            .from("lumbaanays")
+            .select("*")
+            .eq("id", lumbaanayId)
+            .single();
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async checkJoinCodeExists(joinCode: string): Promise<boolean> {
+        const { data, error } = await supabase
+            .from("lumbaanays")
+            .select("join_code")
+            .eq("join_code", joinCode)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        return data !== null;
+    },
+
+    async generateUniqueJoinCode(): Promise<string> {
+        const generateCode = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 5; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        };
+
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (attempts < maxAttempts) {
+            const code = generateCode();
+            const exists = await this.checkJoinCodeExists(code);
+            
+            if (!exists) {
+                return code;
+            }
+            
+            attempts++;
+        }
+
+        throw new Error("Failed to generate unique code after multiple attempts");
+    },
+
+    async validateJoinCode(joinCode: string): Promise<{ isValid: boolean; lumbaanayId?: string; message?: string }> {
+        const { data, error } = await supabase
+            .from("lumbaanays")
+            .select("id, status, max_players")
+            .eq("join_code", joinCode)
+            .maybeSingle();
+
+        if (error) {
+            return { isValid: false, message: "Error validating code. Please try again." };
+        }
+
+        if (!data) {
+            return { isValid: false, message: "Invalid join code. Please check and try again." };
+        }
+
+        if (data.status !== "waiting") {
+            return { isValid: false, message: "This lumbaanay is no longer available." };
+        }
+
+        if (data.max_players === 3) {
+            return { isValid: false, message: "This lumbaanay already has max players." };
+        }
+
+        return { isValid: true, lumbaanayId: data.id };
+    },
+
+    async markPlayerReady(lumbaanayId: string, currentReadyPlayers: number): Promise<Lumbaanay> {
+        const { data, error } = await supabase
+        .from('lumbaanays')
+        .update({
+            max_players: currentReadyPlayers + 1,
+            status: currentReadyPlayers + 1 >= 3 ? 'playing' : 'waiting',
+        })
+        .eq('id', lumbaanayId)
+        .select()
+        .single();
+
+        if (error) throw error;
+
+        return data;
+    }
+}
+
+export const gameService = {
+    async updateGameStatus(gameType: string, gameStatus: string, gameId: string) {
+        const table = gameType === "challenge" ? "challenges" : "lumbaanays";
+
+        const { data, error } = await supabase
+            .from(table)
+            .update({ status: gameStatus })
+            .eq("id", gameId)
+            .select()
+            .maybeSingle(); 
+
+        return { data, error };
+    },
+};
+
+

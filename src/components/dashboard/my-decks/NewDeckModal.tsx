@@ -58,12 +58,12 @@ export default function NewDeckModal({currentFolderId} : {currentFolderId?: stri
           className="border-b text-black border-gray-300 p-2 w-full my-2 text-2xl focus:border-black focus:outline-none transition-all duration-200"
         />
         <label className="text-xs text-black font-body">Deck color</label>
-        <div className="flex justify-center items-center gap-4 p-6">
+        <div className="flex justify-center items-center gap-2 lg:gap-4 p-1 lg:p-6">
           {colors.map((color) => (
             <button
               key={color.id}
               onClick={() => setSelectedColor(color.id)}
-              className="w-20 h-20 rounded-full transition-transform duration-200 ease-out cursor-pointer"
+              className="w-15 h-11 lg:w-20 lg:h-20 rounded-full transition-transform duration-200 ease-out cursor-pointer"
               style={{
                 backgroundColor: color.value,
                 boxShadow:

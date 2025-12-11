@@ -4,6 +4,7 @@ import Deck from "@/components/dashboard/my-decks/Deck";
 import DecksPageLayout from "@/components/dashboard/my-decks/DecksPageLayout";
 import NewDeckModal from "@/components/dashboard/my-decks/NewDeckModal";
 import { ModalContext } from "@/components/modals/providers";
+import StylishLoader2 from "@/components/ui/StylishLoader2";
 import { useCards } from "@/lib/hooks/useCards";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useFolders } from "@/lib/hooks/useFolders";
@@ -44,7 +45,7 @@ export default function MyFolderPage({
     });
 
     if (deckLoading || folderLoading) {
-        return <div>Loading...</div>;
+        return <StylishLoader2 />;
     }
 
     if (deckError || folderError) {
@@ -52,7 +53,7 @@ export default function MyFolderPage({
     }
 
     return (
-        <div className="w-full bg-white p-10">
+        <div className="w-full bg-white lg:p-10">
             <DecksPageLayout
                 title={folderName}
                 onAddClick={() => {

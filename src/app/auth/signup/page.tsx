@@ -68,13 +68,14 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="w-full max-w-4xl h-[600px] flex overflow-hidden shadow-2xl bg-white">
-        <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
-          <div className="w-full max-w-md -mt-30">
-            <h2 className="text-4xl font-main text-gray-900 mt-28">Sign up</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-bl from-pink to-lime-300 p-4 lg:bg-none lg:from-transparent lg:to-transparent lg:bg-black">
+      <div className="w-full max-w-4xl min-h-[600px] flex flex-col lg:flex-row overflow-hidden shadow-2xl bg-white rounded-lg lg:rounded-none">
+        {/* Form Section */}
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gray-50">
+          <div className="w-full max-w-md">
+            <h2 className="text-3xl sm:text-4xl font-main text-gray-900 mb-6 sm:mb-8">Sign up</h2>
             <form onSubmit={handleSubmit}>
-              <div className="mt-8 space-y-7">
+              <div className="space-y-5 sm:space-y-6">
                 <div className="relative">
                   <input
                     name="email"
@@ -125,16 +126,16 @@ export default function SignUpPage() {
                     disabled={loading}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border-b text-black border-gray-600 py-1 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                    className="border-b text-black border-gray-600 py-1 pr-10 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                   />
                   {password && (
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute top-1/2 -translate-y-1/2 right-3 bg-white cursor-pointer"
+                      className="absolute top-1/2 -translate-y-1/2 right-0 bg-gray-50 cursor-pointer"
                       disabled={loading}
                     >
-                      {showPassword ? <GrFormView className="text-2xl" /> : <GrFormViewHide className="text-2xl" />}
+                      {showPassword ? <GrFormView className="text-2xl sm:text-3xl" /> : <GrFormViewHide className="text-2xl sm:text-3xl" />}
                     </button>
                   )}
                   <label
@@ -154,17 +155,17 @@ export default function SignUpPage() {
                     disabled={loading}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="border-b text-black border-gray-600 py-1 pr-12 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
+                    className="border-b text-black border-gray-600 py-1 pr-10 focus:border-b-2 transition-colors focus:outline-none peer bg-inherit w-full"
                     autoComplete="off"
                   />
                   {confirmPassword && (
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute top-1/2 -translate-y-1/2 right-3 bg-white cursor-pointer"
+                      className="absolute top-1/2 -translate-y-1/2 right-0 bg-gray-50 cursor-pointer"
                       disabled={loading}
                     >
-                      {showConfirmPassword ? <GrFormView className="text-2xl" /> : <GrFormViewHide className="text-2xl" />}
+                      {showConfirmPassword ? <GrFormView className="text-2xl sm:text-3xl" /> : <GrFormViewHide className="text-2xl sm:text-3xl" />}
                     </button>
                   )}
                   <label
@@ -176,25 +177,39 @@ export default function SignUpPage() {
                 </div>
 
                 {error && (
-                  <div className="border-1 border-pink rounded-lg py-2 text-pink text-sm font-body text-center -mt-4">
+                  <div className="border border-pink rounded-lg py-2 px-3 text-pink text-xs sm:text-sm font-body text-center">
                     {error}
                   </div>
                 )}
 
-                <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center justify-center pt-2">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-[60%] py-1 bg-white border-1 border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base mt-8 cursor-pointer"
+                    className="w-full sm:w-[60%] py-2 bg-white border border-gray-900 rounded-full text-gray-900 font-main hover:bg-gray-900 hover:text-white transition-colors text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Signing up..." : "Sign up"}
                   </button>
+                </div>
+
+                {/* Mobile Sign In Link */}
+                <div className="lg:hidden text-center pt-4 border-t border-gray-300">
+                  <p className="text-sm text-gray-600 mb-3 mt-4">
+                   {` Already have an account?`}
+                  </p>
+                  <Link
+                    href="/auth/signin"
+                    className="inline-block px-12 py-2 bg-pink text-white text-sm font-main rounded-full shadow-lg hover:bg-cyan hover:scale-105 transition-all duration-300"
+                  >
+                    Sign in
+                  </Link>
                 </div>
               </div>
             </form>
           </div>
         </div>
 
+        {/* Branding Section - Desktop Only */}
         <div className="hidden lg:flex lg:w-7/12 bg-gradient-to-bl from-pink to-lime-300 
           relative rounded-tl-[15%] rounded-bl-[15%] drop-shadow-lg overflow-hidden">
           <div className="absolute inset-0 flex flex-col justify-between p-12">
@@ -219,7 +234,7 @@ export default function SignUpPage() {
               </p>
               <Link
                 href="/auth/signin"
-                className="px-16 py-2 bg-pink cursor-pointer text-white text-md font-main rounded-full shadow-lg hover:bg-cyan hover:scale-110 transition-all duration-300"
+                className="inline-block px-16 py-2 bg-pink cursor-pointer text-white text-md font-main rounded-full shadow-lg hover:bg-cyan hover:scale-110 transition-all duration-300"
               >
                 Sign in
               </Link>
