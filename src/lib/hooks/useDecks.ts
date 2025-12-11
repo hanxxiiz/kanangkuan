@@ -74,5 +74,39 @@ export function useDecks(deckId?: string, userId?: string) {
     }
   }
 
-  return { decks, deck, deckLoading, deckError, getDeck, loadAllDecks, createDeck };
+  async function updateDeck(deckId: string, deckData: {
+    deckName?: string;
+    deckColor?: string;
+    folderId?: string | null;
+  }) {
+    try {
+      const updates: Partial<Pick<Deck, 'deck_name' | 'deck_color' | 'folder_id'>> = {};
+      if (deckData.deckName !== undefined) updates.deck_name = deckData.deckName;
+      if (deckData.deckColor !== undefined) updates.deck_color = deckData.deckColor;
+      if (deckData.folderId !== undefined) updates.folder_id = deckData.folderId;
+
+      const updatedDeck = await deckService.updateDeck(deckId, updates);
+      setDecks((prev) => prev.map((d) => d.id === deckId ? updatedDeck : d));
+      if (deck?.id === deckId) {
+        setDeck(updatedDeck);
+      }
+    } catch (err) {
+      setDeckError(err instanceof Error ? err.message : "Failed to update deck.");
+    }
+  }
+
+  async function deleteDeck(deckId: string) {
+    try {
+      await deckService.deleteDeck(deckId);
+      setDecks((prev) => prev.filter((d) => d.id !== deckId));
+      if (deck?.id === deckId) {
+        setDeck(null);
+      }
+    } catch (err) {
+      setDeckError(err instanceof Error ? err.message : "Failed to delete deck.");
+      throw err; // Re-throw so component can handle it
+    }
+  }
+
+  return { decks, deck, deckLoading, deckError, getDeck, loadAllDecks, createDeck, updateDeck, deleteDeck };
 }

@@ -252,20 +252,6 @@ export default function SearchModal({
             ))
           )}
         </div>
-
-        {mode === "practice" && (
-          <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
-            <button
-              onClick={() => {
-                setShowModal(false);
-                router.push("/dashboard/games/challenge");
-              }}
-              className="cursor-pointer w-full bg-black hover:bg-pink text-white font-main text-lg py-2 rounded-full hover:scale-105 transition-all duration-500"
-            >
-              Join Challenge
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

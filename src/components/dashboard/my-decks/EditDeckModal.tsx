@@ -3,18 +3,30 @@
 import { ModalContext } from '@/components/modals/providers';
 import { useDecks } from '@/lib/hooks/useDecks';
 import { useRouter, usePathname } from 'next/navigation';
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 
-export default function NewDeckModal({currentFolderId} : {currentFolderId?: string}) {
-    const { Modal, setShowModal } = useContext(ModalContext);
-    const {createDeck} = useDecks();
-    const router = useRouter();
-    const pathname = usePathname();
+export default function EditDeckModal({
+  deckId,
+  initialDeckName,
+  initialDeckColor,
+  currentFolderId,
+  isOpen,
+}: {
+  deckId: string;
+  initialDeckName: string;
+  initialDeckColor: string;
+  currentFolderId?: string;
+  isOpen: boolean;
+}) {
+  const { Modal, setShowModal } = useContext(ModalContext);
+  const { updateDeck } = useDecks();
+  const router = useRouter();
+  const pathname = usePathname();
         
-    const [deckName, setDeckName] = useState("");
-    const [selectedColor, setSelectedColor] = useState<number | null>(null);
+  const [deckName, setDeckName] = useState(initialDeckName);
+  const [selectedColor, setSelectedColor] = useState<number | null>(null);
   
-    const colors = [
+  const colors = [
     { id: 1, name: "purple", value: "var(--color-purple)" },
     { id: 2, name: "pink", value: "var(--color-pink)" },
     { id: 3, name: "lime", value: "var(--color-lime)" },
@@ -22,37 +34,44 @@ export default function NewDeckModal({currentFolderId} : {currentFolderId?: stri
     { id: 5, name: "blue", value: "var(--color-blue)" },
   ];
 
-    const handleCreateDeck = async () => {
-      if (!deckName.trim()) {
-        alert("Please enter a deck name.");
-        return;
-      }
-      if (selectedColor === null) {
-        alert("Please select a deck color.");
-        return;
-      }
+  useEffect(() => {
+    if (isOpen) {
+      setDeckName(initialDeckName);
+      const colorIndex = colors.findIndex((c) => c.name === initialDeckColor);
+      setSelectedColor(colorIndex !== -1 ? colors[colorIndex].id : null);
+    }
+  }, [isOpen, initialDeckName, initialDeckColor]);
 
-      const colorName = colors.find((c) => c.id === selectedColor)?.name;
+  const handleUpdateDeck = async () => {
+    if (!deckName.trim()) {
+      alert("Please enter a deck name.");
+      return;
+    }
+    if (selectedColor === null) {
+      alert("Please select a deck color.");
+      return;
+    }
 
-      await createDeck({
-        deckName,
-        deckColor: colorName || "pink",
-        folderId: currentFolderId,
-      });
+    const colorName = colors.find((c) => c.id === selectedColor)?.name;
 
-      setShowModal(false);
-      router.push(pathname);
-    };
+    await updateDeck(deckId, {
+      deckName,
+      deckColor: colorName || "pink",
+      folderId: currentFolderId,
+    });
+
+    setShowModal(false);
+    router.push(pathname);
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div>
       <Modal
-        heading="New Deck"
-        actionButtonText="Create"
-        onAction={() => {
-          handleCreateDeck();
-          setShowModal(false);
-        }}
+        heading="Edit Deck"
+        actionButtonText="Update"
+        onAction={handleUpdateDeck}
       >
         <label className="text-xs text-black font-body">Deck Name</label>
         <input
@@ -92,3 +111,4 @@ export default function NewDeckModal({currentFolderId} : {currentFolderId?: stri
     </div>
   )
 }
+

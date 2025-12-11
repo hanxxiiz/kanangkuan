@@ -2,6 +2,7 @@
 
 import { ModalContext } from '@/components/modals/providers';
 import { useCards } from '@/lib/hooks/useCards';
+import { useRouter, usePathname } from 'next/navigation';
 import React, { useContext, useState, useEffect } from 'react';
 
 export default function EditCardModal({
@@ -19,6 +20,8 @@ export default function EditCardModal({
 }) {
   const { Modal, setShowModal } = useContext(ModalContext);
   const { updateCard } = useCards(currentDeckId);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [front, setFront] = useState(initialFront);
   const [back, setBack] = useState(initialBack);
@@ -47,6 +50,7 @@ export default function EditCardModal({
     });
 
     setShowModal(false);
+    router.push(pathname);
   };
 
   if (!isOpen) return null;
