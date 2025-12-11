@@ -5,36 +5,37 @@ import { deckService } from "../services";
 import { useUser } from "./useUser";
 import { Deck } from "@/utils/supabase/models";
 
-export function useDecks(deckId?: string) {
+export function useDecks(deckId?: string, userId?: string) {
   const { user } = useUser();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [deck, setDeck] = useState<Deck | null>(null);
   const [deckLoading, setDeckLoading] = useState(true);
   const [deckError, setDeckError] = useState<string | null>(null);
 
+  const targetUserId = userId || user?.id;
+
   const loadAllDecks = useCallback(async () => {
-    if (!user) return;
+    if (!targetUserId) return;
 
     try {
       setDeckLoading(true);
       setDeckError(null);
-      const data = await deckService.getAllDecks(user.id);
+      const data = await deckService.getAllDecks(targetUserId);
       setDecks(data);
     } catch (err) {
       setDeckError(err instanceof Error ? err.message : "Failed to load decks.");
     } finally {
       setDeckLoading(false);
     }
-  }, [user]);
+  }, [targetUserId]);
 
   const getDeck = useCallback(
     async (deckId: string) => {
-      if (!user) return;
-
+      if (!targetUserId) return;
       try {
         setDeckLoading(true);
         setDeckError(null);
-        const data = await deckService.getDeck(user.id, deckId);
+        const data = await deckService.getDeck(targetUserId, deckId);
         setDeck(data);
       } catch (err) {
         setDeckError(err instanceof Error ? err.message : "Failed to load deck.");
@@ -42,16 +43,16 @@ export function useDecks(deckId?: string) {
         setDeckLoading(false);
       }
     },
-    [user]
+    [targetUserId]
   );
 
   useEffect(() => {
-    if (user && deckId) {
+    if (targetUserId && deckId) {
       getDeck(deckId);
-    } else if (user) {
+    } else if (targetUserId) {
       loadAllDecks();
     }
-  }, [user, deckId, getDeck, loadAllDecks]);
+  }, [targetUserId, deckId, getDeck, loadAllDecks]);
 
   async function createDeck(deckData: {
     deckName: string;

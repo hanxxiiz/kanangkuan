@@ -70,7 +70,7 @@ export default function Navbar({ items, activeIndex, onChange, className }: Navb
             key={label + i}
             ref={(el) => { itemRefs.current[i] = el; }}
             className={`
-              relative flex items-center justify-center select-none pb-5 cursor-pointer font-body transition-colors
+              relative flex font-main items-center justify-center select-none pb-5 cursor-pointer font-body transition-colors
               text-base sm:text-lg lg:text-3xl
               ${i === currentActive ? "text-black" : "text-gray-500 hover:text-gray-700"}
             `}

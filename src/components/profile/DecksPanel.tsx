@@ -9,11 +9,16 @@ import { useDecks } from "@/lib/hooks/useDecks";
 import { useCards } from "@/lib/hooks/useCards";
 import { useViewMode } from "@/lib/hooks/useViewMode";
 
-export default function MyDecksPage() {
+type DecksPanelProps = {
+  userId: string;
+  isOwnProfile: boolean;
+}
 
-  const { folders, folderLoading, folderError } = useFolders();
-  const { decks, deckLoading, deckError } = useDecks();
-  const { cards } = useCards();
+export default function MyDecksPage({userId, isOwnProfile}: DecksPanelProps) {
+  // When viewing another user's profile, scope queries to that userId
+  const { folders, folderLoading, folderError } = useFolders(undefined, userId);
+  const { decks, deckLoading, deckError } = useDecks(undefined, userId);
+  const { cards } = useCards(undefined, userId);
 
   const allItems = useMemo(() => {
     return [
@@ -53,7 +58,7 @@ export default function MyDecksPage() {
   return (
     <div className="w-full bg-white p-10">
       <DecksPageLayout
-        title="My Decks"
+        title={isOwnProfile ? "My Decks" : "Decks"}
         filterOptions={[
           { label: "All", onClick: () => setViewMode("all") },
           { label: "A–Z", onClick: () => setViewMode("a-z") },
@@ -74,6 +79,8 @@ export default function MyDecksPage() {
                     color={item.data.folder_color}
                     folderName={item.data.folder_name}
                     deckCount={decks.filter((deck) => deck.folder_id === item.id).length}
+                    userId={isOwnProfile ? undefined : userId}
+                    readonly={!isOwnProfile}
                   />
                 );
               } else {
@@ -84,6 +91,8 @@ export default function MyDecksPage() {
                     color={item.data.deck_color}
                     deckName={item.data.deck_name}
                     cardCount={cards.filter((card) => card.deck_id === item.id).length}
+                    userId={isOwnProfile ? undefined : userId}
+                    readonly={!isOwnProfile}
                   />
                 );
               }

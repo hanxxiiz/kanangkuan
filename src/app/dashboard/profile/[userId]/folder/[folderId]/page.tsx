@@ -12,12 +12,12 @@ import { use, useMemo } from "react";
 export default function MyFolderPage({
     params,
 }: {
-    params: Promise<{ folderId: string }>
+    params: Promise<{ userId: string; folderId: string }>
 }) {
-    const { folderId } = use(params);
-    const { decks, deckLoading, deckError } = useDecks();
-    const { cards } = useCards();
-    const { folder, folderLoading, folderError } = useFolders(folderId);
+    const { userId, folderId } = use(params);
+    const { decks, deckLoading, deckError } = useDecks(undefined, userId);
+    const { cards } = useCards(undefined, userId);
+    const { folder, folderLoading, folderError } = useFolders(folderId, userId);
 
     const folderName = folderLoading
         ? "Loading..."

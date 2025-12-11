@@ -3,17 +3,22 @@
 import React, { useMemo } from "react";
 import Folder from "@/components/dashboard/my-decks/Folder";
 import Deck from "@/components/dashboard/my-decks/Deck";
-
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useDecks } from "@/lib/hooks/useDecks";
 import { useCards } from "@/lib/hooks/useCards";
 
-export default function ProfileRecentItems() {
-  const { folders, folderLoading } = useFolders();
-  const { decks, deckLoading } = useDecks();
-  const { cards } = useCards();
+type RecentItemsProps = {
+  userId: string;
+  isOwnProfile?: boolean;
+}
 
-  // 🔥 Combine folders + top-level decks into ONE list
+export default function ProfileRecentItems({ userId }: RecentItemsProps) {
+  // Scope data to the viewed user's content
+  const { folders, folderLoading } = useFolders(undefined, userId);
+  const { decks, deckLoading } = useDecks(undefined, userId);
+  const { cards } = useCards(undefined, userId);
+
+  // Combine folders + top-level decks into ONE list
   const combined = useMemo(() => {
     const folderItems = folders.map(folder => ({
       type: "folder" as const,
@@ -38,20 +43,20 @@ export default function ProfileRecentItems() {
     return [...folderItems, ...deckItems];
   }, [folders, decks]);
 
-  // 🔥 Sort by creation date (newest -> oldest)
+  //Sorts by creation date (newest -> oldest)
   const sorted = useMemo(() => {
     return combined.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [combined]);
 
-  // 🔥 Get only the top 3 items
+  //Gets only 3 recent decks
   const topThree = sorted.slice(0, 3);
 
   if (folderLoading || deckLoading) {
-    return <div>Loading recent items...</div>;
+    return <div>Loading recent decks...</div>;
   }
 
   if (topThree.length === 0) {
-    return <p className="text-gray-500 text-xl font-main">No recent items</p>;
+    return <p className="text-gray-500 text-xl font-main">No recent decks</p>;
   }
 
   return (
@@ -64,6 +69,7 @@ export default function ProfileRecentItems() {
             color={entry.color}
             folderName={entry.name}
             deckCount={decks.filter(d => d.folder_id === entry.id).length}
+            userId={userId}
           />
         ) : (
           <Deck
@@ -72,6 +78,7 @@ export default function ProfileRecentItems() {
             color={entry.color}
             deckName={entry.name}
             cardCount={cards.filter(c => c.deck_id === entry.id).length}
+            userId={userId}
           />
         )
       )}

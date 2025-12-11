@@ -6,6 +6,7 @@ interface CardProps{
     color?: string;
     front?: string;
     back?: string;
+    readonly?: boolean;
 }
 
 const colorMap = {

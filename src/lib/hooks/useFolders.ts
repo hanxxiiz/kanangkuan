@@ -5,51 +5,52 @@ import { folderService } from "../services"
 import { useUser } from "./useUser";
 import { Folder } from "@/utils/supabase/models";
 
-export function useFolders(folderId?: string) {
+export function useFolders(folderId?: string, userId?: string) {
     const { user } = useUser(); 
     const [folders, setFolders] = useState<Folder[]>([])
     const [folder, setFolder] = useState<Folder | null>(null);
     const [folderLoading, setFolderLoading] = useState(true);
     const [folderError, setFolderError] = useState<string | null>(null);
 
+    const targetUserId = userId || user?.id;
+
     const loadFolders = useCallback( async () =>  {
-        if (!user) return;
+        if (!targetUserId) return;
 
         try{
             setFolderLoading(true);
             setFolderError(null);
-            const data = await folderService.getFolders(user?.id);
+            const data = await folderService.getFolders(targetUserId);
             setFolders(data);
         } catch (err){
             setFolderError (err instanceof Error ? err.message : "Failed to load folders.");
         } finally{
             setFolderLoading(false);
         }
-    }, [user]);
+    }, [targetUserId]);
 
     const getFolder = useCallback(
         async (folderId: string) => {
-        if (!user) return;
-
+        if (!targetUserId) return;
         try{
             setFolderLoading(true);
             setFolderError(null);
-            const data = await folderService.getFolder(user?.id, folderId);
+            const data = await folderService.getFolder(targetUserId, folderId);
             setFolder(data);
         } catch (err){
             setFolderError (err instanceof Error ? err.message : "Failed to load folder.");
         } finally{
             setFolderLoading(false);
         }
-    }, [user]);
+    }, [targetUserId]);
 
     useEffect(() => {
-        if (user && folderId) {
+        if (targetUserId && folderId) {
             getFolder(folderId);
-        } else if (user) {
+        } else if (targetUserId) {
             loadFolders();
         }
-    }, [user, folderId, getFolder, loadFolders]);
+    }, [targetUserId, folderId, getFolder, loadFolders]);
 
     async function createFolder(folderData: {
         folderName: string,
