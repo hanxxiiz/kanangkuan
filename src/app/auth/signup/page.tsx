@@ -195,7 +195,7 @@ export default function SignUpPage() {
                 {/* Mobile Sign In Link */}
                 <div className="lg:hidden text-center pt-4 border-t border-gray-300">
                   <p className="text-sm text-gray-600 mb-3 mt-4">
-                    Already have an account?
+                   {` Already have an account?`}
                   </p>
                   <Link
                     href="/auth/signin"

@@ -1,6 +1,6 @@
 import { useState, ReactNode, useContext, useRef, useEffect } from "react";
 import { Button } from "@/components/buttons/PrimaryButton";
-import { IoFilter, IoShareSocialSharp, IoAdd } from "react-icons/io5";
+import { IoFilter, IoAdd } from "react-icons/io5";
 import { RiQuillPenAiFill , RiQuillPenFill } from "react-icons/ri";
 import { ModalContext } from "@/components/modals/providers";
 import NewCardModal from "./NewCardModal";

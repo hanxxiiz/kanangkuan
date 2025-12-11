@@ -100,11 +100,23 @@ export default function Home() {
       color: "bg-cyan",
     },
     {
-      title: "Challenge", 
-      description: "Go head-to-head with friends in real-time brain duels—fierce, and fun!", 
-      image: "/challenge.png",
-      color: "bg-pink",
-    }
+      title: "Active Recall", 
+      description: "Struggle a little, remember a lot — it’s the good kind of brain sweat!", 
+      image: "/active-recall.png",
+      color: "bg-blue",
+    },
+    {
+      title: "Basic Review", 
+      description: "Vibe with your notes, scroll, and let the info slowly click into place.", 
+      image: "/basic-review.png",
+      color: "bg-purple",
+    },
+    {
+      title: "Audio Player", 
+      description: "Tune in and listen to your notes anytime, anywhere.", 
+      image: "/audio-player.png",
+      color: "bg-cyan",
+    },
   ];
 
   const mascotRef = useRef<HTMLDivElement>(null);
@@ -163,7 +175,7 @@ export default function Home() {
               />
             </div>
             <p className="-mt-6 text-white font-body text-sm">
-              Helping your brain, one 'kuan' at a time.
+              {`Helping your brain, one 'kuan' at a time.`}
             </p>
           </div>
         <div ref={mascotRef} className="mascot-container">
@@ -175,7 +187,7 @@ export default function Home() {
           >
             <h1 className="text-9xl font-main text-white">Kanang Kuan</h1>
             <p className="text-white font-body text-2xl mt-4">
-              Helping your brain, one 'kuan' at a time.
+              {`Helping your brain, one 'kuan' at a time.`}
             </p>
           </div>
           <MascotBlink className="mascot-blink"/>
@@ -227,19 +239,19 @@ export default function Home() {
               <CardCarousel
                 cards={slides}
                 breakpoints={{
-                  1920: { slidesPerView: 4, spaceBetween: 8 },
+                  1920: { slidesPerView: 3, spaceBetween: 8 },
                   1028: { slidesPerView: 3, spaceBetween: 1},
                   640: { slidesPerView: 1, spaceBetween: 1},
                 }}
                 renderCard={(card, isActive) => (
                   <div
-                    className={`rounded-2xl h-75 w-75 lg:w-full lg:h-96 flex flex-col justify-center items-center transition-all duration-300 ${
+                    className={`rounded-2xl h-75 w-76 lg:w-full lg:h-96 flex flex-col justify-center items-center transition-all duration-300 ${
                       isActive ? "scale-100 shadow-xl" : "scale-75 opacity-50"
                     } ${card.color}`}
                   >
                     <span className="text-7xl mb-4">{card.icon}</span>
-                    <span className="text-xl lg:text-3xl font-main mb-2">{card.title}</span>
-                    <span className="text-xs lg:text-sm font-body opacity-80 px-10 text-center">
+                    <span className="text-xl font-main mb-2">{card.title}</span>
+                    <span className="text-xs  font-body opacity-80 px-10 text-center">
                       {card.description}
                     </span>
                   </div>
@@ -256,7 +268,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-8 py-16">
           <div className="flex flex-col items-center justify-center">
             <p className="text-sm text-center lg:text-lg font-body text-gray-200 leading-relaxed">
-                Enjoy a fun, interactive learning experience and test your skills with
+                {`Enjoy a fun, interactive learning experience and test your skills with`}
             </p>
             <h1 className="text-6xl lg:text-8xl text-center font-main text-white">
               Practice Modes
@@ -324,8 +336,8 @@ export default function Home() {
                 />
               </div>
               <p className="text-lg font-body text-gray-200 -mt-5 leading-relaxed">
-                Kanang Kuan helps you turn those ‘hala, familiar’ moments into ‘I got this!’ wins. 
-                With AI-powered decks and fun games to play with friends or classmates, studying feels less like work and more like a good time.
+                {`Kanang Kuan helps you turn those ‘hala, familiar’ moments into ‘I got this!’ wins. 
+                With AI-powered decks and fun games to play with friends or classmates, studying feels less like work and more like a good time.`}
               </p>
             </div>
             
@@ -373,7 +385,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-8 py-20 lg:py-60">
           <div className="flex flex-col items-center mt-10 lg:mt-0">
             <h1 className="text-xl lg:text-7xl font-main text-center text-black">
-              Turn every ‘hala familiar’ into <br /> I got this!
+              {`Turn every ‘hala familiar’ into <br /> I got this!`}
             </h1>
             <Link
                 href="/auth/signin"

@@ -76,7 +76,8 @@ export default function Card({
             await deleteCard(id);
             alert("Card deleted successfully!");
         } catch (error) {
-            alert("Failed to delete card. Please try again.");
+            alert(`Failed to delete card. Please try again. ${error} `);
+            
         }
     };
 

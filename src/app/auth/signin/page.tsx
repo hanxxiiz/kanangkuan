@@ -43,7 +43,7 @@ export default function SignInPage() {
 
             <div className="mb-40">
               <h1 className="text-6xl font-main text-white leading-none">
-                Hello, Classmate
+                {`Hello, Classmate`}
               </h1>
               <p className="p-3 font-body text-xs text-white">
                 {"Don't have an account yet?"}
@@ -125,7 +125,7 @@ export default function SignInPage() {
                     type="button"
                     className="text-xs font-body text-gray-400 hover:text-cyan cursor-pointer transition-colors duration-200 ease-in-out"
                   >
-                    Forgot password?
+                    {`Forgot password?`}
                   </button>
                 </div>
 
@@ -157,7 +157,7 @@ export default function SignInPage() {
 
                 <div className="lg:hidden text-center mt-10 border-t border-gray-300">
                   <p className="text-sm text-gray-600 mb-3 mt-4">
-                    Don't have an account yet?
+                    {`Don't have an account yet?`}
                   </p>
                   <Link
                     href="/auth/signup"
