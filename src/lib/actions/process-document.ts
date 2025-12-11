@@ -3,6 +3,11 @@
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { extractText } from '@/app/api/text-extraction/extract-text';
+import { 
+  generateFlashcardsFromText, 
+  generateWrongOptionsBatch, 
+  generateBlankWordsBatch 
+} from '@/lib/ai/generators';
 
 const MAX_CARDS_PER_DOCUMENT = 100;
 const MAX_TEXT_LENGTH = 100000;
@@ -25,24 +30,6 @@ interface CardWithId {
   id: string;
   front: string;
   back: string;
-}
-
-// HELPER: GET BASE URL
-
-function getBaseUrl(): string {
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
-  }
-  
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-  
-  return 'http://localhost:3000';
 }
 
 // STEP 1: TEXT EXTRACTION
@@ -92,81 +79,32 @@ async function extractTextFromDocument(
   return result.text;
 }
 
-// STEP 2: FLASHCARD GENERATION (WITH DETAILED LOGGING)
+// STEP 2: FLASHCARD GENERATION (DIRECT FUNCTION CALL)
 
 async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
-  const baseUrl = getBaseUrl();
-  const url = `${baseUrl}/api/ai/generate-qna`;
-  
   console.log('[GENERATE] ===== FLASHCARD GENERATION START =====');
-  console.log('[GENERATE] Target URL:', url);
   console.log('[GENERATE] Text length:', text.slice(0, MAX_TEXT_LENGTH).length);
-  console.log('[GENERATE] Text preview:', text.slice(0, 200) + '...');
   
   try {
-    console.log('[GENERATE] Making fetch request...');
+    // ✅ DIRECT FUNCTION CALL - NO HTTP, NO AUTH ISSUES!
+    const flashcards = await generateFlashcardsFromText(text.slice(0, MAX_TEXT_LENGTH));
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text: text.slice(0, MAX_TEXT_LENGTH) }),
-    });
-
-    console.log('[GENERATE] Response received');
-    console.log('[GENERATE] Status:', response.status, response.statusText);
-    console.log('[GENERATE] Headers:', Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      // Get the error response body
-      const responseText = await response.text();
-      console.error('[GENERATE] ERROR RESPONSE:', responseText);
-      
-      let errorData;
-      try {
-        errorData = JSON.parse(responseText);
-      } catch {
-        errorData = { error: responseText };
-      }
-      
-      throw new Error(
-        `Flashcard generation failed: HTTP ${response.status} - ${errorData.error || responseText}`
-      );
-    }
-
-    console.log('[GENERATE] Parsing JSON response...');
-    const result = await response.json();
-    
-    console.log('[GENERATE] Result received:', {
-      success: result.success,
-      flashcardsCount: result.flashcards?.length || 0,
-      hasError: !!result.error
-    });
-
-    if (!result.success) {
-      throw new Error(`API returned success=false: ${result.error || 'Unknown error'}`);
-    }
-
-    if (!result.flashcards || !Array.isArray(result.flashcards)) {
-      throw new Error('Invalid response format: missing flashcards array');
-    }
-
+    console.log('[GENERATE] Flashcards received:', flashcards.length);
     console.log('[GENERATE] Validating flashcards...');
     
-    const validCards = result.flashcards
-      .filter((card: { front?: string; back?: string }) => 
+    const validCards = flashcards
+      .filter((card) => 
         card?.front?.trim() && 
         card?.back?.trim() &&
         card.front.length <= 200 &&
         card.back.length <= 300
       )
-      .map((card: { front: string; back: string }) => ({
+      .map((card) => ({
         front: card.front.trim(),
         back: card.back.trim()
       }));
 
-    console.log('[GENERATE] Valid cards:', validCards.length, '/', result.flashcards.length);
+    console.log('[GENERATE] Valid cards:', validCards.length, '/', flashcards.length);
 
     if (validCards.length === 0) {
       throw new Error('No valid flashcards generated after filtering');
@@ -227,38 +165,25 @@ async function saveCardsToDatabase(
   return cardIds;
 }
 
-// STEP 4: BATCHED WRONG OPTIONS GENERATION (1 REQUEST FOR ALL CARDS!)
+// STEP 4: BATCHED WRONG OPTIONS GENERATION (DIRECT FUNCTION CALL)
 
 async function generateAllWrongOptions(cards: CardWithId[]): Promise<void> {
   const supabase = await createClient();
-  const baseUrl = getBaseUrl();
   
-  console.log(`[WRONG-OPTIONS] Generating for ${cards.length} cards in ONE request...`);
+  console.log(`[WRONG-OPTIONS] Generating for ${cards.length} cards...`);
   
   try {
-    const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options-batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        cards: cards.map(c => ({ front: c.front, back: c.back }))
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
+    // ✅ DIRECT FUNCTION CALL - NO HTTP, NO AUTH ISSUES!
+    const allWrongOptions = await generateWrongOptionsBatch(
+      cards.map(c => ({ front: c.front, back: c.back }))
+    );
     
-    if (!result.success || !result.options) {
-      throw new Error('Invalid response format');
-    }
-
-    console.log(`[WRONG-OPTIONS] Saving for ${cards.length} cards...`);
+    console.log(`[WRONG-OPTIONS] Received options for ${cards.length} cards`);
+    console.log(`[WRONG-OPTIONS] Saving to database...`);
     
     for (let i = 0; i < cards.length; i++) {
       const cardId = cards[i].id;
-      const wrongOptions = result.options[i];
+      const wrongOptions = allWrongOptions[i];
       
       if (!wrongOptions || wrongOptions.length < 3) {
         console.warn(`[WRONG-OPTIONS] Skipping card ${cardId} - insufficient options`);
@@ -286,38 +211,25 @@ async function generateAllWrongOptions(cards: CardWithId[]): Promise<void> {
   }
 }
 
-// STEP 5: BATCHED BLANK WORDS GENERATION (1 REQUEST FOR ALL CARDS!)
+// STEP 5: BATCHED BLANK WORDS GENERATION (DIRECT FUNCTION CALL)
 
 async function generateAllBlankWords(cards: CardWithId[]): Promise<void> {
   const supabase = await createClient();
-  const baseUrl = getBaseUrl();
   
-  console.log(`[BLANK-WORDS] Generating for ${cards.length} cards in ONE request...`);
+  console.log(`[BLANK-WORDS] Generating for ${cards.length} cards...`);
   
   try {
-    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words-batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        cards: cards.map(c => ({ back: c.back }))
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
+    // ✅ DIRECT FUNCTION CALL - NO HTTP, NO AUTH ISSUES!
+    const blankWords = await generateBlankWordsBatch(
+      cards.map(c => ({ back: c.back }))
+    );
     
-    if (!result.success || !result.blank_words) {
-      throw new Error('Invalid response format');
-    }
-
-    console.log(`[BLANK-WORDS] Updating ${cards.length} cards...`);
+    console.log(`[BLANK-WORDS] Received ${blankWords.length} blank words`);
+    console.log(`[BLANK-WORDS] Updating database...`);
     
     for (let i = 0; i < cards.length; i++) {
       const cardId = cards[i].id;
-      const blankWord = result.blank_words[i];
+      const blankWord = blankWords[i];
       
       if (!blankWord || !blankWord.trim()) {
         console.warn(`[BLANK-WORDS] Skipping card ${cardId} - no word generated`);
@@ -471,7 +383,7 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
 
     console.log('[PROCESS] Cards fetched for background processing:', savedCards.length);
 
-    // BACKGROUND: Process all cards with just 2 AI requests!
+    // BACKGROUND: Process all cards with just 2 AI calls!
     (async () => {
       try {
         console.log('[BACKGROUND] Starting batched processing...');
