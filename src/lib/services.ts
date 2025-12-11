@@ -53,6 +53,31 @@ export const folderService = {
 
         return data;
     },
+
+    async updateFolder(
+        folderId: string,
+        updates: Partial<Omit<Folder, "id" | "created_at" | "created_by">>
+    ): Promise<Folder> {
+        const { data, error } = await supabase
+            .from("folders")
+            .update(updates)
+            .eq("id", folderId)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async deleteFolder(folderId: string): Promise<void> {
+        const { error } = await supabase
+            .from("folders")
+            .delete()
+            .eq("id", folderId)
+
+        if (error) throw error;
+    },
 }
 
 export const deckService = {
@@ -104,6 +129,31 @@ export const deckService = {
         if (error) throw error;
 
         return data;
+    },
+
+    async updateDeck(
+        deckId: string,
+        updates: Partial<Omit<Deck, "id" | "created_at" | "last_opened" | "created_by">>
+    ): Promise<Deck> {
+        const { data, error } = await supabase
+            .from("decks")
+            .update(updates)
+            .eq("id", deckId)
+            .select()
+            .single()
+
+        if (error) throw error;
+
+        return data;
+    },
+
+    async deleteDeck(deckId: string): Promise<void> {
+        const { error } = await supabase
+            .from("decks")
+            .delete()
+            .eq("id", deckId)
+
+        if (error) throw error;
     },
 }
 

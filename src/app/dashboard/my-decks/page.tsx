@@ -82,7 +82,7 @@ export default function MyDecksPage() {
         ]}
       >
         {sortedItems.length === 0 ? (
-          <div className="text-gray-500 text-7xl font-main">Nothing here yet</div>
+          <div className="text-gray-200 text-center text-2xl lg:text-7xl font-main">Nothing here yet</div>
         ) : (
           <>
             {sortedItems.map((item) => {

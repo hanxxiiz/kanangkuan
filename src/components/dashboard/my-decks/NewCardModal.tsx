@@ -2,11 +2,14 @@
 
 import { ModalContext } from '@/components/modals/providers';
 import { useCards } from '@/lib/hooks/useCards';
+import { useRouter, usePathname } from 'next/navigation';
 import React, { useContext, useState } from 'react';
 
 export default function NewCardModal({currentDeckId} : {currentDeckId?: string}) {
   const { Modal, setShowModal } = useContext(ModalContext);
   const { createCard } = useCards(currentDeckId);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
@@ -31,6 +34,7 @@ export default function NewCardModal({currentDeckId} : {currentDeckId?: string})
     setBack('');
 
     setShowModal(false);
+    router.push(pathname);
   };
 
   return (

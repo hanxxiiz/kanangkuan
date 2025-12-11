@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
 import EditCardModal from './EditCardModal';
 import { ModalContext } from '@/components/modals/providers';
@@ -29,6 +30,8 @@ export default function Card({
     back = "",
     deckId,
 }:CardProps) {
+    const router = useRouter();
+    const pathname = usePathname();
     const bgColor = colorMap[color as keyof typeof colorMap] || colorMap.pink;
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -75,9 +78,9 @@ export default function Card({
         try {
             await deleteCard(id);
             alert("Card deleted successfully!");
+            router.push(pathname);
         } catch (error) {
             alert(`Failed to delete card. Please try again. ${error} `);
-            
         }
     };
 
@@ -91,7 +94,7 @@ export default function Card({
                                 <button
                                     ref={buttonRef}
                                     onClick={() => setShowDropdown(!showDropdown)}
-                                    className="absolute -top-5 -right-5 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors cursor-pointer z-10"
+                                    className="absolute -top-5 -right-5 p-2  rounded-full hover:bg-gray-100 transition-colors cursor-pointer z-10"
                                 >
                                     <PiDotsThreeOutlineVerticalFill className="text-xl text-black" />
                                 </button>

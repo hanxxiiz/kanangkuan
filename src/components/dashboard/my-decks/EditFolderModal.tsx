@@ -3,15 +3,25 @@
 import { ModalContext } from "@/components/modals/providers";
 import { useFolders } from "@/lib/hooks/useFolders";
 import { useRouter, usePathname } from 'next/navigation';
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 
-export default function NewFolderModal() {
+export default function EditFolderModal({
+  folderId,
+  initialFolderName,
+  initialFolderColor,
+  isOpen,
+}: {
+  folderId: string;
+  initialFolderName: string;
+  initialFolderColor: string;
+  isOpen: boolean;
+}) {
   const { Modal, setShowModal } = useContext(ModalContext);
-  const { createFolder } = useFolders();
+  const { updateFolder } = useFolders();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [folderName, setFolderName] = useState("");
+  const [folderName, setFolderName] = useState(initialFolderName);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
 
   const colors = [
@@ -22,7 +32,15 @@ export default function NewFolderModal() {
     { id: 5, name: "blue", value: "var(--color-blue)" },
   ];
 
-  const handleCreateFolder = async () => {
+  useEffect(() => {
+    if (isOpen) {
+      setFolderName(initialFolderName);
+      const colorIndex = colors.findIndex((c) => c.name === initialFolderColor);
+      setSelectedColor(colorIndex !== -1 ? colors[colorIndex].id : null);
+    }
+  }, [isOpen, initialFolderName, initialFolderColor]);
+
+  const handleUpdateFolder = async () => {
     if (!folderName.trim()) {
       alert("Please enter a folder name.");
       return;
@@ -34,7 +52,7 @@ export default function NewFolderModal() {
 
     const colorName = colors.find((c) => c.id === selectedColor)?.name;
 
-    await createFolder({
+    await updateFolder(folderId, {
       folderName,
       folderColor: colorName || "pink",
     });
@@ -43,12 +61,14 @@ export default function NewFolderModal() {
     router.push(pathname);
   };
 
+  if (!isOpen) return null;
+
   return (
     <div>
       <Modal
-        heading="New Folder"
-        actionButtonText="Create"
-        onAction={handleCreateFolder}
+        heading="Edit Folder"
+        actionButtonText="Update"
+        onAction={handleUpdateFolder}
       >
         <label className="text-xs text-black font-body">Folder Name</label>
         <input
@@ -89,3 +109,4 @@ export default function NewFolderModal() {
     </div>
   );
 }
+
