@@ -167,7 +167,6 @@ export default function PracticeModal({ currentDeckId, onClose }: PracticeModalP
 
   return (
     <>
-      {/* Add custom styles for disabled button state when canPlay is false */}
       {isButtonDisabled && (
         <style jsx global>{`
           .fixed.inset-0.z-50 button:last-child,

@@ -240,7 +240,7 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
       const needsOptions = !optionsComplete;
       const needsBlankWord = !hasBlankWord;
       
-      return needsOptions && needsBlankWord;
+      return needsOptions || needsBlankWord; 
     });
 
     console.log(`Total cards: ${cards.length}`);
