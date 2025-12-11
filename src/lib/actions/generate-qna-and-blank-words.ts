@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { generateWrongOptionsBatch, generateBlankWordsBatch } from '@/lib/ai/generators';
 
 interface GenerateResult {
   success: boolean;
@@ -31,116 +32,6 @@ interface CardWithOptions extends Card {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// UTILITY: GET BASE URL
-// ═══════════════════════════════════════════════════════════════════════════
-
-function getBaseUrl(): string {
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
-  }
-  
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-  
-  return 'http://localhost:3000';
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// BATCHED AI API CALLS (2 REQUESTS TOTAL!)
-// ═══════════════════════════════════════════════════════════════════════════
-
-async function generateAllWrongOptions(
-  cards: CardWithOptions[]
-): Promise<string[][] | null> {
-  const baseUrl = getBaseUrl();
-  
-  console.log(`🚀 Generating wrong options for ${cards.length} cards in ONE batch request...`);
-  
-  try {
-    const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options-batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        cards: cards.map(c => ({ front: c.front, back: c.back }))
-      }),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      console.error(`Wrong options batch failed: ${response.status}`);
-      return null;
-    }
-
-    const result = await response.json();
-    
-    if (!result.success || !result.options || !Array.isArray(result.options)) {
-      console.error('Invalid response format from wrong options batch');
-      return null;
-    }
-
-    if (result.options.length !== cards.length) {
-      console.error(`Expected ${cards.length} results, got ${result.options.length}`);
-      return null;
-    }
-
-    console.log(`Successfully generated wrong options for ${cards.length} cards`);
-    return result.options;
-    
-  } catch (error) {
-    console.error('Exception in wrong options batch:', error);
-    return null;
-  }
-}
-
-async function generateAllBlankWords(
-  cards: CardWithOptions[]
-): Promise<string[] | null> {
-  const baseUrl = getBaseUrl();
-  
-  console.log(`Generating blank words for ${cards.length} cards in ONE batch request...`);
-  
-  try {
-    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words-batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        cards: cards.map(c => ({ back: c.back }))
-      }),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      console.error(`Blank words batch failed: ${response.status}`);
-      return null;
-    }
-
-    const result = await response.json();
-    
-    if (!result.success || !result.blank_words || !Array.isArray(result.blank_words)) {
-      console.error('Invalid response format from blank words batch');
-      return null;
-    }
-
-    if (result.blank_words.length !== cards.length) {
-      console.error(`Expected ${cards.length} results, got ${result.blank_words.length}`);
-      return null;
-    }
-
-    console.log(`Successfully generated blank words for ${cards.length} cards`);
-    return result.blank_words;
-    
-  } catch (error) {
-    console.error('Exception in blank words batch:', error);
-    return null;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // MAIN FUNCTION
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -163,7 +54,7 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
     const effectiveUserId = userId || user?.id;
     
     if (!effectiveUserId) {
-      console.error('❌ [STAGE 1/6] Authentication failed');
+      console.error('[STAGE 1/6] Authentication failed');
       return { success: false, error: 'User not authenticated' };
     }
     console.log(`[STAGE 1/6] User authenticated: ${effectiveUserId}`);
@@ -248,7 +139,7 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
     console.log(`Already complete: ${cards.length - cardsNeedingGeneration.length}`);
 
     if (cardsNeedingGeneration.length === 0) {
-      console.log('[STAGE 4/6] All cards already complete!');
+      console.log('[STAGE 4/6] All cards already complete');
       return {
         success: true,
         message: 'All cards already have wrong options and blank words',
@@ -259,28 +150,46 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    console.log(`\n[STAGE 5/6] Generating AI data in BATCH (2 API requests total)...`);
-    console.log(`   Processing ${cardsNeedingGeneration.length} cards at once!`);
+    console.log(`\n[STAGE 5/6] Generating AI data via DIRECT FUNCTION CALLS...`);
+    console.log(`Processing ${cardsNeedingGeneration.length} cards at once`);
     // ─────────────────────────────────────────────────────────────────────────
     
-    // MAKE BOTH BATCH REQUESTS IN PARALLEL (2 requests for all cards!)
-    const [wrongOptionsResults, blankWordsResults] = await Promise.all([
-      generateAllWrongOptions(cardsNeedingGeneration as CardWithOptions[]),
-      generateAllBlankWords(cardsNeedingGeneration as CardWithOptions[])
-    ]);
+    // DIRECT FUNCTION CALLS - NO HTTP, NO AUTH ISSUES
+    let wrongOptionsResults: string[][] | null = null;
+    let blankWordsResults: string[] | null = null;
 
-    if (!wrongOptionsResults || !blankWordsResults) {
-      console.error('[STAGE 5/6] Batch generation failed');
+    try {
+      [wrongOptionsResults, blankWordsResults] = await Promise.all([
+        generateWrongOptionsBatch(
+          cardsNeedingGeneration.map(c => ({ front: c.front, back: c.back }))
+        ),
+        generateBlankWordsBatch(
+          cardsNeedingGeneration.map(c => ({ back: c.back }))
+        )
+      ]);
+    } catch (error) {
+      console.error('[STAGE 5/6] AI generation failed:', error);
       return {
         success: false,
-        error: 'Failed to generate AI data in batch',
+        error: error instanceof Error ? error.message : 'AI generation failed',
         cardsProcessed: cards.length,
         cardsUpdated: 0,
         cardsSkipped: cards.length - cardsNeedingGeneration.length,
       };
     }
 
-    console.log('[STAGE 5/6] Batch generation complete!');
+    if (!wrongOptionsResults || !blankWordsResults) {
+      console.error('[STAGE 5/6] Generation returned null results');
+      return {
+        success: false,
+        error: 'Failed to generate AI data',
+        cardsProcessed: cards.length,
+        cardsUpdated: 0,
+        cardsSkipped: cards.length - cardsNeedingGeneration.length,
+      };
+    }
+
+    console.log('[STAGE 5/6] Generation complete');
 
     // ─────────────────────────────────────────────────────────────────────────
     console.log(`\n[STAGE 6/6] Saving results to database...`);
@@ -293,46 +202,59 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
       const wrongOptions = wrongOptionsResults[i];
       const blankWord = blankWordsResults[i];
 
-      console.log(`   [${i + 1}/${cardsNeedingGeneration.length}] Saving card ${card.id}...`);
+      console.log(`[${i + 1}/${cardsNeedingGeneration.length}] Saving card ${card.id}...`);
 
       try {
-        // Validate data before saving
-        if (!wrongOptions || wrongOptions.length !== 3) {
-          console.error(`Invalid wrong options for card ${card.id}`);
-          continue;
+        // Check if card needs options
+        const hasOptions = card.card_options && card.card_options.length > 0;
+        const optionsComplete = hasOptions && 
+          card.card_options[0]?.wrong_option_1 && 
+          card.card_options[0]?.wrong_option_2 && 
+          card.card_options[0]?.wrong_option_3;
+
+        // Only save options if needed
+        if (!optionsComplete) {
+          if (!wrongOptions || wrongOptions.length !== 3) {
+            console.error(`Invalid wrong options for card ${card.id}`);
+            continue;
+          }
+
+          const { error: optionsError } = await supabase
+            .from('card_options')
+            .upsert({
+              card_id: card.id,
+              wrong_option_1: wrongOptions[0],
+              wrong_option_2: wrongOptions[1],
+              wrong_option_3: wrongOptions[2],
+            }, {
+              onConflict: 'card_id'
+            });
+
+          if (optionsError) {
+            console.error(`Failed to save card_options for ${card.id}:`, optionsError);
+            continue;
+          }
         }
 
-        if (!blankWord || !blankWord.trim()) {
-          console.error(`Invalid blank word for card ${card.id}`);
-          continue;
-        }
+        // Check if card needs blank word
+        const hasBlankWord = card.blank_word && card.blank_word.trim() !== '';
 
-        // Insert/update card_options
-        const { error: optionsError } = await supabase
-          .from('card_options')
-          .upsert({
-            card_id: card.id,
-            wrong_option_1: wrongOptions[0],
-            wrong_option_2: wrongOptions[1],
-            wrong_option_3: wrongOptions[2],
-          }, {
-            onConflict: 'card_id'
-          });
+        // Only save blank word if needed
+        if (!hasBlankWord) {
+          if (!blankWord || !blankWord.trim()) {
+            console.error(`Invalid blank word for card ${card.id}`);
+            continue;
+          }
 
-        if (optionsError) {
-          console.error(`Failed to save card_options for ${card.id}:`, optionsError);
-          continue;
-        }
+          const { error: blankWordError } = await supabase
+            .from('cards')
+            .update({ blank_word: blankWord })
+            .eq('id', card.id);
 
-        // Update blank_word
-        const { error: blankWordError } = await supabase
-          .from('cards')
-          .update({ blank_word: blankWord })
-          .eq('id', card.id);
-
-        if (blankWordError) {
-          console.error(`Failed to save blank_word for ${card.id}:`, blankWordError);
-          continue;
+          if (blankWordError) {
+            console.error(`Failed to save blank_word for ${card.id}:`, blankWordError);
+            continue;
+          }
         }
 
         successCount++;
@@ -344,7 +266,7 @@ export async function generateWrongOptionsAndBlankWordsForDeck(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    console.log(`\n[STAGE 6/6] Generation complete!`);
+    console.log(`\n[STAGE 6/6] Generation complete`);
     // ─────────────────────────────────────────────────────────────────────────
     console.log(`Successfully updated: ${successCount}`);
     console.log(`Failed: ${cardsNeedingGeneration.length - successCount}`);
