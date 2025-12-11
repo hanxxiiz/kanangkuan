@@ -75,7 +75,7 @@ export function useFolders(folderId?: string, userId?: string) {
         folderColor?: string,
     }) {
         try {
-            const updates: any = {};
+            const updates: Partial<Pick<Folder, 'folder_name' | 'folder_color'>> = {};
             if (folderData.folderName !== undefined) updates.folder_name = folderData.folderName;
             if (folderData.folderColor !== undefined) updates.folder_color = folderData.folderColor;
 

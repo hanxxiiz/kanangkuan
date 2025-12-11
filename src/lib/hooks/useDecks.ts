@@ -80,7 +80,7 @@ export function useDecks(deckId?: string, userId?: string) {
     folderId?: string | null;
   }) {
     try {
-      const updates: any = {};
+      const updates: Partial<Pick<Deck, 'deck_name' | 'deck_color' | 'folder_id'>> = {};
       if (deckData.deckName !== undefined) updates.deck_name = deckData.deckName;
       if (deckData.deckColor !== undefined) updates.deck_color = deckData.deckColor;
       if (deckData.folderId !== undefined) updates.folder_id = deckData.folderId;
