@@ -3,6 +3,11 @@
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { extractText } from '@/app/api/text-extraction/extract-text';
+import { 
+  generateFlashcardsFromText, 
+  generateWrongOptionsBatch, 
+  generateBlankWordsBatch 
+} from '@/lib/ai/generators';
 
 const MAX_CARDS_PER_DOCUMENT = 100;
 const MAX_TEXT_LENGTH = 100000;
@@ -25,24 +30,6 @@ interface CardWithId {
   id: string;
   front: string;
   back: string;
-}
-
-// HELPER: GET BASE URL
-
-function getBaseUrl(): string {
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
-  }
-  
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-  
-  return 'http://localhost:3000';
 }
 
 // STEP 1: TEXT EXTRACTION
@@ -92,40 +79,54 @@ async function extractTextFromDocument(
   return result.text;
 }
 
-// STEP 2: FLASHCARD GENERATION
+// STEP 2: FLASHCARD GENERATION (DIRECT FUNCTION CALL)
 
 async function generateFlashcards(text: string): Promise<GeneratedCard[]> {
-  const baseUrl = getBaseUrl();
-  const response = await fetch(`${baseUrl}/api/ai/generate-qna`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text.slice(0, MAX_TEXT_LENGTH) }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Flashcard generation failed');
-  }
-
-  const result = await response.json();
+  console.log('[GENERATE] ===== FLASHCARD GENERATION START =====');
+  console.log('[GENERATE] Text length:', text.slice(0, MAX_TEXT_LENGTH).length);
   
-  const validCards = (result.flashcards || [])
-    .filter((card: { front?: string; back?: string }) => 
-      card?.front?.trim() && 
-      card?.back?.trim() &&
-      card.front.length <= 200 &&
-      card.back.length <= 300
-    )
-    .map((card: { front: string; back: string }) => ({
-      front: card.front.trim(),
-      back: card.back.trim()
-    }));
+  try {
+    // ✅ DIRECT FUNCTION CALL - NO HTTP, NO AUTH ISSUES!
+    const flashcards = await generateFlashcardsFromText(text.slice(0, MAX_TEXT_LENGTH));
+    
+    console.log('[GENERATE] Flashcards received:', flashcards.length);
+    console.log('[GENERATE] Validating flashcards...');
+    
+    const validCards = flashcards
+      .filter((card) => 
+        card?.front?.trim() && 
+        card?.back?.trim() &&
+        card.front.length <= 200 &&
+        card.back.length <= 300
+      )
+      .map((card) => ({
+        front: card.front.trim(),
+        back: card.back.trim()
+      }));
 
-  if (validCards.length === 0) {
-    throw new Error('No valid flashcards generated');
+    console.log('[GENERATE] Valid cards:', validCards.length, '/', flashcards.length);
+
+    if (validCards.length === 0) {
+      throw new Error('No valid flashcards generated after filtering');
+    }
+
+    const finalCards = validCards.slice(0, MAX_CARDS_PER_DOCUMENT);
+    console.log('[GENERATE] ===== SUCCESS =====');
+    console.log('[GENERATE] Returning', finalCards.length, 'flashcards');
+
+    return finalCards;
+    
+  } catch (error) {
+    console.error('[GENERATE] ===== FATAL ERROR =====');
+    console.error('[GENERATE] Error:', error);
+    
+    if (error instanceof Error) {
+      console.error('[GENERATE] Error message:', error.message);
+      console.error('[GENERATE] Error stack:', error.stack);
+    }
+    
+    throw error;
   }
-
-  return validCards.slice(0, MAX_CARDS_PER_DOCUMENT);
 }
 
 // STEP 3: DATABASE OPERATIONS
@@ -164,43 +165,28 @@ async function saveCardsToDatabase(
   return cardIds;
 }
 
-// STEP 4: BATCHED WRONG OPTIONS GENERATION (1 REQUEST FOR ALL CARDS!)
+// STEP 4: BATCHED WRONG OPTIONS GENERATION (DIRECT FUNCTION CALL)
 
 async function generateAllWrongOptions(cards: CardWithId[]): Promise<void> {
   const supabase = await createClient();
-  const baseUrl = getBaseUrl();
   
-  console.log(`Generating wrong options for ${cards.length} cards in ONE request...`);
+  console.log(`[WRONG-OPTIONS] Generating for ${cards.length} cards...`);
   
   try {
-    // ONE API REQUEST FOR ALL CARDS
-    const response = await fetch(`${baseUrl}/api/ai/generate-wrong-options-batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        cards: cards.map(c => ({ front: c.front, back: c.back }))
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
+    // ✅ DIRECT FUNCTION CALL - NO HTTP, NO AUTH ISSUES!
+    const allWrongOptions = await generateWrongOptionsBatch(
+      cards.map(c => ({ front: c.front, back: c.back }))
+    );
     
-    if (!result.success || !result.options) {
-      throw new Error('Invalid response format');
-    }
-
-    // Save all wrong options to database
-    console.log(`Saving wrong options for ${cards.length} cards...`);
+    console.log(`[WRONG-OPTIONS] Received options for ${cards.length} cards`);
+    console.log(`[WRONG-OPTIONS] Saving to database...`);
     
     for (let i = 0; i < cards.length; i++) {
       const cardId = cards[i].id;
-      const wrongOptions = result.options[i];
+      const wrongOptions = allWrongOptions[i];
       
       if (!wrongOptions || wrongOptions.length < 3) {
-        console.warn(`Skipping card ${cardId} - insufficient wrong options`);
+        console.warn(`[WRONG-OPTIONS] Skipping card ${cardId} - insufficient options`);
         continue;
       }
 
@@ -214,54 +200,39 @@ async function generateAllWrongOptions(cards: CardWithId[]): Promise<void> {
         });
 
       if (error) {
-        console.error(`Failed to save wrong options for card ${cardId}:`, error);
+        console.error(`[WRONG-OPTIONS] Failed for card ${cardId}:`, error);
       }
     }
 
-    console.log('Wrong options generation complete!');
+    console.log('[WRONG-OPTIONS] Complete!');
   } catch (error) {
-    console.error('Batched wrong options generation failed:', error);
+    console.error('[WRONG-OPTIONS] Failed:', error);
     throw error;
   }
 }
 
-// STEP 5: BATCHED BLANK WORDS GENERATION (1 REQUEST FOR ALL CARDS!)
+// STEP 5: BATCHED BLANK WORDS GENERATION (DIRECT FUNCTION CALL)
 
 async function generateAllBlankWords(cards: CardWithId[]): Promise<void> {
   const supabase = await createClient();
-  const baseUrl = getBaseUrl();
   
-  console.log(`Generating blank words for ${cards.length} cards in ONE request...`);
+  console.log(`[BLANK-WORDS] Generating for ${cards.length} cards...`);
   
   try {
-    // ONE API REQUEST FOR ALL CARDS
-    const response = await fetch(`${baseUrl}/api/ai/generate-blank-words-batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        cards: cards.map(c => ({ back: c.back }))
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
+    // ✅ DIRECT FUNCTION CALL - NO HTTP, NO AUTH ISSUES!
+    const blankWords = await generateBlankWordsBatch(
+      cards.map(c => ({ back: c.back }))
+    );
     
-    if (!result.success || !result.blank_words) {
-      throw new Error('Invalid response format');
-    }
-
-    // Update all cards with blank words
-    console.log(`Updating ${cards.length} cards with blank words...`);
+    console.log(`[BLANK-WORDS] Received ${blankWords.length} blank words`);
+    console.log(`[BLANK-WORDS] Updating database...`);
     
     for (let i = 0; i < cards.length; i++) {
       const cardId = cards[i].id;
-      const blankWord = result.blank_words[i];
+      const blankWord = blankWords[i];
       
       if (!blankWord || !blankWord.trim()) {
-        console.warn(`Skipping card ${cardId} - no blank word generated`);
+        console.warn(`[BLANK-WORDS] Skipping card ${cardId} - no word generated`);
         continue;
       }
 
@@ -271,13 +242,13 @@ async function generateAllBlankWords(cards: CardWithId[]): Promise<void> {
         .eq('id', cardId);
 
       if (error) {
-        console.error(`Failed to update blank word for card ${cardId}:`, error);
+        console.error(`[BLANK-WORDS] Failed for card ${cardId}:`, error);
       }
     }
 
-    console.log('Blank words generation complete!');
+    console.log('[BLANK-WORDS] Complete!');
   } catch (error) {
-    console.error('Batched blank words generation failed:', error);
+    console.error('[BLANK-WORDS] Failed:', error);
     throw error;
   }
 }
@@ -412,7 +383,7 @@ export async function processDocument(importId: string): Promise<ProcessResult> 
 
     console.log('[PROCESS] Cards fetched for background processing:', savedCards.length);
 
-    // BACKGROUND: Process all cards with just 2 AI requests!
+    // BACKGROUND: Process all cards with just 2 AI calls!
     (async () => {
       try {
         console.log('[BACKGROUND] Starting batched processing...');
